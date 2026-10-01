@@ -3,6 +3,7 @@
   "package": "io.github.jason13official.spookiness.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BlockLightEngineMixin",
     "MinecraftServerMixin"
   ],
   "client": [

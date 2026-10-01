@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.entity;
 
 import io.github.jason13official.spookiness.entity.control.JackOMimicJumpControl;
 import io.github.jason13official.spookiness.entity.control.JackOMimicMoveControl;
+import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -31,6 +32,7 @@ public class JackOMimic extends PathfinderMob {
 
   private static final int JUMP_DELAY_TICKS = 10;
   private static final int JUMP_DURATION_IN_TICKS = 20;
+  private static final int LIGHT_EMISSION = 15;
 
   public final AnimationState yapAnimationState = new AnimationState();
 
@@ -104,8 +106,21 @@ public class JackOMimic extends PathfinderMob {
   }
 
   @Override
+  public void onAddedToLevel() {
+    super.onAddedToLevel();
+    LivingLights.add(this, LIGHT_EMISSION);
+  }
+
+  @Override
+  public void onRemovedFromLevel() {
+    super.onRemovedFromLevel();
+    LivingLights.remove(this);
+  }
+
+  @Override
   public void tick() {
     super.tick();
+    LivingLights.move(this);
 
     // this.yapAnimationState.startIfStopped(this.tickCount);
   }

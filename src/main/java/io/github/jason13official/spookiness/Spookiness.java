@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness;
 
 import io.github.jason13official.spookiness.entity.JackOMimic;
+import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.function.BiConsumer;
@@ -23,6 +24,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +77,8 @@ public class Spookiness {
         event.setCanceled(true);
       }
     });
+
+    NeoForge.EVENT_BUS.addListener((LevelEvent.Unload event) -> LivingLights.unload(event.getLevel()));
 
     if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
       new SpookinessClient(EVENT_BUS);
