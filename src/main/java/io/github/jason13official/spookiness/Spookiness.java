@@ -10,6 +10,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.IEventBus;
@@ -17,6 +18,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
+import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.slf4j.Logger;
 
@@ -35,8 +37,20 @@ public class Spookiness {
     // FinalizeSpawnEvent
     NeoForge.EVENT_BUS.addListener((FinalizeSpawnEvent event) -> {
 
-      if (event.getEntity() instanceof AbstractSkeleton skeleton && skeleton.getRandom().nextBoolean()) {
+      // if (event.getEntity() instanceof AbstractSkeleton skeleton && skeleton.getRandom().nextBoolean()) {
+      if (event.getEntity() instanceof AbstractSkeleton skeleton) {
         skeleton.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.JACK_O_LANTERN));
+      }
+    });
+
+    NeoForge.EVENT_BUS.addListener((LivingChangeTargetEvent event ) -> {
+
+      if (!event.getEntity().getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN)) {
+        return;
+      }
+
+      if (event.getNewAboutToBeSetTarget() instanceof Player player && player.getMainHandItem().is(ModItems.PUMPKIN_MACE)) {
+        event.setCanceled(true);
       }
     });
   }
