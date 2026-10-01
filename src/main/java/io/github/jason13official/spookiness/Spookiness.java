@@ -24,11 +24,14 @@ import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Mod(Spookiness.MOD_ID)
 public class Spookiness {
 
   public static final String MOD_ID = "spookiness";
+  public static final Logger LOG = LoggerFactory.getLogger(MOD_ID);
 
   public static IEventBus EVENT_BUS;
 
