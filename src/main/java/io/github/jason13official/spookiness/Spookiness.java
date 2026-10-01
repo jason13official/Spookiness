@@ -43,7 +43,7 @@ public class Spookiness {
     // EntityAttributeCreationEvent
     EVENT_BUS.addListener((EntityAttributeCreationEvent event) -> {
 
-      event.put(ModEntities.JACK_O_MIMIC, LivingEntity.createLivingAttributes().build());
+      event.put(ModEntities.JACK_O_MIMIC, JackOMimic.createAttributes().build());
     });
 
     // FinalizeSpawnEvent
