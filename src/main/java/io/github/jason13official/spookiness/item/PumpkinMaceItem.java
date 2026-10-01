@@ -32,10 +32,9 @@ public class PumpkinMaceItem extends Item {
 
   /// 1.5F originally
   public static final float SMASH_ATTACK_FALL_THRESHOLD = 0.1F;
+  public static final float SMASH_ATTACK_KNOCKBACK_RADIUS = 3.5F;
   /// -3.4 originally
   private static final float DEFAULT_ATTACK_SPEED = -2.4F;
-
-  public static final float SMASH_ATTACK_KNOCKBACK_RADIUS = 3.5F;
   private static final int DEFAULT_ATTACK_DAMAGE = 5;
   private static final float SMASH_ATTACK_HEAVY_THRESHOLD = 5.0F;
   private static final float SMASH_ATTACK_KNOCKBACK_POWER = 0.7F;

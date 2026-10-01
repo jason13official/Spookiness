@@ -1,15 +1,16 @@
 package io.github.jason13official.spookiness.entity.control;
 
-import io.github.jason13official.spookiness.entity.JackOMimic;
+import io.github.jason13official.spookiness.entity.JumpingPathfinderMob;
 import net.minecraft.world.entity.ai.control.JumpControl;
 
-public class JackOMimicJumpControl extends JumpControl {
-  private final JackOMimic mimic;
+public class HoppingJumpControl extends JumpControl {
+
+  private final JumpingPathfinderMob mob;
   private boolean canJump;
 
-  public JackOMimicJumpControl(JackOMimic mimic) {
-    super(mimic);
-    this.mimic = mimic;
+  public HoppingJumpControl(JumpingPathfinderMob mob) {
+    super(mob);
+    this.mob = mob;
   }
 
   public boolean wantJump() {
@@ -26,7 +27,7 @@ public class JackOMimicJumpControl extends JumpControl {
 
   public void tick() {
     if (this.jump) {
-      this.mimic.startJumping();
+      this.mob.startJumping();
       this.jump = false;
     }
 

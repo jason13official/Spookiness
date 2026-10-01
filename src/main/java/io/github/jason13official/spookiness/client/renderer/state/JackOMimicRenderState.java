@@ -5,6 +5,6 @@ import net.minecraft.world.entity.AnimationState;
 
 public class JackOMimicRenderState extends LivingEntityRenderState {
 
-  public float jumpCompletion;
   public final AnimationState yapAnimationState = new AnimationState();
+  public float jumpCompletion;
 }

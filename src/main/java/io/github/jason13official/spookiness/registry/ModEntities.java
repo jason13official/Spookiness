@@ -13,9 +13,7 @@ public class ModEntities {
 
   public static EntityType<JackOMimic> JACK_O_MIMIC;
 
-  /// floating candles
-  /// floating book
-  /// invisible mob holding sword like Spectral Sword from Curse of Darkness?
+  /// floating candles floating book invisible mob holding sword like Spectral Sword from Curse of Darkness?
   public static void register(BiConsumer<EntityType<?>, Identifier> consumer) {
 
     JACK_O_MIMIC = EntityType.Builder.of(JackOMimic::new, MobCategory.MISC).sized(1.0f, 1.0f).build(ResourceKey.create(Registries.ENTITY_TYPE, Spookiness.id("jack_o_mimic")));
