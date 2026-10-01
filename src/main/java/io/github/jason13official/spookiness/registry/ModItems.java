@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness.registry;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import java.util.function.BiConsumer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -24,9 +25,9 @@ public class ModItems {
     // .repairable(BREEZE_ROD).attributes(MaceItem.createAttributes()).enchantable(15)
     // .component(DataComponents.WEAPON, new Weapon(1)));
 
-    PUMPKIN_MACE = new MaceItem(new Item.Properties().rarity(Rarity.EPIC)
-        .durability(500).component(DataComponents.TOOL, MaceItem.createToolProperties())
-        .repairable(Items.STICK).attributes(MaceItem.createAttributes()).enchantable(15)
+    PUMPKIN_MACE = new PumpkinMaceItem(new Item.Properties().rarity(Rarity.EPIC)
+        .durability(500).component(DataComponents.TOOL, PumpkinMaceItem.createToolProperties())
+        .repairable(Items.STICK).attributes(PumpkinMaceItem.createAttributes()).enchantable(15)
         .component(DataComponents.WEAPON, new Weapon(1))
         .setId(ResourceKey.create(Registries.ITEM, Spookiness.id("pumpkin_mace"))));
 
