@@ -19,6 +19,9 @@ sourceSets.main.resources {
 }
 
 repositories {
+  maven {
+    url = "https://api.modrinth.com/maven"
+  }
 }
 
 base {
@@ -71,6 +74,8 @@ configurations {
 }
 
 dependencies {
+
+  implementation 'maven.modrinth:jei:29.43.0.106-neoforge'
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
