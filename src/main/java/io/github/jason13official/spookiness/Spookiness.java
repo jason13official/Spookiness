@@ -1,8 +1,10 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModEntities;
+import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -10,20 +12,27 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.slf4j.Logger;
@@ -44,11 +53,22 @@ public class Spookiness {
 
     bind(Registries.ENTITY_TYPE, ModEntities::register);
     bind(Registries.ITEM, ModItems::register);
+    bind(Registries.FEATURE, ModFeatures::register);
+
+    // GatherDataEvent.Client
+    EVENT_BUS.addListener(SpookinessDatagen::init);
 
     // EntityAttributeCreationEvent
     EVENT_BUS.addListener((EntityAttributeCreationEvent event) -> {
 
       event.put(ModEntities.JACK_O_MIMIC, JackOMimic.createAttributes().build());
+    });
+
+    // RegisterSpawnPlacementsEvent
+    EVENT_BUS.addListener((RegisterSpawnPlacementsEvent event) -> {
+
+      event.register(ModEntities.JACK_O_MIMIC, SpawnPlacementTypes.ON_GROUND,
+          Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, JackOMimic::checkJackOMimicSpawnRules, RegisterSpawnPlacementsEvent.Operation.REPLACE);
     });
 
     // FinalizeSpawnEvent
@@ -78,7 +98,27 @@ public class Spookiness {
       }
     });
 
+    // LevelEvent.Unload
     NeoForge.EVENT_BUS.addListener((LevelEvent.Unload event) -> LivingLights.unload(event.getLevel()));
+
+    // LivingDeathEvent
+    NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> {
+
+      LivingEntity entity = event.getEntity();
+      if (!(entity instanceof JackOMimic mimic)) {
+        return; // not a death we care about
+      }
+
+      DamageSource source = event.getSource();
+      if (!source.is(DamageTypes.MACE_SMASH) || !(mimic.level() instanceof ServerLevel level)) {
+        return;
+      }
+
+      ItemStack weapon = source.getWeaponItem();
+      if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
+        mimic.spawnSoulBurst(level);
+      }
+    });
 
     if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
       new SpookinessClient(EVENT_BUS);
