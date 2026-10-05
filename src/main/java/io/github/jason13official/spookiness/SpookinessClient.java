@@ -6,6 +6,7 @@ import io.github.jason13official.spookiness.client.renderer.FloatingBookRenderer
 import io.github.jason13official.spookiness.client.renderer.FloatingCandlesRenderer;
 import io.github.jason13official.spookiness.client.renderer.FloatingSwordRenderer;
 import io.github.jason13official.spookiness.client.renderer.JackOMimicRenderer;
+import io.github.jason13official.spookiness.client.renderer.LamentConfigurationSpecialRenderer;
 import io.github.jason13official.spookiness.client.renderer.SpectralJackOMimicRenderer;
 import io.github.jason13official.spookiness.client.renderer.BooklessEnchantTableRenderer;
 import io.github.jason13official.spookiness.client.renderer.layer.HeadItemLayer;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterSpecialModelRendererEvent;
 
 public class SpookinessClient {
 
@@ -43,6 +45,12 @@ public class SpookinessClient {
       event.registerBlockEntityRenderer(BlockEntityType.ENCHANTING_TABLE, BooklessEnchantTableRenderer::new);
     });
 
+    // RegisterSpecialModelRendererEvent
+    modEventBus.addListener((RegisterSpecialModelRendererEvent event) -> {
+
+      event.register(Spookiness.id("lament"), LamentConfigurationSpecialRenderer.Unbaked.MAP_CODEC);
+    });
+
     // EntityRenderersEvent.AddLayers
     modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {
 
@@ -62,8 +70,13 @@ public class SpookinessClient {
     });
   }
 
-  private static <S extends LivingEntityRenderState, M extends EntityModel<? super S>> void addHeadItemLayer(LivingEntityRenderer<?, S, M> renderer, float headCenterZ) {
+//  private static <S extends LivingEntityRenderState, M extends EntityModel<? super S>> void addHeadItemLayer(LivingEntityRenderer<?, S, M> renderer, float headCenterZ) {
+//
+//    renderer.addLayer(new HeadItemLayer<>(renderer, headCenterZ));
+//  }
 
-    renderer.addLayer(new HeadItemLayer<>(renderer, headCenterZ));
+  private static void addHeadItemLayer(LivingEntityRenderer<?, ?, ?> renderer, float headCenterZ) {
+
+    renderer.addLayer(new HeadItemLayer(renderer, headCenterZ));
   }
 }
