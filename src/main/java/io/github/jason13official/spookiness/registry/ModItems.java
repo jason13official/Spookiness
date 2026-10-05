@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness.registry;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.item.AlliedSpawnEggItem;
 import io.github.jason13official.spookiness.item.LamentConfigurationItem;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import java.util.ArrayList;
@@ -35,6 +36,18 @@ public class ModItems {
 
   public static Item PIECE_OF_LAMENT_TWO;
 
+  public static Item JACK_O_MIMIC_SPAWN_EGG;
+
+  public static Item FLOATING_CANDLES_SPAWN_EGG;
+
+  public static Item FLOATING_BOOK_SPAWN_EGG;
+
+  public static Item FLOATING_SWORD_SPAWN_EGG;
+
+  public static Item SPECTRAL_JACK_O_MIMIC_SPAWN_EGG;
+
+  public static List<Item> SPAWN_EGGS = new ArrayList<>();
+
   public static List<Item> CREATIVE_TAB_ITEMS = new LinkedList<>();
 
   public static void register(BiConsumer<Item, Identifier> consumer) {
@@ -52,6 +65,13 @@ public class ModItems {
     PIECE_OF_LAMENT_ONE = registerItem("piece_of_lament_one", new Item.Properties().stacksTo(1), consumer);
 
     PIECE_OF_LAMENT_TWO = registerItem("piece_of_lament_two", new Item.Properties().stacksTo(1), consumer);
+
+    SPAWN_EGGS.clear();
+    JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.JACK_O_MIMIC, consumer);
+    FLOATING_CANDLES_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_CANDLES, consumer);
+    FLOATING_BOOK_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_BOOK, consumer);
+    FLOATING_SWORD_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SWORD, consumer);
+    SPECTRAL_JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.SPECTRAL_JACK_O_MIMIC, consumer);
   }
 
   // region vanilla registration methods
@@ -68,7 +88,9 @@ public class ModItems {
 
   private static Item registerSpawnEgg(EntityType<?> type, BiConsumer<Item, Identifier> consumer) {
 
-    return registerItem(ResourceKey.create(Registries.ITEM, EntityType.getKey(type).withSuffix("_spawn_egg")), SpawnEggItem::new, (new Item.Properties()).spawnEgg(type), consumer);
+    Item egg = registerItem(ResourceKey.create(Registries.ITEM, EntityType.getKey(type).withSuffix("_spawn_egg")), AlliedSpawnEggItem::new, (new Item.Properties()).spawnEgg(type), consumer);
+    SPAWN_EGGS.add(egg);
+    return egg;
   }
 
   private static Item registerBlock(Block block, BiConsumer<Item, Identifier> consumer) {

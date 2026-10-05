@@ -10,9 +10,11 @@ import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.ModelProvider;
 import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
+import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TextureSlot;
 import net.minecraft.client.resources.model.UnbakedModel;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
@@ -44,12 +46,25 @@ public class SpookinessModelProvider extends ModelProvider {
   @Override
   protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
 
+    Identifier spawnEgg = ModelTemplates.TWO_LAYERED_ITEM.create(Spookiness.id("item/spawn_egg"),
+        TextureMapping.layered(new Material(Spookiness.id("item/spawn_egg")), new Material(Spookiness.id("item/spawn_egg_overlay"))), itemModels.modelOutput);
+    spawnEgg(itemModels, ModItems.JACK_O_MIMIC_SPAWN_EGG, spawnEgg, 0xE38A1D, 0x3B2508);
+    spawnEgg(itemModels, ModItems.FLOATING_CANDLES_SPAWN_EGG, spawnEgg, 0xEFE3C2, 0xF5A623);
+    spawnEgg(itemModels, ModItems.FLOATING_BOOK_SPAWN_EGG, spawnEgg, 0x6E4325, 0xE5D9AE);
+    spawnEgg(itemModels, ModItems.FLOATING_SWORD_SPAWN_EGG, spawnEgg, 0xB8BEC8, 0x5E3FAE);
+    spawnEgg(itemModels, ModItems.SPECTRAL_JACK_O_MIMIC_SPAWN_EGG, spawnEgg, 0x5FE3E0, 0x1A4E7A);
+
     itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.PUMPKIN_MACE)));
 
     Identifier lamentBase = LAMENT_BASE.create(ModItems.LAMENT_CONFIGURATION, TextureMapping.particle(Blocks.GOLD_BLOCK), itemModels.modelOutput);
     lament(itemModels, ModItems.LAMENT_CONFIGURATION, lamentBase, LamentConfigurationModel.Part.ALL);
     lament(itemModels, ModItems.PIECE_OF_LAMENT_ONE, lamentBase, LamentConfigurationModel.Part.ONE);
     lament(itemModels, ModItems.PIECE_OF_LAMENT_TWO, lamentBase, LamentConfigurationModel.Part.TWO);
+  }
+
+  private static void spawnEgg(ItemModelGenerators itemModels, Item egg, Identifier model, int baseColor, int spotColor) {
+
+    itemModels.itemModelOutput.accept(egg, ItemModelUtils.tintedModel(model, ItemModelUtils.constantTint(baseColor), ItemModelUtils.constantTint(spotColor)));
   }
 
   private static void lament(ItemModelGenerators itemModels, Item item, Identifier base, LamentConfigurationModel.Part part) {

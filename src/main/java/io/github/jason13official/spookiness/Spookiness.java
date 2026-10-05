@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.effect.LamentRitual;
@@ -42,6 +43,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
@@ -166,6 +168,14 @@ public class Spookiness {
         SpookySpawns.tickCandleAwakening(player);
         SpookySpawns.tickBookshelfAwakening(player);
         LamentRitual.tick(player);
+      }
+    });
+
+    // EntityJoinLevelEvent
+    NeoForge.EVENT_BUS.addListener((EntityJoinLevelEvent event) -> {
+
+      if (!event.getLevel().isClientSide() && !event.loadedFromDisk()) {
+        Allies.onEntityJoin(event.getEntity());
       }
     });
 

@@ -20,6 +20,12 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModItems.PIECE_OF_LAMENT_ONE, "Piece of Lament, One");
     this.add(ModItems.PIECE_OF_LAMENT_TWO, "Piece of Lament, Two");
 
+    this.add(ModItems.JACK_O_MIMIC_SPAWN_EGG, "Jack o'Mimic Spawn Egg");
+    this.add(ModItems.FLOATING_CANDLES_SPAWN_EGG, "Floating Candles Spawn Egg");
+    this.add(ModItems.FLOATING_BOOK_SPAWN_EGG, "Floating Book Spawn Egg");
+    this.add(ModItems.FLOATING_SWORD_SPAWN_EGG, "Floating Sword Spawn Egg");
+    this.add(ModItems.SPECTRAL_JACK_O_MIMIC_SPAWN_EGG, "Spectral Jack o'Mimic Spawn Egg");
+
     this.add(ModEntities.JACK_O_MIMIC, "Jack o'Lantern");
     this.add(ModEntities.FLOATING_CANDLES, "Floating Candles");
     this.add(ModEntities.FLOATING_BOOK, "Floating Book");
