@@ -1,6 +1,9 @@
 package io.github.jason13official.spookiness;
 
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
+import io.github.jason13official.spookiness.entity.FloatingBook;
+import io.github.jason13official.spookiness.entity.FloatingCandles;
+import io.github.jason13official.spookiness.entity.FloatingSword;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -62,6 +65,9 @@ public class Spookiness {
     EVENT_BUS.addListener((EntityAttributeCreationEvent event) -> {
 
       event.put(ModEntities.JACK_O_MIMIC, JackOMimic.createAttributes().build());
+      event.put(ModEntities.FLOATING_CANDLES, FloatingCandles.createAttributes().build());
+      event.put(ModEntities.FLOATING_BOOK, FloatingBook.createAttributes().build());
+      event.put(ModEntities.FLOATING_SWORD, FloatingSword.createAttributes().build());
     });
 
     // RegisterSpawnPlacementsEvent

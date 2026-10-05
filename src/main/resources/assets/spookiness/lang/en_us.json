@@ -1,4 +1,7 @@
 {
   "item.spookiness.pumpkin_mace": "Pumpkin Mace",
-  "entity.spookiness.jack_o_mimic": "Jack o'Lantern"
+  "entity.spookiness.jack_o_mimic": "Jack o'Lantern",
+  "entity.spookiness.floating_candles": "Floating Candles",
+  "entity.spookiness.floating_book": "Floating Book",
+  "entity.spookiness.floating_sword": "Floating Sword"
 }
