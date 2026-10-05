@@ -48,6 +48,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add("message.spookiness.hallow_too_weak", "You are too weak to give any more of yourself");
     this.add("message.spookiness.hallow_too_many", "Your lantern cannot guide any more souls");
     this.add("message.spookiness.mother_warning", "Your lanterns grow restless...");
+    this.add("message.spookiness.mother_digesting", "You are being digested! Strike her with the mace to break free");
     this.add("message.spookiness.mother_seizes", "The Hallowed Mother seizes %s! Strike her with the mace to cut the vine");
     this.add("message.spookiness.mother_sinks_dawn", "The Hallowed Mother retreats from the daylight");
     this.add("message.spookiness.mother_sinks_lost", "The Hallowed Mother has reclaimed her children");

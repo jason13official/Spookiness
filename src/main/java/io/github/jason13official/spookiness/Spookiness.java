@@ -170,6 +170,12 @@ public class Spookiness {
     // LivingFallEvent
     NeoForge.EVENT_BUS.addListener(MotherBrood::onFall);
 
+    // LivingChangeTargetEvent
+    NeoForge.EVENT_BUS.addListener(MotherBrood::onChangeTarget);
+
+    // MobEffectEvent.Applicable
+    NeoForge.EVENT_BUS.addListener(MotherBrood::onEffectApplicable);
+
     // PlayerInteractEvent.EntityInteract
     NeoForge.EVENT_BUS.addListener(MaceRituals::onEntityInteract);
 
@@ -250,8 +256,8 @@ public class Spookiness {
         Hallowing.applyGoals(mob);
         PlayerFollowers.track(mob);
       }
-      if (event.getEntity() instanceof JackOMimic mimic) {
-        MotherBrood.applyGoals(mimic);
+      if (event.getEntity() instanceof Mob mob && MotherBrood.isBrood(mob)) {
+        MotherBrood.applyGoals(mob);
       }
     });
 
