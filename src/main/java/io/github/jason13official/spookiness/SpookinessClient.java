@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness;
 
 import io.github.jason13official.spookiness.client.model.FloatingBookModel;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
+import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
 import io.github.jason13official.spookiness.client.renderer.FloatingBookRenderer;
 import io.github.jason13official.spookiness.client.renderer.FloatingCandlesRenderer;
 import io.github.jason13official.spookiness.client.renderer.FloatingSwordRenderer;
@@ -31,6 +32,7 @@ public class SpookinessClient {
 
       event.registerLayerDefinition(JackOMimicModel.LAYER_LOCATION, JackOMimicModel::createBodyLayer);
       event.registerLayerDefinition(FloatingBookModel.LAYER_LOCATION, FloatingBookModel::createBodyLayer);
+      event.registerLayerDefinition(LamentConfigurationModel.LAYER_LOCATION, LamentConfigurationModel::createBodyLayer);
     });
 
     // EntityRenderersEvent.RegisterRenderers
