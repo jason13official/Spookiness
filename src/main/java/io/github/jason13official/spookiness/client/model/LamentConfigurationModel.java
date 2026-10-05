@@ -1,6 +1,9 @@
 package io.github.jason13official.spookiness.client.model;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.client.anim.LamentConfigurationAnimations;
+import io.github.jason13official.spookiness.client.renderer.state.LamentConfigurationRenderState;
+import net.minecraft.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -10,12 +13,10 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Unit;
 
-public class LamentConfigurationModel extends Model<Unit> {
+public class LamentConfigurationModel extends Model<LamentConfigurationRenderState> {
 
   public static final Identifier TEXTURE = Spookiness.id("textures/entity/lament/lament.png");
 
@@ -29,6 +30,8 @@ public class LamentConfigurationModel extends Model<Unit> {
   private final ModelPart halfOne;
   private final ModelPart halfTwo;
 
+  private final KeyframeAnimation spinAnimation;
+
   public LamentConfigurationModel(ModelPart root) {
     super(root, RenderTypes::entityCutout);
     this.box = root.getChild("box");
@@ -38,6 +41,8 @@ public class LamentConfigurationModel extends Model<Unit> {
     this.two = this.box.getChild("two");
     this.halfOne = this.two.getChild("halfOne");
     this.halfTwo = this.two.getChild("halfTwo");
+
+    this.spinAnimation = LamentConfigurationAnimations.SPIN_LOOP.bake(root);
   }
 
   public static LayerDefinition createBodyLayer() {
@@ -71,7 +76,8 @@ public class LamentConfigurationModel extends Model<Unit> {
   }
 
   @Override
-  public void setupAnim(Unit state) {
+  public void setupAnim(LamentConfigurationRenderState state) {
     super.setupAnim(state);
+    this.spinAnimation.apply(state.spinAnimationState, state.ageInTicks);
   }
 }

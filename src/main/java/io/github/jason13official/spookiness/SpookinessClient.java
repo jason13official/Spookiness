@@ -7,6 +7,7 @@ import io.github.jason13official.spookiness.client.renderer.FloatingBookRenderer
 import io.github.jason13official.spookiness.client.renderer.FloatingCandlesRenderer;
 import io.github.jason13official.spookiness.client.renderer.FloatingSwordRenderer;
 import io.github.jason13official.spookiness.client.renderer.JackOMimicRenderer;
+import io.github.jason13official.spookiness.client.renderer.LamentConfigurationOverlay;
 import io.github.jason13official.spookiness.client.renderer.LamentConfigurationSpecialRenderer;
 import io.github.jason13official.spookiness.client.renderer.SpectralJackOMimicRenderer;
 import io.github.jason13official.spookiness.client.renderer.BooklessEnchantTableRenderer;
@@ -20,6 +21,9 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterSpecialModelRendererEvent;
 
@@ -52,6 +56,12 @@ public class SpookinessClient {
 
       event.register(Spookiness.id("lament"), LamentConfigurationSpecialRenderer.Unbaked.MAP_CODEC);
     });
+
+    // ClientTickEvent.Post
+    NeoForge.EVENT_BUS.addListener((ClientTickEvent.Post event) -> LamentConfigurationOverlay.tick());
+
+    // RenderHandEvent
+    NeoForge.EVENT_BUS.addListener(LamentConfigurationOverlay::render);
 
     // EntityRenderersEvent.AddLayers
     modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {

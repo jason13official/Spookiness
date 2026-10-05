@@ -13,6 +13,7 @@ public class ModAttachments {
 
   public static AttachmentType<List<CompoundTag>> STASHED_COMPANIONS;
   public static AttachmentType<Boolean> BOOK_AWAKENED;
+  public static AttachmentType<Integer> LAMENT_RITUAL;
 
   public static void register(BiConsumer<AttachmentType<?>, Identifier> consumer) {
 
@@ -26,5 +27,10 @@ public class ModAttachments {
         .sync(ByteBufCodecs.BOOL)
         .build();
     consumer.accept(BOOK_AWAKENED, Spookiness.id("book_awakened"));
+
+    LAMENT_RITUAL = AttachmentType.builder(() -> 0)
+        .sync(ByteBufCodecs.VAR_INT)
+        .build();
+    consumer.accept(LAMENT_RITUAL, Spookiness.id("lament_ritual"));
   }
 }

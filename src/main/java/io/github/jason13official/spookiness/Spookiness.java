@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness;
 
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
+import io.github.jason13official.spookiness.effect.LamentRitual;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.FloatingSword;
@@ -154,6 +155,7 @@ public class Spookiness {
       if (event.getEntity() instanceof ServerPlayer player) {
         SpookySpawns.tickCandleAwakening(player);
         SpookySpawns.tickBookshelfAwakening(player);
+        LamentRitual.tick(player);
       }
     });
 
