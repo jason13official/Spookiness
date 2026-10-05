@@ -6,6 +6,7 @@ import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.UUID;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -107,6 +108,11 @@ public class Wickman extends Monster {
     wickman.setTarget(kindler);
     level.addFreshEntity(wickman);
     return wickman;
+  }
+
+  @Override
+  protected Component getTypeName() {
+    return this.getVariant() == Variant.FROST ? Component.translatable("entity.spookiness.frostwick") : super.getTypeName();
   }
 
   public Variant getVariant() {

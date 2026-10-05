@@ -1,40 +1,76 @@
 package io.github.jason13official.spookiness.client.renderer.boss;
 
-import io.github.jason13official.spookiness.client.renderer.BlockPartsRenderer;
-import io.github.jason13official.spookiness.client.renderer.state.BlockPartsRenderState;
+import com.mojang.blaze3d.vertex.PoseStack;
+import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.client.model.HallowedMotherModel;
+import io.github.jason13official.spookiness.client.model.JackOMimicModel;
+import io.github.jason13official.spookiness.client.renderer.state.HallowedMotherRenderState;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
+import java.util.ArrayList;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.Blocks;
 
-public class HallowedMotherRenderer extends BlockPartsRenderer<HallowedMother> {
+public class HallowedMotherRenderer extends MobRenderer<HallowedMother, HallowedMotherRenderState, HallowedMotherModel> {
 
-  private static final float SCALE = 4.0F;
-  private static final float SINK = -1.0F;
+  private static final Identifier TEXTURE = Spookiness.id("textures/entity/jack_o_mimic/jack_o_mimic.png");
+  private static final float SCALE = HallowedMother.SCALE;
+  private static final int FULL_LIGHT = 15;
 
   public HallowedMotherRenderer(Context context) {
-    super(context, 2.5F);
+    super(context, new HallowedMotherModel(context.bakeLayer(JackOMimicModel.LAYER_LOCATION)), 2.5F);
   }
 
   @Override
-  protected void collectParts(HallowedMother entity, BlockPartsRenderState state, float partialTicks) {
+  public HallowedMotherRenderState createRenderState() {
+    return new HallowedMotherRenderState();
+  }
 
-    float yRot = Mth.rotLerp(partialTicks, entity.yBodyRotO, entity.yBodyRot);
-    float breathe = 1.0F + Mth.sin((entity.tickCount + partialTicks) * 0.05F) * 0.03F;
-    this.part(state, (entity.isEnraged() ? Blocks.JACK_O_LANTERN : Blocks.CARVED_PUMPKIN).defaultBlockState(), 0.0, SINK, 0.0, SCALE * breathe, yRot + 180.0F,
-        0.0F);
+  @Override
+  public Identifier getTextureLocation(HallowedMotherRenderState state) {
+    return TEXTURE;
+  }
+
+  @Override
+  protected boolean shouldShowName(HallowedMother entity, double distanceToCameraSq) {
+    return false;
+  }
+
+  @Override
+  protected void scale(HallowedMotherRenderState state, PoseStack poseStack) {
+    poseStack.scale(SCALE, SCALE, SCALE);
+  }
+
+  @Override
+  public void extractRenderState(HallowedMother entity, HallowedMotherRenderState state, float partialTicks) {
+    super.extractRenderState(entity, state, partialTicks);
+    state.spitAnimationState.copyFrom(entity.spitAnimationState);
+    state.breathe = 1.0F + Mth.sin((entity.tickCount + partialTicks) * 0.06F) * 0.025F;
 
     Entity tethered = entity.getTethered();
-    if (tethered != null) {
-      double dx = Mth.lerp(partialTicks, tethered.xo, tethered.getX()) - Mth.lerp(partialTicks, entity.xo, entity.getX());
-      double dy = Mth.lerp(partialTicks, tethered.yo, tethered.getY()) - Mth.lerp(partialTicks, entity.yo, entity.getY());
-      double dz = Mth.lerp(partialTicks, tethered.zo, tethered.getZ()) - Mth.lerp(partialTicks, entity.zo, entity.getZ());
-      int links = Math.max(2, (int) Math.sqrt(dx * dx + dy * dy + dz * dz));
-      for (int i = 1; i < links; i++) {
-        double t = (double) i / links;
-        this.part(state, Blocks.MOSS_BLOCK.defaultBlockState(), dx * t, 1.5 + (dy - 1.5) * t, dz * t, 0.3F, 0.0F, 0.0F);
-      }
+    if (tethered == null) {
+      return;
     }
+    if (state.leashStates == null || state.leashStates.size() != 1) {
+      state.leashStates = new ArrayList<>(1);
+      state.leashStates.add(new EntityRenderState.LeashState());
+    }
+    EntityRenderState.LeashState leash = state.leashStates.getFirst();
+    leash.offset = entity.mouthOffset(entity.getPreciseBodyRotation(partialTicks));
+    leash.start = entity.getPosition(partialTicks).add(leash.offset);
+    leash.end = tethered.getPosition(partialTicks).add(0.0, tethered.getBbHeight() * 0.6, 0.0);
+    leash.startBlockLight = FULL_LIGHT;
+    leash.endBlockLight = FULL_LIGHT;
+    leash.startSkyLight = FULL_LIGHT;
+    leash.endSkyLight = FULL_LIGHT;
+    leash.slack = false;
+  }
+
+  @Override
+  protected boolean affectedByCulling(HallowedMother entity) {
+    return entity.getTethered() == null && super.affectedByCulling(entity);
   }
 }

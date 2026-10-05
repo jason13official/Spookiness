@@ -35,6 +35,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModEntities.FLOATING_SWORD, "Floating Sword");
     this.add(ModEntities.SPECTRAL_JACK_O_MIMIC, "Spectral Jack o'Mimic");
     this.add(ModEntities.WICKMAN, "The Wickman");
+    this.add("entity.spookiness.frostwick", "The Frostwick");
     this.add(ModEntities.VIGIL_CANDLE, "Vigil Candle");
     this.add(ModEntities.HALLOWED_MOTHER, "Hallowed Mother");
     this.add(ModEntities.GOURDWYRM, "Gourdwyrm");
@@ -46,6 +47,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add("message.spookiness.hallow_too_weak", "You are too weak to give any more of yourself");
     this.add("message.spookiness.hallow_too_many", "Your lantern cannot guide any more souls");
     this.add("message.spookiness.mother_warning", "Your lanterns grow restless...");
+    this.add("message.spookiness.mother_seizes", "The Hallowed Mother seizes %s! Strike her with the mace to cut the vine");
     this.add("message.spookiness.mother_sinks_dawn", "The Hallowed Mother retreats from the daylight");
     this.add("message.spookiness.mother_sinks_lost", "The Hallowed Mother has reclaimed her children");
     this.add("message.spookiness.netherrealm_altar", "Bring the Lament to the altar at the heart of the Netherrealm");

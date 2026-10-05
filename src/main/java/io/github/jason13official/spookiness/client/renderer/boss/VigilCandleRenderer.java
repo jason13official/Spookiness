@@ -10,8 +10,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class VigilCandleRenderer extends BlockPartsRenderer<VigilCandle> {
 
-  private static final float GREAT_SCALE = 2.5F;
-
   public VigilCandleRenderer(Context context) {
     super(context, 0.2F);
   }
@@ -20,9 +18,9 @@ public class VigilCandleRenderer extends BlockPartsRenderer<VigilCandle> {
   protected void collectParts(VigilCandle entity, BlockPartsRenderState state, float partialTicks) {
 
     BlockState candle = (entity.isFrost() ? Blocks.LIGHT_BLUE_CANDLE : Blocks.ORANGE_CANDLE).defaultBlockState()
-        .setValue(CandleBlock.CANDLES, entity.isGreat() ? 4 : 1).setValue(CandleBlock.LIT, true);
-    float scale = entity.isGreat() ? GREAT_SCALE : 1.0F;
-    this.part(state, Blocks.HONEYCOMB_BLOCK.defaultBlockState(), 0.0, 0.0, 0.0, scale * 0.4F, 0.0F, 0.0F);
-    this.part(state, candle, 0.0, scale * 0.4F, 0.0, scale, 0.0F, 0.0F);
+        .setValue(CandleBlock.CANDLES, entity.getCandles()).setValue(CandleBlock.LIT, true);
+    float scale = entity.getRenderScale();
+    this.part(state, Blocks.HONEYCOMB_BLOCK.defaultBlockState(), 0.0, 0.0, 0.0, scale * VigilCandle.BASE_HEIGHT, 0.0F, 0.0F);
+    this.part(state, candle, 0.0, scale * VigilCandle.BASE_HEIGHT, 0.0, scale, 0.0F, 0.0F);
   }
 }

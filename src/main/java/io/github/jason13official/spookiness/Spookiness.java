@@ -17,6 +17,7 @@ import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
+import io.github.jason13official.spookiness.lighting.LanternHeads;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
@@ -164,6 +165,7 @@ public class Spookiness {
     // EntityTickEvent.Post
     NeoForge.EVENT_BUS.addListener((EntityTickEvent.Post event) -> {
 
+      LanternHeads.tick(event.getEntity());
       if (event.getEntity().level().isClientSide()) {
         Hallowing.clientTick(event.getEntity());
       }
@@ -172,13 +174,19 @@ public class Spookiness {
     // EntityLeaveLevelEvent
     NeoForge.EVENT_BUS.addListener((EntityLeaveLevelEvent event) -> {
 
+      LanternHeads.leave(event.getEntity());
+
       if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
         PlayerFollowers.untrack(mob);
       }
     });
 
     // LevelEvent.Unload
-    NeoForge.EVENT_BUS.addListener((LevelEvent.Unload event) -> LivingLights.unload(event.getLevel()));
+    NeoForge.EVENT_BUS.addListener((LevelEvent.Unload event) -> {
+
+      LivingLights.unload(event.getLevel());
+      LanternHeads.unload(event.getLevel());
+    });
 
     // LivingDeathEvent
     NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> {

@@ -53,7 +53,7 @@ public class ModEntities {
         .build(key("vigil_candle"));
     consumer.accept(VIGIL_CANDLE, Spookiness.id("vigil_candle"));
 
-    HALLOWED_MOTHER = EntityType.Builder.of(HallowedMother::new, MobCategory.MONSTER).sized(4.0f, 3.0f).clientTrackingRange(10).build(key("hallowed_mother"));
+    HALLOWED_MOTHER = EntityType.Builder.of(HallowedMother::new, MobCategory.MONSTER).sized(4.0f, 4.0f).clientTrackingRange(10).build(key("hallowed_mother"));
     consumer.accept(HALLOWED_MOTHER, Spookiness.id("hallowed_mother"));
 
     GOURDWYRM = EntityType.Builder.of(Gourdwyrm::new, MobCategory.MONSTER).fireImmune().sized(3.0f, 3.0f).clientTrackingRange(16).build(key("gourdwyrm"));

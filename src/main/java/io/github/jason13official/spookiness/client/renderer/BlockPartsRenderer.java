@@ -42,6 +42,10 @@ public abstract class BlockPartsRenderer<T extends Entity> extends EntityRendere
   protected abstract void collectParts(T entity, BlockPartsRenderState state, float partialTicks);
 
   protected void part(BlockPartsRenderState state, BlockState block, double x, double y, double z, float scale, float yRot, float xRot) {
+    this.part(state, block, x, y, z, scale, yRot, xRot, 0.0F);
+  }
+
+  protected void part(BlockPartsRenderState state, BlockState block, double x, double y, double z, float scale, float yRot, float xRot, float zRot) {
 
     BlockPartsRenderState.Part part = state.next();
     this.blockModelResolver.update(part.model, block, BLOCK_DISPLAY_CONTEXT);
@@ -51,6 +55,7 @@ public abstract class BlockPartsRenderer<T extends Entity> extends EntityRendere
     part.scale = scale;
     part.yRot = yRot;
     part.xRot = xRot;
+    part.zRot = zRot;
   }
 
   @Override
@@ -62,6 +67,7 @@ public abstract class BlockPartsRenderer<T extends Entity> extends EntityRendere
       poseStack.pushPose();
       poseStack.translate(part.x, part.y, part.z);
       poseStack.mulPose(Axis.YP.rotationDegrees(-part.yRot));
+      poseStack.mulPose(Axis.ZP.rotationDegrees(part.zRot));
       poseStack.mulPose(Axis.XP.rotationDegrees(part.xRot));
       poseStack.scale(part.scale, part.scale, part.scale);
       poseStack.translate(-0.5F, 0.0F, -0.5F);
