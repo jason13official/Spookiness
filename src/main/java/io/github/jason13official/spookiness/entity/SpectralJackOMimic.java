@@ -1,9 +1,14 @@
 package io.github.jason13official.spookiness.entity;
 
-import io.github.jason13official.spookiness.companion.SpectralCompanions;
+import io.github.jason13official.spookiness.companion.PlayerFollower;
+import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -37,7 +42,10 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class SpectralJackOMimic extends FloatingPathfinderMob implements OwnableEntity {
+public class SpectralJackOMimic extends FloatingPathfinderMob implements OwnableEntity, PlayerFollower {
+
+  private static final EntityDataAccessor<Optional<EntityReference<LivingEntity>>> DATA_OWNER = SynchedEntityData.defineId(SpectralJackOMimic.class,
+      EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE);
 
   private static final int LIGHT_EMISSION = 10;
   private static final byte ATTACK_EVENT = 4;
@@ -46,8 +54,6 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
   private static final double TELEPORT_DISTANCE = 20.0;
 
   public final AnimationState yapAnimationState = new AnimationState();
-
-  private @Nullable EntityReference<LivingEntity> owner;
 
   public SpectralJackOMimic(EntityType<? extends SpectralJackOMimic> type, Level level) {
     super(type, level);
@@ -79,17 +85,49 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
   }
 
   @Override
-  public @Nullable EntityReference<LivingEntity> getOwnerReference() {
-    return this.owner;
+  protected void defineSynchedData(SynchedEntityData.Builder entityData) {
+    super.defineSynchedData(entityData);
+    entityData.define(DATA_OWNER, Optional.empty());
   }
 
+  @Override
+  public @Nullable EntityReference<LivingEntity> getOwnerReference() {
+    return this.entityData.get(DATA_OWNER).orElse(null);
+  }
+
+  @Override
   public @Nullable UUID getOwnerUUID() {
-    return this.owner == null ? null : this.owner.getUUID();
+    EntityReference<LivingEntity> owner = this.getOwnerReference();
+    return owner == null ? null : owner.getUUID();
+  }
+
+  private void setOwnerReference(@Nullable EntityReference<LivingEntity> owner) {
+    this.entityData.set(DATA_OWNER, Optional.ofNullable(owner));
+    PlayerFollowers.track(this);
   }
 
   public void setOwner(LivingEntity owner) {
-    this.owner = EntityReference.of(owner);
+    this.setOwnerReference(EntityReference.of(owner));
     this.setPersistenceRequired();
+  }
+
+  private boolean isOwner(Entity entity) {
+    EntityReference<LivingEntity> owner = this.getOwnerReference();
+    return owner != null && owner.getUUID().equals(entity.getUUID());
+  }
+
+  @Override
+  public void push(Entity entity) {
+    if (!this.isOwner(entity)) {
+      super.push(entity);
+    }
+  }
+
+  @Override
+  protected void doPush(Entity entity) {
+    if (!this.isOwner(entity)) {
+      super.doPush(entity);
+    }
   }
 
   public boolean wantsToAttack(LivingEntity target) {
@@ -101,11 +139,12 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
 
   @Override
   protected boolean considersEntityAsAlly(Entity other) {
-    if (this.owner != null) {
-      if (other instanceof LivingEntity living && this.owner.matches(living)) {
+    UUID ownerId = this.getOwnerUUID();
+    if (ownerId != null) {
+      if (ownerId.equals(other.getUUID())) {
         return true;
       }
-      if (other instanceof SpectralJackOMimic companion && this.owner.equals(companion.owner)) {
+      if (other instanceof SpectralJackOMimic companion && ownerId.equals(companion.getOwnerUUID())) {
         return true;
       }
     }
@@ -115,13 +154,13 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
   @Override
   protected void addAdditionalSaveData(ValueOutput output) {
     super.addAdditionalSaveData(output);
-    EntityReference.store(this.owner, output, "owner");
+    EntityReference.store(this.getOwnerReference(), output, "owner");
   }
 
   @Override
   protected void readAdditionalSaveData(ValueInput input) {
     super.readAdditionalSaveData(input);
-    this.owner = EntityReference.read(input, "owner");
+    this.setOwnerReference(EntityReference.read(input, "owner"));
   }
 
   @Override
@@ -163,16 +202,14 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
   public void onAddedToLevel() {
     super.onAddedToLevel();
     LivingLights.add(this, LIGHT_EMISSION);
-    if (!this.level().isClientSide()) {
-      SpectralCompanions.track(this);
-    }
+    PlayerFollowers.track(this);
   }
 
   @Override
   public void onRemovedFromLevel() {
     super.onRemovedFromLevel();
     LivingLights.remove(this);
-    SpectralCompanions.untrack(this);
+    PlayerFollowers.untrack(this);
   }
 
   @Override

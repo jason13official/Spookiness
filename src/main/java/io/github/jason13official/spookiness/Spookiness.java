@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness;
 
-import io.github.jason13official.spookiness.companion.SpectralCompanions;
+import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
@@ -28,6 +28,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -96,6 +97,10 @@ public class Spookiness {
       if (event.getEntity() instanceof AbstractSkeleton skeleton) {
         skeleton.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.JACK_O_LANTERN));
       }
+
+      if (event.getEntity() instanceof Spider spider) {
+        spider.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.CARVED_PUMPKIN));
+      }
     });
 
     // LivingChangeTargetEvent
@@ -139,13 +144,13 @@ public class Spookiness {
     });
 
     // ServerTickEvent.Post
-    NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> SpectralCompanions.tick(event.getServer()));
+    NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> PlayerFollowers.tick(event.getServer()));
 
     // PlayerEvent.PlayerLoggedOutEvent
     NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> {
 
       if (event.getEntity() instanceof ServerPlayer player) {
-        SpectralCompanions.stash(player);
+        PlayerFollowers.stash(player);
       }
     });
 
@@ -153,7 +158,7 @@ public class Spookiness {
     NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
 
       if (event.getEntity() instanceof ServerPlayer player) {
-        SpectralCompanions.restore(player);
+        PlayerFollowers.restore(player);
       }
     });
 

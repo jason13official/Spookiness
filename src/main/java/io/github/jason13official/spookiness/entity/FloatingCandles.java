@@ -1,11 +1,14 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.companion.PlayerFollower;
+import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
 import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -44,7 +47,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class FloatingCandles extends FloatingPathfinderMob {
+public class FloatingCandles extends FloatingPathfinderMob implements PlayerFollower {
 
   private static final EntityDataAccessor<Integer> DATA_CANDLES = SynchedEntityData.defineId(FloatingCandles.class, EntityDataSerializers.INT);
   private static final EntityDataAccessor<Integer> DATA_COLOR = SynchedEntityData.defineId(FloatingCandles.class, EntityDataSerializers.INT);
@@ -159,6 +162,11 @@ public class FloatingCandles extends FloatingPathfinderMob {
     this.entityData.set(DATA_FOLLOWING, following);
   }
 
+  @Override
+  public @Nullable UUID getOwnerUUID() {
+    return this.owner == null ? null : this.owner.getUUID();
+  }
+
   public boolean isOwnedBy(Player player) {
     return this.owner != null && this.owner.matches(player);
   }
@@ -188,6 +196,7 @@ public class FloatingCandles extends FloatingPathfinderMob {
       consumed.add(this);
       for (FloatingCandles candles : consumed) {
         SoulBurst.spawn(level, candles.getBoundingBox().getCenter(), 24, 0.3, 0.06);
+        candles.dropCandles(level);
         candles.discard();
       }
       SpectralCompanions.summon(level, player, COMPANIONS_PER_LINE);
@@ -199,6 +208,7 @@ public class FloatingCandles extends FloatingPathfinderMob {
     this.setFollowing(true);
     this.setPersistenceRequired();
     this.getNavigation().stop();
+    PlayerFollowers.track(this);
     this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 0.8F + line.size() * 0.1F);
   }
 
@@ -246,12 +256,14 @@ public class FloatingCandles extends FloatingPathfinderMob {
   public void onAddedToLevel() {
     super.onAddedToLevel();
     LivingLights.add(this, this.getLightEmission());
+    PlayerFollowers.track(this);
   }
 
   @Override
   public void onRemovedFromLevel() {
     super.onRemovedFromLevel();
     LivingLights.remove(this);
+    PlayerFollowers.untrack(this);
   }
 
   @Override
@@ -285,6 +297,10 @@ public class FloatingCandles extends FloatingPathfinderMob {
   @Override
   protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
     super.dropCustomDeathLoot(level, source, killedByPlayer);
+    this.dropCandles(level);
+  }
+
+  private void dropCandles(ServerLevel level) {
     this.spawnAtLocation(level, new ItemStack(CANDLE_BLOCKS[this.getColor()], this.getCandles()));
   }
 

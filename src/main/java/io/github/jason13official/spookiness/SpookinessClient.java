@@ -7,7 +7,10 @@ import io.github.jason13official.spookiness.client.renderer.FloatingCandlesRende
 import io.github.jason13official.spookiness.client.renderer.FloatingSwordRenderer;
 import io.github.jason13official.spookiness.client.renderer.JackOMimicRenderer;
 import io.github.jason13official.spookiness.client.renderer.SpectralJackOMimicRenderer;
+import io.github.jason13official.spookiness.client.renderer.layer.SpiderHeadLayer;
 import io.github.jason13official.spookiness.registry.ModEntities;
+import net.minecraft.client.renderer.entity.SpiderRenderer;
+import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
@@ -30,6 +33,16 @@ public class SpookinessClient {
       event.registerEntityRenderer(ModEntities.FLOATING_BOOK, FloatingBookRenderer::new);
       event.registerEntityRenderer(ModEntities.FLOATING_SWORD, FloatingSwordRenderer::new);
       event.registerEntityRenderer(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimicRenderer::new);
+    });
+
+    // EntityRenderersEvent.AddLayers
+    modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {
+
+      for (EntityType<?> type : new EntityType<?>[] {EntityType.SPIDER, EntityType.CAVE_SPIDER}) {
+        if (event.getRenderer(type) instanceof SpiderRenderer<?> renderer) {
+          renderer.addLayer(new SpiderHeadLayer(renderer));
+        }
+      }
     });
   }
 }
