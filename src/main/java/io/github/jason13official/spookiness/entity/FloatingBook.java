@@ -1,13 +1,21 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.registry.ModAttachments;
+import java.util.EnumSet;
+import java.util.Locale;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -18,8 +26,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChiseledBookShelfBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
+import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public class FloatingBook extends FloatingPathfinderMob {
 
@@ -27,6 +41,13 @@ public class FloatingBook extends FloatingPathfinderMob {
   private static final float LAPIS_BLOCK_CHANCE = 0.25F;
   private static final int MIN_LAPIS = 4;
   private static final int MAX_LAPIS = 10;
+
+  private static final int HOME_RADIUS = 12;
+  private static final int MIN_STAY_TICKS = 600;
+  private static final int MAX_STAY_TICKS = 1200;
+  private static final int MAX_RETURN_TICKS = 600;
+  private static final double ENTER_DISTANCE = 0.8;
+  private static final int ADOPT_RADIUS = 8;
 
   public float open;
   public float oOpen;
@@ -36,6 +57,11 @@ public class FloatingBook extends FloatingPathfinderMob {
   private float flipA;
 
   private ItemStack heldBook = ItemStack.EMPTY;
+  private Home homeKind = Home.NONE;
+  private @Nullable BlockPos homePos;
+  private int homeSlot = -1;
+  private int ticksOutside;
+  private int stayTicks;
 
   public FloatingBook(EntityType<? extends FloatingBook> type, Level level) {
     super(type, level);
@@ -51,6 +77,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     int goalPriority = 1;
 
     this.goalSelector.addGoal(goalPriority++, new MeleeAttackGoal(this, 1.4, true));
+    this.goalSelector.addGoal(goalPriority++, new ReturnToShelfGoal());
     this.goalSelector.addGoal(goalPriority++, new WaterAvoidingRandomFlyingGoal(this, 1.0));
     this.goalSelector.addGoal(goalPriority++, new LookAtPlayerGoal(this, Player.class, 8.0F));
     this.goalSelector.addGoal(goalPriority++, new RandomLookAroundGoal(this));
@@ -58,12 +85,41 @@ public class FloatingBook extends FloatingPathfinderMob {
     int targetPriority = 1;
 
     this.targetSelector.addGoal(targetPriority++, new HurtByTargetGoal(this).setAlertOthers());
-    this.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(this, Player.class, true));
+    this.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(this, Player.class, true) {
+
+      @Override
+      public boolean canUse() {
+        return !FloatingBook.this.isNeutral() && super.canUse();
+      }
+    });
   }
 
-  public void setHeldBook(ItemStack book) {
-    this.heldBook = book.copy();
+  public boolean isNeutral() {
+    return !this.heldBook.isEmpty();
+  }
+
+  public void setEnchantingTableHome(BlockPos pos) {
+    this.homeKind = Home.ENCHANTING_TABLE;
+    this.homePos = pos.immutable();
     this.setPersistenceRequired();
+  }
+
+  public void setShelfHome(BlockPos pos, int slot, ItemStack book) {
+    this.heldBook = book.copy();
+    this.homeKind = Home.BOOKSHELF;
+    this.homePos = pos.immutable();
+    this.homeSlot = slot;
+    this.ticksOutside = 0;
+    this.stayTicks = Mth.nextInt(this.random, MIN_STAY_TICKS, MAX_STAY_TICKS);
+    this.setHomeTo(this.homePos, HOME_RADIUS);
+    this.setPersistenceRequired();
+  }
+
+  private void loseHome() {
+    this.homeKind = Home.NONE;
+    this.homePos = null;
+    this.homeSlot = -1;
+    this.clearHome();
   }
 
   @Override
@@ -72,12 +128,110 @@ public class FloatingBook extends FloatingPathfinderMob {
     if (!this.heldBook.isEmpty()) {
       output.store("held_book", ItemStack.CODEC, this.heldBook);
     }
+    output.putString("home_kind", this.homeKind.name().toLowerCase(Locale.ROOT));
+    output.storeNullable("home_pos", BlockPos.CODEC, this.homePos);
+    output.putInt("home_slot", this.homeSlot);
+    output.putInt("ticks_outside", this.ticksOutside);
+    output.putInt("stay_ticks", this.stayTicks);
   }
 
   @Override
   protected void readAdditionalSaveData(ValueInput input) {
     super.readAdditionalSaveData(input);
     this.heldBook = input.read("held_book", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+    this.homeKind = Home.byName(input.getStringOr("home_kind", ""));
+    this.homePos = input.read("home_pos", BlockPos.CODEC).orElse(null);
+    this.homeSlot = input.getIntOr("home_slot", -1);
+    this.ticksOutside = input.getIntOr("ticks_outside", 0);
+    this.stayTicks = input.getIntOr("stay_ticks", MIN_STAY_TICKS);
+    if (this.homePos == null) {
+      this.loseHome();
+    } else if (this.homeKind == Home.BOOKSHELF) {
+      this.setHomeTo(this.homePos, HOME_RADIUS);
+    }
+  }
+
+  @Override
+  protected void customServerAiStep(ServerLevel level) {
+    super.customServerAiStep(level);
+    if (this.homeKind == Home.BOOKSHELF && this.getTarget() == null) {
+      this.ticksOutside++;
+    }
+  }
+
+  @Override
+  public void die(DamageSource source) {
+    super.die(source);
+    if (this.homeKind == Home.ENCHANTING_TABLE && this.homePos != null && this.level() instanceof ServerLevel level
+        && level.getBlockEntity(this.homePos) instanceof EnchantingTableBlockEntity table) {
+      table.setData(ModAttachments.BOOK_AWAKENED, false);
+      table.setChanged();
+      level.playSound(null, this.homePos, SoundEvents.BOOK_PUT, SoundSource.BLOCKS, 1.0F, 1.0F);
+    }
+  }
+
+  private static int findShelfSlot(ChiseledBookShelfBlockEntity shelf, int preferred) {
+    if (preferred >= 0 && preferred < shelf.getContainerSize() && shelf.getItem(preferred).isEmpty()) {
+      return preferred;
+    }
+    for (int slot = 0; slot < shelf.getContainerSize(); slot++) {
+      if (shelf.getItem(slot).isEmpty()) {
+        return slot;
+      }
+    }
+    return -1;
+  }
+
+  private static Vec3 shelfFront(ChiseledBookShelfBlockEntity shelf) {
+    Direction facing = shelf.getBlockState().getValue(ChiseledBookShelfBlock.FACING);
+    return Vec3.atCenterOf(shelf.getBlockPos()).add(facing.getStepX() * 0.8, -0.3, facing.getStepZ() * 0.8);
+  }
+
+  private @Nullable ChiseledBookShelfBlockEntity getHomeShelf() {
+    if (this.homePos != null && this.level().getBlockEntity(this.homePos) instanceof ChiseledBookShelfBlockEntity shelf
+        && findShelfSlot(shelf, this.homeSlot) >= 0) {
+      return shelf;
+    }
+    return null;
+  }
+
+  private @Nullable ChiseledBookShelfBlockEntity adoptNearbyShelf() {
+    ChiseledBookShelfBlockEntity closest = null;
+    double closestDistance = Double.MAX_VALUE;
+    int minX = SectionPos.blockToSectionCoord(this.getX() - ADOPT_RADIUS);
+    int maxX = SectionPos.blockToSectionCoord(this.getX() + ADOPT_RADIUS);
+    int minZ = SectionPos.blockToSectionCoord(this.getZ() - ADOPT_RADIUS);
+    int maxZ = SectionPos.blockToSectionCoord(this.getZ() + ADOPT_RADIUS);
+    for (int x = minX; x <= maxX; x++) {
+      for (int z = minZ; z <= maxZ; z++) {
+        for (BlockEntity blockEntity : this.level().getChunk(x, z).getBlockEntities().values()) {
+          if (blockEntity instanceof ChiseledBookShelfBlockEntity shelf && findShelfSlot(shelf, -1) >= 0) {
+            double distance = shelf.getBlockPos().distToCenterSqr(this.position());
+            if (distance <= ADOPT_RADIUS * ADOPT_RADIUS && distance < closestDistance) {
+              closest = shelf;
+              closestDistance = distance;
+            }
+          }
+        }
+      }
+    }
+    if (closest != null) {
+      this.homePos = closest.getBlockPos().immutable();
+      this.homeSlot = -1;
+      this.setHomeTo(this.homePos, HOME_RADIUS);
+    }
+    return closest;
+  }
+
+  private void enterShelf(ChiseledBookShelfBlockEntity shelf) {
+    int slot = findShelfSlot(shelf, this.homeSlot);
+    if (slot < 0) {
+      return;
+    }
+    shelf.setItem(slot, this.heldBook.copy());
+    this.heldBook = ItemStack.EMPTY;
+    this.level().playSound(null, shelf.getBlockPos(), SoundEvents.CHISELED_BOOKSHELF_INSERT, SoundSource.BLOCKS, 1.0F, 1.0F);
+    this.discard();
   }
 
   @Override
@@ -141,5 +295,79 @@ public class FloatingBook extends FloatingPathfinderMob {
   @Override
   protected SoundEvent getDeathSound() {
     return SoundEvents.BOOK_PUT;
+  }
+
+  private enum Home {
+    NONE, ENCHANTING_TABLE, BOOKSHELF;
+
+    static Home byName(String name) {
+      for (Home home : values()) {
+        if (home.name().equalsIgnoreCase(name)) {
+          return home;
+        }
+      }
+      return NONE;
+    }
+  }
+
+  private class ReturnToShelfGoal extends Goal {
+
+    private int returnTicks;
+
+    ReturnToShelfGoal() {
+      this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+    }
+
+    @Override
+    public boolean canUse() {
+      FloatingBook book = FloatingBook.this;
+      return book.homeKind == Home.BOOKSHELF && book.getTarget() == null && book.ticksOutside >= book.stayTicks;
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+      return FloatingBook.this.homeKind == Home.BOOKSHELF && FloatingBook.this.getTarget() == null;
+    }
+
+    @Override
+    public void start() {
+      this.returnTicks = 0;
+    }
+
+    @Override
+    public void stop() {
+      FloatingBook.this.getNavigation().stop();
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+      return true;
+    }
+
+    @Override
+    public void tick() {
+      FloatingBook book = FloatingBook.this;
+      ChiseledBookShelfBlockEntity shelf = book.getHomeShelf();
+      if (shelf == null) {
+        shelf = book.adoptNearbyShelf();
+      }
+      if (shelf == null) {
+        book.loseHome();
+        return;
+      }
+
+      Vec3 front = shelfFront(shelf);
+      if (book.position().distanceTo(front) < ENTER_DISTANCE || ++this.returnTicks > MAX_RETURN_TICKS) {
+        book.enterShelf(shelf);
+        return;
+      }
+
+      if (book.position().distanceTo(front) < 3.0) {
+        book.getNavigation().stop();
+        book.getMoveControl().setWantedPosition(front.x, front.y, front.z, 0.8);
+      } else if (this.returnTicks % 10 == 1) {
+        book.getNavigation().moveTo(front.x, front.y, front.z, 1.0);
+      }
+    }
   }
 }

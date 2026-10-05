@@ -60,8 +60,8 @@ public final class SpookySpawns {
   private static final float CANDLE_AWAKEN_CHANCE = 0.005F;
 
   private static final int BOOKSHELF_CHECK_INTERVAL = 20;
-  private static final double BOOKSHELF_RADIUS = 6.0;
-  private static final float BOOKSHELF_AWAKEN_CHANCE = 0.002F;
+  private static final double BOOKSHELF_RADIUS = 16.0;
+  private static final float BOOKSHELF_AWAKEN_CHANCE = 0.005F;
 
   private static final float CAMPFIRE_SWORD_CHANCE = 0.025F;
 
@@ -91,6 +91,7 @@ public final class SpookySpawns {
 
     Vec3 spawn = Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0);
     book.snapTo(spawn.x, spawn.y, spawn.z, player.getYRot() + 180.0F, 0.0F);
+    book.setEnchantingTableHome(pos);
     book.setTarget(player);
     level.addFreshEntity(book);
 
@@ -188,7 +189,8 @@ public final class SpookySpawns {
       return;
     }
 
-    ItemStack taken = shelf.removeItem(filled.get(random.nextInt(filled.size())), 1);
+    int slot = filled.get(random.nextInt(filled.size()));
+    ItemStack taken = shelf.removeItem(slot, 1);
     if (taken.isEmpty()) {
       return;
     }
@@ -197,7 +199,7 @@ public final class SpookySpawns {
     Direction facing = shelf.getBlockState().getValue(ChiseledBookShelfBlock.FACING);
     Vec3 spawn = Vec3.atCenterOf(pos).add(facing.getStepX() * 0.8, -0.3, facing.getStepZ() * 0.8);
     book.snapTo(spawn.x, spawn.y, spawn.z, facing.toYRot(), 0.0F);
-    book.setHeldBook(taken);
+    book.setShelfHome(pos, slot, taken);
     level.addFreshEntity(book);
 
     SoulBurst.spawn(level, book.getBoundingBox().getCenter(), 16, 0.25, 0.04);
