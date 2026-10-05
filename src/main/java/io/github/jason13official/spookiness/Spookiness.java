@@ -15,6 +15,7 @@ import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
+import io.github.jason13official.spookiness.registry.ModTabs;
 import io.github.jason13official.spookiness.world.SpookySpawns;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -68,11 +69,20 @@ public class Spookiness {
 
     EVENT_BUS = modEventBus;
 
+    // neo registration
     bind(Registries.DATA_COMPONENT_TYPE, ModDataComponents::register);
     bind(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, ModAttachments::register);
+
+    // vanilla registration
+    // sounds, fluids, mob effects, blocks
     bind(Registries.ENTITY_TYPE, ModEntities::register);
     bind(Registries.ITEM, ModItems::register);
+    // potion, particle, block entity type, menu,
+    // recipe type, recipe serializer, attribute
+    // villager type, villager profession,
     bind(Registries.FEATURE, ModFeatures::register);
+    bind(Registries.CREATIVE_MODE_TAB, ModTabs::register);
+    // game rule
 
     // GatherDataEvent.Client
     EVENT_BUS.addListener(SpookinessDatagen::init);
