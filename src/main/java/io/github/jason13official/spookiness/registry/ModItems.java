@@ -31,6 +31,10 @@ public class ModItems {
 
   public static Item LAMENT_CONFIGURATION;
 
+  public static Item PIECE_OF_LAMENT_ONE;
+
+  public static Item PIECE_OF_LAMENT_TWO;
+
   public static List<Item> CREATIVE_TAB_ITEMS = new LinkedList<>();
 
   public static void register(BiConsumer<Item, Identifier> consumer) {
@@ -44,6 +48,10 @@ public class ModItems {
         .component(DataComponents.WEAPON, new Weapon(1)), consumer); // format
 
     LAMENT_CONFIGURATION = registerItem("lament_configuration", LamentConfigurationItem::new, new Item.Properties().stacksTo(1), consumer);
+
+    PIECE_OF_LAMENT_ONE = registerItem("piece_of_lament_one", new Item.Properties().stacksTo(1), consumer);
+
+    PIECE_OF_LAMENT_TWO = registerItem("piece_of_lament_two", new Item.Properties().stacksTo(1), consumer);
   }
 
   // region vanilla registration methods

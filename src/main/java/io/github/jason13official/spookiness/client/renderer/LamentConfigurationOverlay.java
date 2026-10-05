@@ -16,10 +16,10 @@ import org.jspecify.annotations.Nullable;
 
 public final class LamentConfigurationOverlay {
 
-  private static final float INTRO_TICKS = 12.0F;
+  private static final float INTRO_TICKS = 20.0F;
   private static final float START_DEPTH = -10.0F;
-  private static final float HOLD_DEPTH = -1.6F;
-  private static final float SIZE = 1.5F;
+  private static final float HOLD_DEPTH = -1.2F;
+  private static final float SIZE = 2.0F;
   private static final float INTRO_SPIN = 540.0F;
   private static final float TILT = 20.0F;
   private static final float MODEL_CENTER_Y = 1.375F;

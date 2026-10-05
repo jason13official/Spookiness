@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:gold_ingot",
+    "minecraft:gold_ingot",
+    "minecraft:blaze_rod"
+  ],
+  "result": {
+    "id": "spookiness:piece_of_lament_one"
+  }
+}

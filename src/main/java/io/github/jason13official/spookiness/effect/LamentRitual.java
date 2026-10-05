@@ -30,7 +30,7 @@ import net.minecraft.world.phys.Vec3;
 
 public final class LamentRitual {
 
-  public static final int DURATION_TICKS = 40;
+  public static final int DURATION_TICKS = 80;
 
   private static final int COOLDOWN_TICKS = 100;
   private static final Identifier FREEZE_ID = Spookiness.id("lament_freeze");

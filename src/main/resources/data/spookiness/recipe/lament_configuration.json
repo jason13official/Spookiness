@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "spookiness:piece_of_lament_one",
+    "spookiness:piece_of_lament_two"
+  ],
+  "result": {
+    "id": "spookiness:lament_configuration"
+  }
+}

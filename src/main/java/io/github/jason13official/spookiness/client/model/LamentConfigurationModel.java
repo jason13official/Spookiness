@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.client.model;
 
+import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.anim.LamentConfigurationAnimations;
 import io.github.jason13official.spookiness.client.renderer.state.LamentConfigurationRenderState;
@@ -15,10 +16,13 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.StringRepresentable;
 
 public class LamentConfigurationModel extends Model<LamentConfigurationRenderState> {
 
   public static final Identifier TEXTURE = Spookiness.id("textures/entity/lament/lament.png");
+
+  private static final float SPIN_SPEED = 0.5F;
 
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Spookiness.id("lament_configuration"), "main");
 
@@ -43,6 +47,11 @@ public class LamentConfigurationModel extends Model<LamentConfigurationRenderSta
     this.halfTwo = this.two.getChild("halfTwo");
 
     this.spinAnimation = LamentConfigurationAnimations.SPIN_LOOP.bake(root);
+  }
+
+  public void showOnly(Part part) {
+    this.one.visible = part != Part.TWO;
+    this.two.visible = part != Part.ONE;
   }
 
   public static LayerDefinition createBodyLayer() {
@@ -78,6 +87,25 @@ public class LamentConfigurationModel extends Model<LamentConfigurationRenderSta
   @Override
   public void setupAnim(LamentConfigurationRenderState state) {
     super.setupAnim(state);
-    this.spinAnimation.apply(state.spinAnimationState, state.ageInTicks);
+    this.spinAnimation.apply(state.spinAnimationState, state.ageInTicks, SPIN_SPEED);
+  }
+
+  public enum Part implements StringRepresentable {
+    ALL("all"),
+    ONE("one"),
+    TWO("two");
+
+    public static final Codec<Part> CODEC = StringRepresentable.fromEnum(Part::values);
+
+    private final String name;
+
+    Part(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String getSerializedName() {
+      return this.name;
+    }
   }
 }

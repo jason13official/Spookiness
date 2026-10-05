@@ -8,5 +8,7 @@
   "item.spookiness.pumpkin_mace.pumpkin_kills": "Pumpkin Kills: %s/%s",
   "message.spookiness.companion_summoned": "A spectral Jack o'Mimic joins you!",
   "message.spookiness.companions_summoned": "%s spectral Jack o'Mimics join you!",
-  "item.spookiness.lament_configuration": "Lament Configuration"
+  "item.spookiness.lament_configuration": "Lament Configuration",
+  "item.spookiness.piece_of_lament_one": "Piece of Lament, One",
+  "item.spookiness.piece_of_lament_two": "Piece of Lament, Two"
 }
