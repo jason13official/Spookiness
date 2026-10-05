@@ -18,5 +18,8 @@ public class SpookinessDatagen {
         .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, ModBiomeModifiers::bootstrap));
 
     event.createProvider(SpookinessBiomeTagsProvider::new);
+    event.createProvider(SpookinessRecipeProvider.Runner::new);
+    event.createProvider(SpookinessModelProvider::new);
+    event.createProvider(SpookinessLanguageProvider::new);
   }
 }
