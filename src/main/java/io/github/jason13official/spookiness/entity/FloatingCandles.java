@@ -41,6 +41,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
+import net.minecraft.world.level.block.CandleCakeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -144,6 +145,15 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
 
   public void setCandles(int candles) {
     this.entityData.set(DATA_CANDLES, Mth.clamp(candles, CandleBlock.MIN_CANDLES, CandleBlock.MAX_CANDLES));
+  }
+
+  public static int colorOf(Block block) {
+    for (int i = 0; i < CANDLE_BLOCKS.length; i++) {
+      if (CANDLE_BLOCKS[i] == block || (block instanceof CandleCakeBlock && CandleCakeBlock.byCandle((CandleBlock) CANDLE_BLOCKS[i]).is(block))) {
+        return i;
+      }
+    }
+    return 0;
   }
 
   public int getColor() {

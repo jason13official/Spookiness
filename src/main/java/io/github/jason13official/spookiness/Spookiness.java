@@ -14,6 +14,7 @@ import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
+import io.github.jason13official.spookiness.world.SpookySpawns;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.minecraft.core.Registry;
@@ -26,9 +27,9 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.inventory.EnchantmentMenu;
 import net.minecraft.world.entity.SpawnPlacementTypes;
-import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
-import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -43,7 +44,9 @@ import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEnchantItemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -93,14 +96,8 @@ public class Spookiness {
     // FinalizeSpawnEvent
     NeoForge.EVENT_BUS.addListener((FinalizeSpawnEvent event) -> {
 
-      // if (event.getEntity() instanceof AbstractSkeleton skeleton && skeleton.getRandom().nextBoolean()) {
-      if (event.getEntity() instanceof AbstractSkeleton skeleton) {
-        skeleton.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.JACK_O_LANTERN));
-      }
-
-      if (event.getEntity() instanceof Spider spider) {
-        spider.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.CARVED_PUMPKIN));
-      }
+      Mob mob = event.getEntity();
+      SpookySpawns.equipPumpkinHead(mob, mob.getRandom());
     });
 
     // LivingChangeTargetEvent
@@ -140,6 +137,23 @@ public class Spookiness {
       ItemStack weapon = source.getWeaponItem();
       if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
         mimic.spawnSoulBurst(level);
+      }
+    });
+
+    // PlayerEnchantItemEvent
+    NeoForge.EVENT_BUS.addListener((PlayerEnchantItemEvent event) -> {
+
+      if (event.getEntity() instanceof ServerPlayer player && player.containerMenu instanceof EnchantmentMenu menu) {
+        menu.access.execute((level, pos) -> SpookySpawns.awakenEnchantingTableBook((ServerLevel) level, pos, player));
+      }
+    });
+
+    // PlayerTickEvent.Post
+    NeoForge.EVENT_BUS.addListener((PlayerTickEvent.Post event) -> {
+
+      if (event.getEntity() instanceof ServerPlayer player) {
+        SpookySpawns.tickCandleAwakening(player);
+        SpookySpawns.tickBookshelfAwakening(player);
       }
     });
 

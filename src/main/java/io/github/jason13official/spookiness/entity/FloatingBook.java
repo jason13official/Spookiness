@@ -13,13 +13,20 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class FloatingBook extends FloatingPathfinderMob {
 
   private static final double READING_DISTANCE = 4.0;
+  private static final float LAPIS_BLOCK_CHANCE = 0.25F;
+  private static final int MIN_LAPIS = 4;
+  private static final int MAX_LAPIS = 10;
 
   public float open;
   public float oOpen;
@@ -27,6 +34,8 @@ public class FloatingBook extends FloatingPathfinderMob {
   public float oFlip;
   private float flipT;
   private float flipA;
+
+  private ItemStack heldBook = ItemStack.EMPTY;
 
   public FloatingBook(EntityType<? extends FloatingBook> type, Level level) {
     super(type, level);
@@ -49,6 +58,26 @@ public class FloatingBook extends FloatingPathfinderMob {
     int targetPriority = 1;
 
     this.targetSelector.addGoal(targetPriority++, new HurtByTargetGoal(this).setAlertOthers());
+    this.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(this, Player.class, true));
+  }
+
+  public void setHeldBook(ItemStack book) {
+    this.heldBook = book.copy();
+    this.setPersistenceRequired();
+  }
+
+  @Override
+  protected void addAdditionalSaveData(ValueOutput output) {
+    super.addAdditionalSaveData(output);
+    if (!this.heldBook.isEmpty()) {
+      output.store("held_book", ItemStack.CODEC, this.heldBook);
+    }
+  }
+
+  @Override
+  protected void readAdditionalSaveData(ValueInput input) {
+    super.readAdditionalSaveData(input);
+    this.heldBook = input.read("held_book", ItemStack.CODEC).orElse(ItemStack.EMPTY);
   }
 
   @Override
@@ -85,7 +114,13 @@ public class FloatingBook extends FloatingPathfinderMob {
   @Override
   protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
     super.dropCustomDeathLoot(level, source, killedByPlayer);
-    this.spawnAtLocation(level, Items.BOOK);
+    if (!this.heldBook.isEmpty()) {
+      this.spawnAtLocation(level, this.heldBook);
+    } else if (this.random.nextFloat() < LAPIS_BLOCK_CHANCE) {
+      this.spawnAtLocation(level, Items.LAPIS_BLOCK);
+    } else {
+      this.spawnAtLocation(level, new ItemStack(Items.LAPIS_LAZULI, Mth.nextInt(this.random, MIN_LAPIS, MAX_LAPIS)));
+    }
   }
 
   @Override

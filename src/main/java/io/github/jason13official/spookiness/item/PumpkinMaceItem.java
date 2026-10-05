@@ -21,6 +21,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.golem.SnowGolem;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -68,7 +69,12 @@ public class PumpkinMaceItem extends Item {
       return false;
     }
 
-    return entity instanceof JackOMimic || entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN);
+    if (entity instanceof SnowGolem golem) {
+      return golem.hasPumpkin();
+    }
+
+    ItemStack head = entity.getItemBySlot(EquipmentSlot.HEAD);
+    return entity instanceof JackOMimic || head.is(Items.JACK_O_LANTERN) || head.is(Items.CARVED_PUMPKIN);
   }
 
   public static void addPumpkinKill(ServerLevel level, Player player, ItemStack stack) {
