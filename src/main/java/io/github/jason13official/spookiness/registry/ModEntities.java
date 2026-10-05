@@ -29,7 +29,7 @@ public class ModEntities {
     FLOATING_CANDLES = EntityType.Builder.of(FloatingCandles::new, MobCategory.AMBIENT).sized(0.5f, 0.5f).clientTrackingRange(16).build(key("floating_candles"));
     consumer.accept(FLOATING_CANDLES, Spookiness.id("floating_candles"));
 
-    FLOATING_BOOK = EntityType.Builder.of(FloatingBook::new, MobCategory.CREATURE).sized(0.5f, 0.6f).clientTrackingRange(8).build(key("floating_book"));
+    FLOATING_BOOK = EntityType.Builder.of(FloatingBook::new, MobCategory.CREATURE).sized(0.8f, 0.5f).clientTrackingRange(8).build(key("floating_book"));
     consumer.accept(FLOATING_BOOK, Spookiness.id("floating_book"));
 
     FLOATING_SWORD = EntityType.Builder.of(FloatingSword::new, MobCategory.MONSTER).sized(0.6f, 1.95f).clientTrackingRange(8).build(key("floating_sword"));

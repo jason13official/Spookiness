@@ -197,7 +197,7 @@ public final class SpookySpawns {
 
     BlockPos pos = shelf.getBlockPos();
     Direction facing = shelf.getBlockState().getValue(ChiseledBookShelfBlock.FACING);
-    Vec3 spawn = Vec3.atCenterOf(pos).add(facing.getStepX() * 0.8, -0.3, facing.getStepZ() * 0.8);
+    Vec3 spawn = book.shelfFront(shelf);
     book.snapTo(spawn.x, spawn.y, spawn.z, facing.toYRot(), 0.0F);
     book.setShelfHome(pos, slot, taken);
     level.addFreshEntity(book);
