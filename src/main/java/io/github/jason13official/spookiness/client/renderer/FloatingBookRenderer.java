@@ -5,9 +5,13 @@ import io.github.jason13official.spookiness.client.renderer.state.FloatingBookRe
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public class FloatingBookRenderer extends MobRenderer<FloatingBook, FloatingBookRenderState, FloatingBookModel> {
 
@@ -42,8 +46,24 @@ public class FloatingBookRenderer extends MobRenderer<FloatingBook, FloatingBook
     float reading = entity.staysStill() ? WIDE_OPEN : Mth.sin(state.ageInTicks * 0.02F) * 0.1F + 1.25F;
 
     state.openness = Mth.lerp(open, flapping, reading);
+    state.alpha = entity.getAlpha(partialTicks);
     state.pageFlip1 = Mth.clamp(Mth.frac(flip + 0.25F) * 1.6F - 0.3F, 0.0F, 1.0F);
     state.pageFlip2 = Mth.clamp(Mth.frac(flip + 0.75F) * 1.6F - 0.3F, 0.0F, 1.0F);
+  }
+
+  @Override
+  protected int getModelTint(FloatingBookRenderState state) {
+
+    return ARGB.white(state.alpha);
+  }
+
+  @Override
+  protected @Nullable RenderType getRenderType(FloatingBookRenderState state, boolean isBodyVisible, boolean forceTransparent, boolean appearGlowing) {
+
+    if (isBodyVisible && state.alpha < 1.0F) {
+      return RenderTypes.entityTranslucent(this.getTextureLocation(state));
+    }
+    return super.getRenderType(state, isBodyVisible, forceTransparent, appearGlowing);
   }
 
   @Override

@@ -45,6 +45,7 @@ public class FloatingBook extends FloatingPathfinderMob {
 
   private static final EntityDataAccessor<Boolean> DATA_NEUTRAL = SynchedEntityData.defineId(FloatingBook.class, EntityDataSerializers.BOOLEAN);
   private static final EntityDataAccessor<Boolean> DATA_STAYS_STILL = SynchedEntityData.defineId(FloatingBook.class, EntityDataSerializers.BOOLEAN);
+  private static final EntityDataAccessor<Boolean> DATA_PHASING = SynchedEntityData.defineId(FloatingBook.class, EntityDataSerializers.BOOLEAN);
 
   private static final double READING_DISTANCE = 4.0;
   private static final int MAX_STILL_TIMEOUT = 10;
@@ -52,6 +53,15 @@ public class FloatingBook extends FloatingPathfinderMob {
   private static final double STEP_RISE = 0.6;
   private static final double STEP_RETARGET_DISTANCE = 0.5;
   private static final double STEP_SETTLE_DISTANCE = 0.3;
+  private static final double PASS_DISTANCE = 1.5;
+  private static final int STEP_HOLD_TICKS = 40;
+  private static final double PHASE_MARGIN = 0.2;
+  private static final double DETOUR_CLEARANCE = 0.4;
+  private static final double DETOUR_ARC = 2.5;
+  private static final double DETOUR_LEAD = 0.6;
+  private static final double PATHFIND_DISTANCE = 4.0;
+  private static final float PHASE_ALPHA = 0.5F;
+  private static final float PHASE_FADE_PER_TICK = 0.1F;
   private static final float LAPIS_BLOCK_CHANCE = 0.25F;
   private static final int MIN_LAPIS = 4;
   private static final int MAX_LAPIS = 10;
@@ -83,6 +93,10 @@ public class FloatingBook extends FloatingPathfinderMob {
   private @Nullable Player guidedPlayer;
   private @Nullable FloatingBook guidePlatform;
   private @Nullable Vec3 stepTarget;
+  private boolean stepSettled;
+  private int stepHoldTicks;
+  private float alpha = 1.0F;
+  private float oAlpha = 1.0F;
 
   public FloatingBook(EntityType<? extends FloatingBook> type, Level level) {
     super(type, level);
@@ -127,6 +141,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     super.defineSynchedData(entityData);
     entityData.define(DATA_NEUTRAL, false);
     entityData.define(DATA_STAYS_STILL, false);
+    entityData.define(DATA_PHASING, false);
   }
 
   public boolean isNeutral() {
@@ -187,11 +202,41 @@ public class FloatingBook extends FloatingPathfinderMob {
     this.guidedPlayer = null;
     this.guidePlatform = null;
     this.stepTarget = null;
+    this.stepSettled = false;
+    this.stepHoldTicks = 0;
+    this.setPhasing(false);
+  }
+
+  public boolean isPhasing() {
+    return this.entityData.get(DATA_PHASING);
+  }
+
+  private void setPhasing(boolean phasing) {
+    this.entityData.set(DATA_PHASING, phasing);
+  }
+
+  public float getAlpha(float partialTicks) {
+    return Mth.lerp(partialTicks, this.oAlpha, this.alpha);
+  }
+
+  private boolean canPhase() {
+    return this.isNeutral() && !this.supportingPlayer && !this.isBelowAnyPlayer();
+  }
+
+  private boolean isBelowAnyPlayer() {
+    AABB box = this.getBoundingBox();
+    AABB column = new AABB(box.minX - 0.3, box.maxY - 0.01, box.minZ - 0.3, box.maxX + 0.3, box.maxY + 2.5, box.maxZ + 0.3);
+    for (Player player : this.level().players()) {
+      if (!player.isSpectator() && column.contains(player.position())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public boolean canBeCollidedWith(@Nullable Entity other) {
-    if (!this.isCalmStep()) {
+    if (!(other instanceof Player) || !this.isCalmStep() || this.isPhasing()) {
       return false;
     }
     if (this.level().isClientSide() && other instanceof Player && other.position().y >= this.getBoundingBox().maxY) {
@@ -201,8 +246,22 @@ public class FloatingBook extends FloatingPathfinderMob {
   }
 
   @Override
+  public void push(Entity entity) {
+    if (!(entity instanceof Player)) {
+      super.push(entity);
+    }
+  }
+
+  @Override
+  protected void doPush(Entity entity) {
+    if (!(entity instanceof Player)) {
+      super.doPush(entity);
+    }
+  }
+
+  @Override
   public boolean isPushable() {
-    return !this.isOnStillTimeout() && super.isPushable();
+    return !this.isOnStillTimeout() && !this.isPhasing() && super.isPushable();
   }
 
   @Override
@@ -381,6 +440,8 @@ public class FloatingBook extends FloatingPathfinderMob {
     super.tick();
     if (this.level().isClientSide()) {
       this.bookAnimationTick();
+      this.oAlpha = this.alpha;
+      this.alpha = Mth.approach(this.alpha, this.isPhasing() ? PHASE_ALPHA : 1.0F, PHASE_FADE_PER_TICK);
     }
   }
 
@@ -555,27 +616,81 @@ public class FloatingBook extends FloatingPathfinderMob {
       }
 
       float yaw = player.getYRot();
-      Vec3 candidate = this.findStep(platform.position(), yaw);
-      if (candidate != null && (book.stepTarget == null || candidate.distanceTo(book.stepTarget) > STEP_RETARGET_DISTANCE)) {
-        book.stepTarget = candidate;
+      if (book.stepHoldTicks > 0) {
+        book.stepHoldTicks--;
+      } else {
+        Vec3 candidate = this.findStep(platform.position(), yaw);
+        if (candidate != null && (book.stepTarget == null || candidate.distanceTo(book.stepTarget) > STEP_RETARGET_DISTANCE)) {
+          book.stepTarget = candidate;
+          book.stepSettled = false;
+        }
       }
       if (book.stepTarget == null) {
         return;
       }
 
       Vec3 target = book.stepTarget;
-      if (book.position().distanceTo(target) < STEP_SETTLE_DISTANCE) {
-        book.setPos(target.x, target.y, target.z);
+      boolean overlapping = book.getBoundingBox().inflate(PHASE_MARGIN).intersects(player.getBoundingBox());
+
+      if (book.stepSettled || book.position().distanceTo(target) < STEP_SETTLE_DISTANCE) {
+        book.setPhasing(overlapping && book.canPhase());
+        if (!book.stepSettled) {
+          book.stepSettled = true;
+          book.stepHoldTicks = STEP_HOLD_TICKS;
+          book.setPos(target.x, target.y, target.z);
+          book.setYRot(yaw);
+          book.yBodyRot = yaw;
+          book.yHeadRot = yaw;
+        }
         book.setDeltaMovement(Vec3.ZERO);
-        book.setYRot(yaw);
-        book.yBodyRot = yaw;
-        book.yHeadRot = yaw;
         book.setServerStillTimeout(MAX_STILL_TIMEOUT);
-      } else {
-        book.setServerStillTimeout(0);
-        book.getMoveControl().setWantedPosition(target.x, target.y, target.z, 1.0);
-        book.getLookControl().setLookAt(player);
+        return;
       }
+
+      book.setServerStillTimeout(0);
+      book.getLookControl().setLookAt(player);
+
+      double horizontal = book.position().subtract(player.position()).horizontalDistance();
+      boolean behindPlayer = book.position().subtract(target).horizontalDistance() > player.position().subtract(target).horizontalDistance();
+      boolean mustPass = overlapping || (behindPlayer && horizontal < PASS_DISTANCE);
+
+      Vec3 wanted = target;
+      if (book.isPhasing() || (mustPass && book.canPhase())) {
+        book.setPhasing(true);
+      } else if (mustPass) {
+        wanted = this.detour(player, target);
+      }
+
+      if (!book.isPhasing() && book.position().distanceTo(wanted) > PATHFIND_DISTANCE) {
+        if (book.tickCount % 10 == 0 || book.getNavigation().isDone()) {
+          book.getNavigation().moveTo(wanted.x, wanted.y, wanted.z, 1.0);
+        }
+      } else {
+        book.getNavigation().stop();
+        book.getMoveControl().setWantedPosition(wanted.x, wanted.y, wanted.z, 1.0);
+      }
+    }
+
+    private Vec3 detour(Player player, Vec3 target) {
+      FloatingBook book = FloatingBook.this;
+      Vec3 toTarget = target.subtract(player.position()).multiply(1.0, 0.0, 1.0);
+      Vec3 forward = toTarget.lengthSqr() > 1.0E-4 ? toTarget.normalize() : Vec3.ZERO;
+      Vec3 lead = player.position().add(forward.scale(DETOUR_LEAD));
+
+      Vec3 over = new Vec3(lead.x, player.getY() + player.getBbHeight() + DETOUR_CLEARANCE, lead.z);
+      Vec3 under = new Vec3(lead.x, player.getY() - book.getBbHeight() - DETOUR_CLEARANCE, lead.z);
+      Vec3 side = new Vec3(-forward.z, 0.0, forward.x).scale(DETOUR_ARC);
+      Vec3 left = player.position().add(side).add(0.0, target.y - player.getY(), 0.0);
+      Vec3 right = player.position().subtract(side).add(0.0, target.y - player.getY(), 0.0);
+      Vec3 nearSide = left.distanceToSqr(book.position()) <= right.distanceToSqr(book.position()) ? left : right;
+      Vec3 farSide = nearSide == left ? right : left;
+
+      for (Vec3 waypoint : new Vec3[] {over, under, nearSide, farSide}) {
+        if (book.level().noCollision(book, book.getDimensions(book.getPose()).makeBoundingBox(waypoint))) {
+          return waypoint;
+        }
+      }
+      return target;
     }
 
     private @Nullable Vec3 findStep(Vec3 from, float yaw) {

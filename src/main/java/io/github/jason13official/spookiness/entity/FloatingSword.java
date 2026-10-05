@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.entity;
 
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
@@ -26,6 +27,11 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jspecify.annotations.Nullable;
 
 public class FloatingSword extends FloatingPathfinderMob implements Enemy {
+
+  private static final float FADE_PER_TICK = 0.08F;
+
+  private float visibility;
+  private float oVisibility;
 
   public FloatingSword(EntityType<? extends FloatingSword> type, Level level) {
     super(type, level);
@@ -63,6 +69,19 @@ public class FloatingSword extends FloatingPathfinderMob implements Enemy {
   @Override
   protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
     this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(random.nextInt(4) == 0 ? Items.GOLDEN_SWORD : Items.IRON_SWORD));
+  }
+
+  @Override
+  public void tick() {
+    super.tick();
+    if (this.level().isClientSide()) {
+      this.oVisibility = this.visibility;
+      this.visibility = Mth.approach(this.visibility, this.isAggressive() ? 1.0F : 0.0F, FADE_PER_TICK);
+    }
+  }
+
+  public float getVisibility(float partialTicks) {
+    return Mth.lerp(partialTicks, this.oVisibility, this.visibility);
   }
 
   @Override

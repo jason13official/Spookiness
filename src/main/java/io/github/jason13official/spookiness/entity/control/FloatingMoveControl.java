@@ -8,6 +8,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class FloatingMoveControl extends MoveControl {
 
+  private static final double CLIMB_FACTOR = 0.6;
+
   private final double steering;
   private final float maxTurn;
 
@@ -37,7 +39,11 @@ public class FloatingMoveControl extends MoveControl {
     double maxSpeed = this.speedModifier * this.mob.getAttributeValue(Attributes.FLYING_SPEED);
     Vec3 velocity = this.mob.getDeltaMovement();
     Vec3 desired = delta.scale(maxSpeed / distance);
-    this.mob.setDeltaMovement(velocity.add(desired.subtract(velocity).scale(this.steering)));
+    Vec3 steered = velocity.add(desired.subtract(velocity).scale(this.steering));
+    if (this.mob.horizontalCollision) {
+      steered = new Vec3(steered.x, Math.max(steered.y, maxSpeed * CLIMB_FACTOR), steered.z);
+    }
+    this.mob.setDeltaMovement(steered);
 
     if (delta.horizontalDistanceSqr() > 1.0E-4) {
       float yRot = (float) (Mth.atan2(delta.z, delta.x) * Mth.RAD_TO_DEG) - 90.0F;
