@@ -15,6 +15,7 @@ import io.github.jason13official.spookiness.client.renderer.layer.HeadItemLayer;
 import io.github.jason13official.spookiness.client.renderer.boss.GourdwyrmRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.HallowedMotherRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.VigilCandleRenderer;
+import io.github.jason13official.spookiness.client.renderer.boss.WickmanHeadRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.WickmanRenderer;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.client.model.EntityModel;
@@ -52,6 +53,7 @@ public class SpookinessClient {
       event.registerEntityRenderer(ModEntities.FLOATING_SWORD, FloatingSwordRenderer::new);
       event.registerEntityRenderer(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimicRenderer::new);
       event.registerEntityRenderer(ModEntities.WICKMAN, WickmanRenderer::new);
+      event.registerEntityRenderer(ModEntities.WICKMAN_HEAD, WickmanHeadRenderer::new);
       event.registerEntityRenderer(ModEntities.VIGIL_CANDLE, VigilCandleRenderer::new);
       event.registerEntityRenderer(ModEntities.HALLOWED_MOTHER, HallowedMotherRenderer::new);
       event.registerEntityRenderer(ModEntities.GOURDWYRM, GourdwyrmRenderer::new);

@@ -36,6 +36,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModEntities.SPECTRAL_JACK_O_MIMIC, "Spectral Jack o'Mimic");
     this.add(ModEntities.WICKMAN, "The Wickman");
     this.add("entity.spookiness.frostwick", "The Frostwick");
+    this.add(ModEntities.WICKMAN_HEAD, "Wickman's Head");
     this.add(ModEntities.VIGIL_CANDLE, "Vigil Candle");
     this.add(ModEntities.HALLOWED_MOTHER, "Hallowed Mother");
     this.add(ModEntities.GOURDWYRM, "Gourdwyrm");

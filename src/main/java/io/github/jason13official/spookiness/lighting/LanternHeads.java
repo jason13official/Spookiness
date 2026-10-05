@@ -3,6 +3,7 @@ package io.github.jason13official.spookiness.lighting;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
+import io.github.jason13official.spookiness.entity.boss.WickmanHead;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.world.entity.Entity;
@@ -50,6 +51,9 @@ public final class LanternHeads {
 
   private static boolean isLanternHeaded(LivingEntity entity) {
 
+    if (entity instanceof WickmanHead head) {
+      return !head.isFrost();
+    }
     if (entity instanceof Wickman wickman) {
       return wickman.getVariant() == Wickman.Variant.WICK && wickman.getPhase() != Wickman.Phase.HEADLESS;
     }

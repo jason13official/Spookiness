@@ -6,12 +6,17 @@ import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -51,6 +56,7 @@ public class HallowedMother extends Monster {
   public static final float SCALE = 4.0F;
 
   private static final EntityDataAccessor<Integer> DATA_TETHER = SynchedEntityData.defineId(HallowedMother.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Boolean> DATA_GAPING = SynchedEntityData.defineId(HallowedMother.class, EntityDataSerializers.BOOLEAN);
 
   private static final int NO_TETHER = -1;
   private static final int RECLAIM_INTERVAL = 160;
@@ -72,7 +78,24 @@ public class HallowedMother extends Monster {
   private static final double MOUTH_FORWARD = 2.0;
   private static final double MOUTH_HEIGHT = 1.0;
   private static final float TURN_SPEED = 6.0F;
+  private static final int BROOD_INTERVAL = 10;
+  private static final int RETALIATE_TICKS = 100;
+  private static final double CROWD_RANGE = 5.0;
+  private static final int CROWD_COUNT = 4;
+  private static final int BURST_COOLDOWN = 500;
+  private static final int BURST_SPIT_GAP = 4;
+  private static final int BURST_MAX_SPITS = MAX_GOURDLINGS;
+  private static final int GATHER_TICKS = 40;
+  private static final double GATHER_PULL = 0.35;
+  private static final double GATHER_STOP = 1.5;
+  private static final double BLAST_RADIUS = 10.0;
+  private static final double BLAST_SPEED = 1.0;
+  private static final double BLAST_LIFT = 0.75;
+  private static final float BLAST_DAMAGE = 6.0F;
+  private static final float GAPE_SPEED = 0.15F;
   private static final float PROJECTILE_MULTIPLIER = 0.4F;
+  private static final float MACE_MULTIPLIER = 2.0F;
+  private static final int BROOD_PARTICLE_INTERVAL = 4;
   private static final long DAY_LENGTH = 24000L;
   private static final long NOON = 6000L;
   private static final long DUSK = 12000L;
@@ -87,6 +110,14 @@ public class HallowedMother extends Monster {
   private int volleyRemaining;
   private int spitTimer;
 
+  private final Set<UUID> brood = new HashSet<>();
+  private Burst burst = Burst.NONE;
+  private int burstTicks;
+  private int burstSpits;
+  private int burstCooldown = BURST_COOLDOWN / 5;
+  private float gape;
+  private float oGape;
+
   public final AnimationState spitAnimationState = new AnimationState();
 
   public HallowedMother(EntityType<? extends HallowedMother> type, Level level) {
@@ -97,7 +128,7 @@ public class HallowedMother extends Monster {
   }
 
   public static AttributeSupplier.Builder createAttributes() {
-    return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 400.0).add(Attributes.ARMOR, 10.0).add(Attributes.ATTACK_DAMAGE, 10.0)
+    return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 1600.0).add(Attributes.ARMOR, 10.0).add(Attributes.ATTACK_DAMAGE, 10.0)
         .add(Attributes.MOVEMENT_SPEED, 0.0).add(Attributes.FOLLOW_RANGE, 32.0).add(Attributes.KNOCKBACK_RESISTANCE, 1.0);
   }
 
@@ -128,6 +159,7 @@ public class HallowedMother extends Monster {
   protected void defineSynchedData(SynchedEntityData.Builder entityData) {
     super.defineSynchedData(entityData);
     entityData.define(DATA_TETHER, NO_TETHER);
+    entityData.define(DATA_GAPING, false);
   }
 
   public @Nullable Entity getTethered() {
@@ -166,13 +198,172 @@ public class HallowedMother extends Monster {
       return;
     }
 
-    this.tickReclaim(level);
+    if (this.tickCount % BROOD_INTERVAL == 0) {
+      this.commandBrood(level);
+    }
+    if (this.tickCount % BROOD_PARTICLE_INTERVAL == 0) {
+      for (JackOMimic mimic : this.livingBrood(level)) {
+        level.sendParticles(this.random.nextBoolean() ? ParticleTypes.SMALL_FLAME : ParticleTypes.SMOKE, mimic.getX(), mimic.getY() + mimic.getBbHeight(), mimic.getZ(),
+            1, 0.2, 0.1, 0.2, 0.01);
+      }
+    }
 
     LivingEntity target = this.getTarget();
     if (target != null) {
       this.faceTarget(target);
+    }
+
+    if (this.burst != Burst.NONE) {
+      this.tickBurst(level, target);
+      return;
+    }
+    if (--this.burstCooldown <= 0 && this.tickCount % BROOD_INTERVAL == 0 && this.isCrowded(level)) {
+      this.startBurst();
+      return;
+    }
+
+    this.tickReclaim(level);
+    if (target != null) {
       this.tickVolley(level, target);
     }
+  }
+
+  @Override
+  public void aiStep() {
+    super.aiStep();
+    if (this.level().isClientSide()) {
+      this.oGape = this.gape;
+      this.gape = Mth.approach(this.gape, this.entityData.get(DATA_GAPING) ? 1.0F : 0.0F, GAPE_SPEED);
+    }
+  }
+
+  public float getGape(float partialTicks) {
+    return Mth.lerp(partialTicks, this.oGape, this.gape);
+  }
+
+  private List<JackOMimic> livingBrood(ServerLevel level) {
+
+    List<JackOMimic> living = new ArrayList<>();
+    this.brood.removeIf(id -> {
+      if (level.getEntity(id) instanceof JackOMimic mimic && mimic.isAlive()) {
+        living.add(mimic);
+        return false;
+      }
+      return true;
+    });
+    return living;
+  }
+
+  private boolean isBrood(Entity entity) {
+    return this.brood.contains(entity.getUUID());
+  }
+
+  private @Nullable LivingEntity broodTarget() {
+
+    LivingEntity attacker = this.getLastHurtByMob();
+    if (attacker != null && attacker.isAlive() && !this.isBrood(attacker) && this.tickCount - this.getLastHurtByMobTimestamp() < RETALIATE_TICKS) {
+      return attacker;
+    }
+    return this.getTarget();
+  }
+
+  private void commandBrood(ServerLevel level) {
+
+    LivingEntity target = this.broodTarget();
+    if (target == null) {
+      return;
+    }
+    for (JackOMimic mimic : this.livingBrood(level)) {
+      if (mimic.getTarget() != target) {
+        mimic.setTarget(target);
+      }
+    }
+  }
+
+  private boolean isCrowded(ServerLevel level) {
+
+    return level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(CROWD_RANGE),
+        entity -> entity != this && entity.isAlive() && !(entity instanceof JackOMimic) && !(entity instanceof Player player && (player.isSpectator() || player.isCreative())))
+        .size() >= CROWD_COUNT;
+  }
+
+  private void startBurst() {
+
+    this.releaseTether();
+    this.volleyRemaining = 0;
+    this.burst = Burst.SPITTING;
+    this.burstTicks = 0;
+    this.burstSpits = 0;
+    this.playSound(SoundEvents.RAVAGER_ROAR, 3.0F, 0.6F);
+  }
+
+  private void tickBurst(ServerLevel level, @Nullable LivingEntity target) {
+
+    this.burstTicks++;
+    switch (this.burst) {
+      case SPITTING -> {
+        if (this.burstTicks % BURST_SPIT_GAP != 0) {
+          return;
+        }
+        if (this.livingBrood(level).size() >= MAX_GOURDLINGS || this.burstSpits >= BURST_MAX_SPITS) {
+          this.burst = Burst.GATHERING;
+          this.burstTicks = 0;
+          this.entityData.set(DATA_GAPING, true);
+          this.playSound(SoundEvents.WARDEN_ROAR, 3.0F, 0.8F);
+          return;
+        }
+        this.spit(level, target, 180.0F);
+        this.burstSpits++;
+      }
+      case GATHERING -> {
+        Vec3 mouth = this.position().add(this.mouthOffset(this.yBodyRot));
+        for (JackOMimic mimic : this.livingBrood(level)) {
+          Vec3 toMouth = mouth.subtract(mimic.position());
+          if (toMouth.lengthSqr() > GATHER_STOP * GATHER_STOP) {
+            Vec3 pull = toMouth.normalize().scale(GATHER_PULL);
+            mimic.setDeltaMovement(pull.x, Math.max(pull.y, mimic.getDeltaMovement().y), pull.z);
+            mimic.hurtMarked = true;
+          }
+          if (this.burstTicks % 4 == 0) {
+            level.sendParticles(ParticleTypes.SOUL, mimic.getX(), mimic.getY() + 0.5, mimic.getZ(), 2, 0.2, 0.2, 0.2, 0.01);
+          }
+        }
+        if (this.burstTicks % 5 == 0) {
+          level.sendParticles(ParticleTypes.FLAME, mouth.x, mouth.y, mouth.z, 10, 0.6, 0.4, 0.6, 0.02);
+        }
+        if (this.burstTicks >= GATHER_TICKS) {
+          this.blast(level);
+          this.entityData.set(DATA_GAPING, false);
+          this.burst = Burst.NONE;
+          this.burstCooldown = BURST_COOLDOWN;
+        }
+      }
+      default -> this.burst = Burst.NONE;
+    }
+  }
+
+  private void blast(ServerLevel level) {
+
+    Vec3 center = this.position();
+    for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(BLAST_RADIUS), entity -> entity != this && entity.isAlive())) {
+      if (entity instanceof Player player && (player.isSpectator() || player.isCreative())) {
+        continue;
+      }
+      if (!this.isBrood(entity)) {
+        entity.hurtServer(level, this.damageSources().mobAttack(this), BLAST_DAMAGE);
+      }
+      Vec3 away = entity.position().subtract(center).multiply(1.0, 0.0, 1.0);
+      Vec3 direction = away.lengthSqr() > 1.0E-4 ? away.normalize() : Vec3.directionFromRotation(0.0F, this.random.nextFloat() * 360.0F);
+      entity.setDeltaMovement(direction.x * BLAST_SPEED, BLAST_LIFT, direction.z * BLAST_SPEED);
+      entity.hurtMarked = true;
+      if (entity instanceof ServerPlayer player) {
+        player.connection.send(new ClientboundSetEntityMotionPacket(player));
+      }
+    }
+
+    level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y + 1.5, center.z, 1, 0.0, 0.0, 0.0, 0.0);
+    level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.x, center.y + 1.0, center.z, 120, 3.0, 1.0, 3.0, 0.3);
+    level.playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 3.0F, 0.6F);
   }
 
   public Vec3 mouthOffset(float bodyYRot) {
@@ -196,7 +387,7 @@ public class HallowedMother extends Monster {
 
     if (this.volleyRemaining > 0) {
       if (--this.spitTimer <= 0) {
-        this.spit(level, target);
+        this.spit(level, target, FLING_SPREAD);
         this.volleyRemaining--;
         this.spitTimer = SPIT_GAP;
       }
@@ -212,14 +403,14 @@ public class HallowedMother extends Monster {
     }
   }
 
-  private void spit(ServerLevel level, LivingEntity target) {
+  private void spit(ServerLevel level, @Nullable LivingEntity target, float spread) {
 
     level.broadcastEntityEvent(this, SPIT_EVENT);
 
     Vec3 mouth = this.position().add(this.mouthOffset(this.yBodyRot));
-    Vec3 aim = target.position().subtract(mouth).multiply(1.0, 0.0, 1.0);
+    Vec3 aim = target == null ? Vec3.ZERO : target.position().subtract(mouth).multiply(1.0, 0.0, 1.0);
     Vec3 direction = (aim.lengthSqr() > 1.0E-4 ? aim.normalize() : Vec3.directionFromRotation(0.0F, this.yBodyRot))
-        .yRot((this.random.nextFloat() - 0.5F) * 2.0F * FLING_SPREAD * Mth.DEG_TO_RAD);
+        .yRot((this.random.nextFloat() - 0.5F) * 2.0F * spread * Mth.DEG_TO_RAD);
 
     JackOMimic gourdling = ModEntities.JACK_O_MIMIC.create(level, EntitySpawnReason.MOB_SUMMONED);
     if (gourdling == null) {
@@ -227,8 +418,10 @@ public class HallowedMother extends Monster {
     }
     gourdling.snapTo(mouth.x, mouth.y, mouth.z, this.yBodyRot, 0.0F);
     gourdling.setDeltaMovement(direction.scale(FLING_SPEED).add(0.0, FLING_LIFT, 0.0));
-    gourdling.setTarget(target);
+    MotherBrood.adopt(gourdling);
+    gourdling.setTarget(this.broodTarget());
     level.addFreshEntity(gourdling);
+    this.brood.add(gourdling.getUUID());
 
     level.sendParticles(ParticleTypes.FLAME, mouth.x, mouth.y, mouth.z, 12, 0.3, 0.3, 0.3, 0.05);
     this.playSound(SoundEvents.LLAMA_SPIT, 2.0F, 0.4F);
@@ -316,8 +509,11 @@ public class HallowedMother extends Monster {
   public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
 
     ItemStack weapon = source.getWeaponItem();
-    if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE) && this.getTethered() != null) {
-      this.releaseTether();
+    if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
+      damage *= MACE_MULTIPLIER;
+      if (this.getTethered() != null) {
+        this.releaseTether();
+      }
     }
     if (source.is(DamageTypeTags.IS_PROJECTILE)) {
       damage *= PROJECTILE_MULTIPLIER;
@@ -375,12 +571,21 @@ public class HallowedMother extends Monster {
   protected void addAdditionalSaveData(ValueOutput output) {
     super.addAdditionalSaveData(output);
     output.storeNullable("summoner", UUIDUtil.CODEC, this.summoner);
+    output.store("brood", UUIDUtil.CODEC.listOf(), List.copyOf(this.brood));
   }
 
   @Override
   protected void readAdditionalSaveData(ValueInput input) {
     super.readAdditionalSaveData(input);
     this.summoner = input.read("summoner", UUIDUtil.CODEC).orElse(null);
+    this.brood.clear();
+    this.brood.addAll(input.read("brood", UUIDUtil.CODEC.listOf()).orElse(List.of()));
     this.bossEvent.setName(this.getDisplayName());
+  }
+
+  private enum Burst {
+    NONE,
+    SPITTING,
+    GATHERING
   }
 }

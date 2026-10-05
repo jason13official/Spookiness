@@ -10,6 +10,7 @@ import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
 import io.github.jason13official.spookiness.entity.boss.VigilCandle;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
+import io.github.jason13official.spookiness.entity.boss.WickmanHead;
 import java.util.function.BiConsumer;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -25,6 +26,7 @@ public class ModEntities {
   public static EntityType<FloatingSword> FLOATING_SWORD;
   public static EntityType<SpectralJackOMimic> SPECTRAL_JACK_O_MIMIC;
   public static EntityType<Wickman> WICKMAN;
+  public static EntityType<WickmanHead> WICKMAN_HEAD;
   public static EntityType<VigilCandle> VIGIL_CANDLE;
   public static EntityType<HallowedMother> HALLOWED_MOTHER;
   public static EntityType<Gourdwyrm> GOURDWYRM;
@@ -48,6 +50,10 @@ public class ModEntities {
 
     WICKMAN = EntityType.Builder.of(Wickman::new, MobCategory.MONSTER).fireImmune().sized(1.0f, 3.2f).clientTrackingRange(10).build(key("wickman"));
     consumer.accept(WICKMAN, Spookiness.id("wickman"));
+
+    WICKMAN_HEAD = EntityType.Builder.of(WickmanHead::new, MobCategory.MISC).noLootTable().fireImmune().sized(1.0f, 1.0f).clientTrackingRange(10)
+        .build(key("wickman_head"));
+    consumer.accept(WICKMAN_HEAD, Spookiness.id("wickman_head"));
 
     VIGIL_CANDLE = EntityType.Builder.<VigilCandle>of(VigilCandle::new, MobCategory.MISC).noLootTable().fireImmune().sized(0.5f, 0.9f).clientTrackingRange(10)
         .build(key("vigil_candle"));

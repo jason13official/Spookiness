@@ -49,6 +49,7 @@ public class HallowedMotherRenderer extends MobRenderer<HallowedMother, Hallowed
     super.extractRenderState(entity, state, partialTicks);
     state.spitAnimationState.copyFrom(entity.spitAnimationState);
     state.breathe = 1.0F + Mth.sin((entity.tickCount + partialTicks) * 0.06F) * 0.025F;
+    state.gape = entity.getGape(partialTicks);
 
     Entity tethered = entity.getTethered();
     if (tethered == null) {

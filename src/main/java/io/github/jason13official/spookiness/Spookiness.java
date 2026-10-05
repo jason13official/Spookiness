@@ -15,7 +15,9 @@ import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
+import io.github.jason13official.spookiness.entity.boss.MotherBrood;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
+import io.github.jason13official.spookiness.entity.boss.WickmanHead;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.lighting.LanternHeads;
 import io.github.jason13official.spookiness.lighting.LivingLights;
@@ -54,7 +56,9 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
@@ -113,6 +117,7 @@ public class Spookiness {
       event.put(ModEntities.FLOATING_SWORD, FloatingSword.createAttributes().build());
       event.put(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimic.createAttributes().build());
       event.put(ModEntities.WICKMAN, Wickman.createAttributes().build());
+      event.put(ModEntities.WICKMAN_HEAD, WickmanHead.createAttributes().build());
       event.put(ModEntities.HALLOWED_MOTHER, HallowedMother.createAttributes().build());
       event.put(ModEntities.GOURDWYRM, Gourdwyrm.createAttributes().build());
     });
@@ -158,6 +163,12 @@ public class Spookiness {
       Hallowing.onIncomingDamage(event);
       Wickman.onIncomingDamage(event);
     });
+
+    // LivingKnockBackEvent
+    NeoForge.EVENT_BUS.addListener(MotherBrood::onKnockBack);
+
+    // LivingFallEvent
+    NeoForge.EVENT_BUS.addListener(MotherBrood::onFall);
 
     // PlayerInteractEvent.EntityInteract
     NeoForge.EVENT_BUS.addListener(MaceRituals::onEntityInteract);
@@ -238,6 +249,9 @@ public class Spookiness {
       if (event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
         Hallowing.applyGoals(mob);
         PlayerFollowers.track(mob);
+      }
+      if (event.getEntity() instanceof JackOMimic mimic) {
+        MotherBrood.applyGoals(mimic);
       }
     });
 

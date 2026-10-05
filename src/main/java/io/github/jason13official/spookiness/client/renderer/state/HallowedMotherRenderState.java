@@ -7,4 +7,5 @@ public class HallowedMotherRenderState extends LivingEntityRenderState {
 
   public final AnimationState spitAnimationState = new AnimationState();
   public float breathe;
+  public float gape;
 }

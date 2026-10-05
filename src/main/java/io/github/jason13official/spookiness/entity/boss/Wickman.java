@@ -4,8 +4,10 @@ import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
+import java.util.EnumSet;
 import java.util.UUID;
 import net.minecraft.core.Holder;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -27,6 +29,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -43,6 +46,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 public class Wickman extends Monster {
@@ -61,9 +65,14 @@ public class Wickman extends Monster {
   private static final int VIGIL_CANDLES = 4;
   private static final double VIGIL_RADIUS = 6.0;
   private static final int PUMPKIN_KILL_REWARD = 5;
+  private static final int HEAD_CHECK_INTERVAL = 40;
+  private static final double GUARD_LEASH = 8.0;
+  private static final double GUARD_CLOSE = 4.0;
 
   private final ServerBossEvent bossEvent = new ServerBossEvent(UUID.randomUUID(), this.getDisplayName(), BossEvent.BossBarColor.YELLOW,
       BossEvent.BossBarOverlay.PROGRESS);
+
+  private @Nullable UUID head;
 
   public Wickman(EntityType<? extends Wickman> type, Level level) {
     super(type, level);
@@ -81,6 +90,7 @@ public class Wickman extends Monster {
   @Override
   protected void registerGoals() {
 
+    this.goalSelector.addGoal(0, new GuardHeadGoal());
     this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.1, false));
     this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8));
     this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 16.0F));
@@ -140,7 +150,10 @@ public class Wickman extends Monster {
     this.entityData.set(DATA_PHASE, phase.ordinal());
     switch (phase) {
       case CANDLE_CHOIR -> this.plantVigilCandles(level);
-      case HEADLESS -> this.applyModifier(Attributes.MOVEMENT_SPEED, HEADLESS_SPEED_ID, HEADLESS_SPEED);
+      case HEADLESS -> {
+        this.applyModifier(Attributes.MOVEMENT_SPEED, HEADLESS_SPEED_ID, HEADLESS_SPEED);
+        this.ensureHead(level);
+      }
       default -> {
       }
     }
@@ -177,9 +190,40 @@ public class Wickman extends Monster {
       this.setPhase(level, next);
     }
 
+    if (this.getPhase() == Phase.HEADLESS) {
+      if (this.tickCount % HEAD_CHECK_INTERVAL == 0) {
+        this.ensureHead(level);
+      }
+      return;
+    }
+
     LivingEntity target = this.getTarget();
     if (target != null && this.tickCount % THROW_INTERVAL == 0 && this.hasLineOfSight(target)) {
       this.throwAt(level, target);
+    }
+  }
+
+  private @Nullable WickmanHead getHead(ServerLevel level) {
+    return this.head != null && level.getEntity(this.head) instanceof WickmanHead found && found.isAlive() ? found : null;
+  }
+
+  private void ensureHead(ServerLevel level) {
+
+    if (this.getHead(level) != null) {
+      return;
+    }
+    WickmanHead detached = WickmanHead.detach(level, this);
+    this.head = detached == null ? null : detached.getUUID();
+  }
+
+  @Override
+  public void die(DamageSource source) {
+    super.die(source);
+    if (this.level() instanceof ServerLevel level) {
+      WickmanHead found = this.getHead(level);
+      if (found != null) {
+        found.burnOut(level);
+      }
     }
   }
 
@@ -250,6 +294,7 @@ public class Wickman extends Monster {
     super.addAdditionalSaveData(output);
     output.putInt("variant", this.getVariant().ordinal());
     output.putInt("phase", this.getPhase().ordinal());
+    output.storeNullable("head", UUIDUtil.CODEC, this.head);
   }
 
   @Override
@@ -257,8 +302,46 @@ public class Wickman extends Monster {
     super.readAdditionalSaveData(input);
     this.entityData.set(DATA_VARIANT, input.getIntOr("variant", 0));
     this.entityData.set(DATA_PHASE, input.getIntOr("phase", 0));
+    this.head = input.read("head", UUIDUtil.CODEC).orElse(null);
     this.bossEvent.setColor(this.getVariant() == Variant.FROST ? BossEvent.BossBarColor.BLUE : BossEvent.BossBarColor.YELLOW);
     this.bossEvent.setName(this.getDisplayName());
+  }
+
+  private final class GuardHeadGoal extends Goal {
+
+    private @Nullable WickmanHead guarded;
+
+    GuardHeadGoal() {
+      this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+    }
+
+    private @Nullable WickmanHead head() {
+      return Wickman.this.getPhase() == Phase.HEADLESS && Wickman.this.level() instanceof ServerLevel level ? Wickman.this.getHead(level) : null;
+    }
+
+    @Override
+    public boolean canUse() {
+      this.guarded = this.head();
+      return this.guarded != null && Wickman.this.distanceTo(this.guarded) > GUARD_LEASH;
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+      return this.guarded != null && this.guarded.isAlive() && Wickman.this.distanceTo(this.guarded) > GUARD_CLOSE;
+    }
+
+    @Override
+    public void tick() {
+      if (this.guarded != null && Wickman.this.tickCount % 10 == 0) {
+        Wickman.this.getNavigation().moveTo(this.guarded.getX(), this.guarded.getY(), this.guarded.getZ(), 1.3);
+      }
+    }
+
+    @Override
+    public void stop() {
+      this.guarded = null;
+      Wickman.this.getNavigation().stop();
+    }
   }
 
   public enum Variant {
