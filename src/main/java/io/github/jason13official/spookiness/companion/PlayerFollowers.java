@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public final class PlayerFollowers {
 
@@ -26,8 +28,35 @@ public final class PlayerFollowers {
 
   private static final Set<Mob> LOADED = ConcurrentHashMap.newKeySet();
 
-  public static <T extends Mob & PlayerFollower> void track(T follower) {
-    if (follower.isAddedToLevel() && !follower.level().isClientSide() && follower.getOwnerUUID() != null) {
+  public static @Nullable UUID ownerOf(Mob mob) {
+    if (mob instanceof PlayerFollower following) {
+      return following.getOwnerUUID();
+    }
+    return Hallowing.ownerOf(mob);
+  }
+
+  public static int count(ServerPlayer owner, Predicate<Mob> filter) {
+    int count = 0;
+    for (Mob follower : LOADED) {
+      if (isFollowing(follower, owner) && filter.test(follower)) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  public static List<Mob> followers(ServerPlayer owner, Predicate<Mob> filter) {
+    List<Mob> followers = new ArrayList<>();
+    for (Mob follower : LOADED) {
+      if (isFollowing(follower, owner) && filter.test(follower)) {
+        followers.add(follower);
+      }
+    }
+    return followers;
+  }
+
+  public static void track(Mob follower) {
+    if (follower.isAddedToLevel() && !follower.level().isClientSide() && ownerOf(follower) != null) {
       LOADED.add(follower);
     }
   }
@@ -43,13 +72,13 @@ public final class PlayerFollowers {
   }
 
   private static boolean isFollowing(Mob follower, ServerPlayer owner) {
-    return follower instanceof PlayerFollower following && owner.getUUID().equals(following.getOwnerUUID()) && follower.isAlive() && !follower.isRemoved();
+    return owner.getUUID().equals(ownerOf(follower)) && follower.isAlive() && !follower.isRemoved();
   }
 
   public static void tick(MinecraftServer server) {
 
     for (Mob follower : List.copyOf(LOADED)) {
-      UUID ownerId = follower instanceof PlayerFollower following ? following.getOwnerUUID() : null;
+      UUID ownerId = ownerOf(follower);
       ServerPlayer owner = ownerId == null ? null : server.getPlayerList().getPlayer(ownerId);
       if (owner == null || !owner.isAlive() || owner.isSpectator() || !isFollowing(follower, owner)) {
         continue;

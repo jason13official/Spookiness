@@ -53,6 +53,9 @@ public class SpookinessModelProvider extends ModelProvider {
     spawnEgg(itemModels, ModItems.FLOATING_BOOK_SPAWN_EGG, spawnEgg, 0x6E4325, 0xE5D9AE);
     spawnEgg(itemModels, ModItems.FLOATING_SWORD_SPAWN_EGG, spawnEgg, 0xB8BEC8, 0x5E3FAE);
     spawnEgg(itemModels, ModItems.SPECTRAL_JACK_O_MIMIC_SPAWN_EGG, spawnEgg, 0x5FE3E0, 0x1A4E7A);
+    spawnEgg(itemModels, ModItems.WICKMAN_SPAWN_EGG, spawnEgg, 0xC9A65A, 0xFF7A1A);
+    spawnEgg(itemModels, ModItems.HALLOWED_MOTHER_SPAWN_EGG, spawnEgg, 0x8A5A2B, 0x4E7A2E);
+    spawnEgg(itemModels, ModItems.GOURDWYRM_SPAWN_EGG, spawnEgg, 0xD9731E, 0x3B5A1E);
 
     itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.PUMPKIN_MACE)));
 

@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.effect;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModAttachments;
+import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -152,8 +153,10 @@ public final class LamentRitual {
 
     double scale = from.dimensionType().coordinateScale() / destination.dimensionType().coordinateScale();
     BlockPos origin = destination.getWorldBorder().clampToBounds(player.getX() * scale, player.getY(), player.getZ() * scale);
-    BlockPos arrival = findArrival(destination, origin);
-    Vec3 target = Vec3.atBottomCenterOf(arrival);
+    Vec3 target = destinationKey == Level.NETHER ? NetherrealmArena.findArrival(destination, origin).orElse(null) : null;
+    if (target == null) {
+      target = Vec3.atBottomCenterOf(findArrival(destination, origin));
+    }
 
     player.teleport(new TeleportTransition(destination, target, Vec3.ZERO, player.getYRot(), player.getXRot(),
         TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET)));

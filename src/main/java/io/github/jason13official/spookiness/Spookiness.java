@@ -1,6 +1,10 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
+import io.github.jason13official.spookiness.boss.Kindling;
+import io.github.jason13official.spookiness.boss.MaceRituals;
 import io.github.jason13official.spookiness.companion.Allies;
+import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.effect.LamentRitual;
@@ -9,6 +13,9 @@ import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.FloatingSword;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
+import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
+import io.github.jason13official.spookiness.entity.boss.HallowedMother;
+import io.github.jason13official.spookiness.entity.boss.Wickman;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModAttachments;
@@ -18,6 +25,7 @@ import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
 import io.github.jason13official.spookiness.registry.ModTabs;
 import io.github.jason13official.spookiness.world.SpookySpawns;
+import io.github.jason13official.spookiness.world.netherrealm.ModStructures;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.minecraft.core.Registry;
@@ -44,6 +52,10 @@ import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
@@ -83,6 +95,8 @@ public class Spookiness {
     // recipe type, recipe serializer, attribute
     // villager type, villager profession,
     bind(Registries.FEATURE, ModFeatures::register);
+    bind(Registries.STRUCTURE_TYPE, ModStructures::registerTypes);
+    bind(Registries.STRUCTURE_PIECE, ModStructures::registerPieces);
     bind(Registries.CREATIVE_MODE_TAB, ModTabs::register);
     // game rule
 
@@ -97,6 +111,9 @@ public class Spookiness {
       event.put(ModEntities.FLOATING_BOOK, FloatingBook.createAttributes().build());
       event.put(ModEntities.FLOATING_SWORD, FloatingSword.createAttributes().build());
       event.put(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimic.createAttributes().build());
+      event.put(ModEntities.WICKMAN, Wickman.createAttributes().build());
+      event.put(ModEntities.HALLOWED_MOTHER, HallowedMother.createAttributes().build());
+      event.put(ModEntities.GOURDWYRM, Gourdwyrm.createAttributes().build());
     });
 
     // RegisterSpawnPlacementsEvent
@@ -128,6 +145,35 @@ public class Spookiness {
       // do not target players wielding our pumpkin_mace
       if (event.getNewAboutToBeSetTarget() instanceof Player player && player.getMainHandItem().is(ModItems.PUMPKIN_MACE)) {
         event.setCanceled(true);
+      }
+    });
+
+    // LivingChangeTargetEvent
+    NeoForge.EVENT_BUS.addListener(Hallowing::onChangeTarget);
+
+    // LivingIncomingDamageEvent
+    NeoForge.EVENT_BUS.addListener((LivingIncomingDamageEvent event) -> {
+
+      Hallowing.onIncomingDamage(event);
+      Wickman.onIncomingDamage(event);
+    });
+
+    // PlayerInteractEvent.EntityInteract
+    NeoForge.EVENT_BUS.addListener(MaceRituals::onEntityInteract);
+
+    // EntityTickEvent.Post
+    NeoForge.EVENT_BUS.addListener((EntityTickEvent.Post event) -> {
+
+      if (event.getEntity().level().isClientSide()) {
+        Hallowing.clientTick(event.getEntity());
+      }
+    });
+
+    // EntityLeaveLevelEvent
+    NeoForge.EVENT_BUS.addListener((EntityLeaveLevelEvent event) -> {
+
+      if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
+        PlayerFollowers.untrack(mob);
       }
     });
 
@@ -168,19 +214,31 @@ public class Spookiness {
         SpookySpawns.tickCandleAwakening(player);
         SpookySpawns.tickBookshelfAwakening(player);
         LamentRitual.tick(player);
+        HallowedMotherTrigger.tick(player);
       }
     });
 
     // EntityJoinLevelEvent
     NeoForge.EVENT_BUS.addListener((EntityJoinLevelEvent event) -> {
 
-      if (!event.getLevel().isClientSide() && !event.loadedFromDisk()) {
+      if (event.getLevel().isClientSide()) {
+        return;
+      }
+      if (!event.loadedFromDisk()) {
         Allies.onEntityJoin(event.getEntity());
+      }
+      if (event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
+        Hallowing.applyGoals(mob);
+        PlayerFollowers.track(mob);
       }
     });
 
     // ServerTickEvent.Post
-    NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> PlayerFollowers.tick(event.getServer()));
+    NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> {
+
+      PlayerFollowers.tick(event.getServer());
+      Kindling.tick(event.getServer());
+    });
 
     // PlayerEvent.PlayerLoggedOutEvent
     NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> {

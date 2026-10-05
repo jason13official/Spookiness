@@ -3,7 +3,10 @@ package io.github.jason13official.spookiness.registry;
 import io.github.jason13official.spookiness.Spookiness;
 import com.mojang.serialization.Codec;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
@@ -14,6 +17,8 @@ public class ModAttachments {
   public static AttachmentType<List<CompoundTag>> STASHED_COMPANIONS;
   public static AttachmentType<Boolean> BOOK_AWAKENED;
   public static AttachmentType<Integer> LAMENT_RITUAL;
+  public static AttachmentType<Optional<UUID>> HALLOWED_OWNER;
+  public static AttachmentType<Long> MOTHER_NIGHT;
 
   public static void register(BiConsumer<AttachmentType<?>, Identifier> consumer) {
 
@@ -32,5 +37,17 @@ public class ModAttachments {
         .sync(ByteBufCodecs.VAR_INT)
         .build();
     consumer.accept(LAMENT_RITUAL, Spookiness.id("lament_ritual"));
+
+    HALLOWED_OWNER = AttachmentType.<Optional<UUID>>builder(Optional::empty)
+        .serialize(UUIDUtil.CODEC.optionalFieldOf("owner"), Optional::isPresent)
+        .sync(ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC))
+        .build();
+    consumer.accept(HALLOWED_OWNER, Spookiness.id("hallowed_owner"));
+
+    MOTHER_NIGHT = AttachmentType.builder(() -> -1L)
+        .serialize(Codec.LONG.fieldOf("mother_night"), night -> night >= 0L)
+        .copyOnDeath()
+        .build();
+    consumer.accept(MOTHER_NIGHT, Spookiness.id("mother_night"));
   }
 }

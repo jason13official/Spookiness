@@ -46,6 +46,12 @@ public class ModItems {
 
   public static Item SPECTRAL_JACK_O_MIMIC_SPAWN_EGG;
 
+  public static Item WICKMAN_SPAWN_EGG;
+
+  public static Item HALLOWED_MOTHER_SPAWN_EGG;
+
+  public static Item GOURDWYRM_SPAWN_EGG;
+
   public static List<Item> SPAWN_EGGS = new ArrayList<>();
 
   public static List<Item> CREATIVE_TAB_ITEMS = new LinkedList<>();
@@ -72,6 +78,9 @@ public class ModItems {
     FLOATING_BOOK_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_BOOK, consumer);
     FLOATING_SWORD_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SWORD, consumer);
     SPECTRAL_JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.SPECTRAL_JACK_O_MIMIC, consumer);
+    WICKMAN_SPAWN_EGG = registerSpawnEgg(ModEntities.WICKMAN, consumer);
+    HALLOWED_MOTHER_SPAWN_EGG = registerSpawnEgg(ModEntities.HALLOWED_MOTHER, consumer);
+    GOURDWYRM_SPAWN_EGG = registerSpawnEgg(ModEntities.GOURDWYRM, consumer);
   }
 
   // region vanilla registration methods

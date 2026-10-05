@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.datagen;
 
+import io.github.jason13official.spookiness.registry.ModDamageTypes;
+import io.github.jason13official.spookiness.world.netherrealm.ModStructures;
 import io.github.jason13official.spookiness.worldgen.ModBiomeModifiers;
 import io.github.jason13official.spookiness.worldgen.ModConfiguredFeatures;
 import io.github.jason13official.spookiness.worldgen.ModPlacedFeatures;
@@ -15,9 +17,13 @@ public class SpookinessDatagen {
     event.createDatapackRegistryObjects(new RegistrySetBuilder()
         .add(Registries.CONFIGURED_FEATURE, ModConfiguredFeatures::bootstrap)
         .add(Registries.PLACED_FEATURE, ModPlacedFeatures::bootstrap)
-        .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, ModBiomeModifiers::bootstrap));
+        .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, ModBiomeModifiers::bootstrap)
+        .add(Registries.DAMAGE_TYPE, ModDamageTypes::bootstrap)
+        .add(Registries.STRUCTURE, ModStructures::bootstrapStructures)
+        .add(Registries.STRUCTURE_SET, ModStructures::bootstrapSets));
 
     event.createProvider(SpookinessBiomeTagsProvider::new);
+    event.createProvider(SpookinessDamageTypeTagsProvider::new);
     event.createProvider(SpookinessRecipeProvider.Runner::new);
     event.createProvider(SpookinessModelProvider::new);
     event.createProvider(SpookinessLanguageProvider::new);
