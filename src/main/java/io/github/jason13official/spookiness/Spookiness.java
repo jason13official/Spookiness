@@ -22,6 +22,8 @@ import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.lighting.LanternHeads;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModAttachments;
+import io.github.jason13official.spookiness.registry.ModBlockEntities;
+import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModFeatures;
@@ -94,6 +96,8 @@ public class Spookiness {
 
     // vanilla registration
     // sounds, fluids, mob effects, blocks
+    bind(Registries.BLOCK, ModBlocks::register);
+    bind(Registries.BLOCK_ENTITY_TYPE, ModBlockEntities::register);
     bind(Registries.ENTITY_TYPE, ModEntities::register);
     bind(Registries.ITEM, ModItems::register);
     // potion, particle, block entity type, menu,
@@ -202,7 +206,6 @@ public class Spookiness {
     NeoForge.EVENT_BUS.addListener((LevelEvent.Unload event) -> {
 
       LivingLights.unload(event.getLevel());
-      LanternHeads.unload(event.getLevel());
     });
 
     // LivingDeathEvent

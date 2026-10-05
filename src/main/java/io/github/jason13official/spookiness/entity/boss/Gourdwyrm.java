@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.entity.boss;
 
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.world.netherrealm.GourdwyrmFight;
+import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -274,6 +275,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     this.spawnAtLocation(level, new ItemStack(Items.JACK_O_LANTERN, 8));
     if (this.anchor != null) {
       GourdwyrmFight.get(level).markDefeated(this.anchor);
+      NetherrealmArena.onWyrmDefeated(level, this.anchor);
     }
   }
 

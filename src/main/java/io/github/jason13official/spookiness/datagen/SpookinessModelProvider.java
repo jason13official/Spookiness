@@ -4,6 +4,8 @@ import com.mojang.math.Transformation;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
 import io.github.jason13official.spookiness.client.renderer.LamentConfigurationSpecialRenderer;
+import io.github.jason13official.spookiness.client.renderer.SoullessJackOMimicSpecialRenderer;
+import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModItems;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
@@ -27,6 +29,8 @@ import org.joml.Vector3f;
 public class SpookinessModelProvider extends ModelProvider {
 
   private static final Transformation LAMENT_TRANSFORMATION = new Transformation(new Vector3f(0.5F, 1.875F, 0.5F), null, new Vector3f(1.0F, -1.0F, -1.0F), null);
+
+  private static final Transformation SOULLESS_TRANSFORMATION = new Transformation(new Vector3f(0.5F, 1.5F, 0.5F), null, new Vector3f(1.0F, -1.0F, -1.0F), null);
 
   private static final ExtendedModelTemplate LAMENT_BASE = ExtendedModelTemplateBuilder.builder()
       .requiredTextureSlot(TextureSlot.PARTICLE)
@@ -56,6 +60,11 @@ public class SpookinessModelProvider extends ModelProvider {
     spawnEgg(itemModels, ModItems.WICKMAN_SPAWN_EGG, spawnEgg, 0xC9A65A, 0xFF7A1A);
     spawnEgg(itemModels, ModItems.HALLOWED_MOTHER_SPAWN_EGG, spawnEgg, 0x8A5A2B, 0x4E7A2E);
     spawnEgg(itemModels, ModItems.GOURDWYRM_SPAWN_EGG, spawnEgg, 0xD9731E, 0x3B5A1E);
+
+    blockModels.createParticleOnlyBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, Blocks.CARVED_PUMPKIN);
+    itemModels.itemModelOutput.accept(ModItems.SOULLESS_JACK_O_MIMIC, ItemModelUtils.specialModel(ModelLocationUtils.getModelLocation(ModItems.SOULLESS_JACK_O_MIMIC),
+        SOULLESS_TRANSFORMATION, new SoullessJackOMimicSpecialRenderer.Unbaked()));
+    LAMENT_BASE.create(ModItems.SOULLESS_JACK_O_MIMIC, TextureMapping.particle(Blocks.CARVED_PUMPKIN), itemModels.modelOutput);
 
     itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.PUMPKIN_MACE)));
 

@@ -32,6 +32,8 @@ public class ModItems {
 
   public static Item LAMENT_CONFIGURATION;
 
+  public static Item SOULLESS_JACK_O_MIMIC;
+
   public static Item PIECE_OF_LAMENT_ONE;
 
   public static Item PIECE_OF_LAMENT_TWO;
@@ -67,6 +69,8 @@ public class ModItems {
         .component(DataComponents.WEAPON, new Weapon(1)), consumer); // format
 
     LAMENT_CONFIGURATION = registerItem("lament_configuration", LamentConfigurationItem::new, new Item.Properties().stacksTo(1), consumer);
+
+    SOULLESS_JACK_O_MIMIC = registerBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, consumer);
 
     PIECE_OF_LAMENT_ONE = registerItem("piece_of_lament_one", new Item.Properties().stacksTo(1), consumer);
 

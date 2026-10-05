@@ -2,6 +2,10 @@ package io.github.jason13official.spookiness.effect;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModAttachments;
+import io.github.jason13official.spookiness.registry.ModDataComponents;
+import io.github.jason13official.spookiness.registry.ModItems;
+import net.minecraft.core.GlobalPos;
+import org.jspecify.annotations.Nullable;
 import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -56,6 +60,9 @@ public final class LamentRitual {
       return;
     }
     player.setData(ModAttachments.LAMENT_RITUAL, 1);
+    if (player.level().dimension() != Level.NETHER) {
+      stack.set(ModDataComponents.LAMENT_ORIGIN, GlobalPos.of(player.level().dimension(), player.blockPosition()));
+    }
     setFrozen(player, true);
     player.setDeltaMovement(Vec3.ZERO);
     player.hurtMarked = true;
@@ -143,7 +150,9 @@ public final class LamentRitual {
   private static void travel(ServerPlayer player) {
 
     ServerLevel from = player.level();
-    ResourceKey<Level> destinationKey = from.dimension() == Level.NETHER ? Level.OVERWORLD : Level.NETHER;
+    ItemStack homeward = from.dimension() == Level.NETHER ? findHomeward(player) : null;
+    GlobalPos home = homeward == null ? null : homeward.get(ModDataComponents.LAMENT_ORIGIN);
+    ResourceKey<Level> destinationKey = home != null ? home.dimension() : from.dimension() == Level.NETHER ? Level.OVERWORLD : Level.NETHER;
     ServerLevel destination = from.getServer().getLevel(destinationKey);
     if (destination == null) {
       return;
@@ -151,16 +160,38 @@ public final class LamentRitual {
 
     burst(from, player.position());
 
-    double scale = from.dimensionType().coordinateScale() / destination.dimensionType().coordinateScale();
-    BlockPos origin = destination.getWorldBorder().clampToBounds(player.getX() * scale, player.getY(), player.getZ() * scale);
-    Vec3 target = destinationKey == Level.NETHER ? NetherrealmArena.findArrival(destination, origin).orElse(null) : null;
-    if (target == null) {
-      target = Vec3.atBottomCenterOf(findArrival(destination, origin));
+    Vec3 target;
+    if (home != null) {
+      BlockPos pos = home.pos();
+      target = Vec3.atBottomCenterOf(isStandable(destination, pos) ? pos : findArrival(destination, pos));
+      homeward.remove(ModDataComponents.LAMENT_ORIGIN);
+    } else {
+      double scale = from.dimensionType().coordinateScale() / destination.dimensionType().coordinateScale();
+      BlockPos origin = destination.getWorldBorder().clampToBounds(player.getX() * scale, player.getY(), player.getZ() * scale);
+      target = destinationKey == Level.NETHER ? NetherrealmArena.findArrival(destination, origin).orElse(null) : null;
+      if (target == null) {
+        target = Vec3.atBottomCenterOf(findArrival(destination, origin));
+      }
     }
 
     player.teleport(new TeleportTransition(destination, target, Vec3.ZERO, player.getYRot(), player.getXRot(),
         TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET)));
     burst(destination, target);
+  }
+
+  private static @Nullable ItemStack findHomeward(ServerPlayer player) {
+
+    for (ItemStack stack : new ItemStack[] {player.getMainHandItem(), player.getOffhandItem()}) {
+      if (stack.is(ModItems.LAMENT_CONFIGURATION) && stack.has(ModDataComponents.LAMENT_ORIGIN)) {
+        return stack;
+      }
+    }
+    for (ItemStack stack : player.getInventory()) {
+      if (stack.is(ModItems.LAMENT_CONFIGURATION) && stack.has(ModDataComponents.LAMENT_ORIGIN)) {
+        return stack;
+      }
+    }
+    return null;
   }
 
   private static BlockPos findArrival(ServerLevel level, BlockPos origin) {

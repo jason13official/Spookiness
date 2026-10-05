@@ -1,19 +1,24 @@
 package io.github.jason13official.spookiness.world.netherrealm;
 
 import com.mojang.datafixers.util.Pair;
+import io.github.jason13official.spookiness.block.entity.SoullessJackOMimicBlockEntity;
 import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.entity.boss.VigilCandle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import io.github.jason13official.spookiness.registry.ModItems;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
+import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -32,7 +37,6 @@ public final class NetherrealmArena {
   public static final int PILLAR_HEIGHT = 14;
 
   private static final int SEARCH_RADIUS_CHUNKS = 100;
-  private static final double ALTAR_REACH = 8.0;
   private static final double WYRM_RISE = 16.0;
 
   public static BoundingBox bounds(BlockPos center) {
@@ -95,31 +99,60 @@ public final class NetherrealmArena {
     return !level.getEntitiesOfClass(Gourdwyrm.class, new AABB(center).inflate(RADIUS * 3)).isEmpty();
   }
 
-  public static boolean tryAwaken(ServerLevel level, ServerPlayer player, ItemStack lament) {
+  public static BlockPos altarPos(BlockPos center) {
+    return center.above(2);
+  }
 
-    Optional<BlockPos> found = centerAt(level, player.blockPosition());
-    if (found.isEmpty()) {
-      return false;
+  public static void onAltarChanged(ServerLevel level, BlockPos pos, ItemStack inserted, ItemStack removed, @Nullable Player player) {
+
+    Optional<BlockPos> found = centerAt(level, pos);
+    if (found.isEmpty() || !altarPos(found.get()).equals(pos)) {
+      return;
     }
     BlockPos center = found.get();
-    if (player.position().distanceTo(Vec3.atBottomCenterOf(center)) > ALTAR_REACH) {
-      player.sendOverlayMessage(Component.translatable("message.spookiness.netherrealm_altar"));
-      return true;
+    if (removed.is(ModItems.LAMENT_CONFIGURATION)) {
+      forfeit(level, center);
     }
-    if (isFightActive(level, center)) {
-      player.sendOverlayMessage(Component.translatable("message.spookiness.netherrealm_active"));
-      return true;
+    if (inserted.is(ModItems.LAMENT_CONFIGURATION) && !isFightActive(level, center)) {
+      awaken(level, center);
     }
+  }
+
+  private static void awaken(ServerLevel level, BlockPos center) {
 
     Gourdwyrm wyrm = Gourdwyrm.awaken(level, center, Vec3.atBottomCenterOf(center).add(0.0, WYRM_RISE, 0.0));
     if (wyrm == null) {
-      return true;
+      return;
     }
     for (BlockPos base : pillarBases(center)) {
       VigilCandle.plant(level, wyrm, Vec3.atBottomCenterOf(base.above(PILLAR_HEIGHT + 1)), false, true);
     }
-    lament.consume(1, player);
-    SoulBurst.spawn(level, Vec3.atCenterOf(center.above(2)), 64, 0.6, 0.12);
-    return true;
+    SoulBurst.spawn(level, Vec3.atCenterOf(altarPos(center)), 64, 0.6, 0.12);
+  }
+
+  private static void forfeit(ServerLevel level, BlockPos center) {
+
+    AABB arena = new AABB(center).inflate(RADIUS * 3);
+    for (Gourdwyrm wyrm : level.getEntitiesOfClass(Gourdwyrm.class, arena)) {
+      level.sendParticles(ParticleTypes.LARGE_SMOKE, wyrm.getX(), wyrm.getY() + 1.5, wyrm.getZ(), 60, 1.5, 1.5, 1.5, 0.05);
+      wyrm.discard();
+    }
+    snuffGreatCandles(level, arena);
+    level.playSound(null, center, SoundEvents.ENDER_DRAGON_AMBIENT, SoundSource.HOSTILE, 3.0F, 0.4F);
+  }
+
+  public static void onWyrmDefeated(ServerLevel level, BlockPos center) {
+
+    snuffGreatCandles(level, new AABB(center).inflate(RADIUS * 3));
+    if (level.getBlockEntity(altarPos(center)) instanceof SoullessJackOMimicBlockEntity altar) {
+      altar.release(level, null, true);
+    }
+  }
+
+  private static void snuffGreatCandles(ServerLevel level, AABB area) {
+
+    for (VigilCandle candle : level.getEntitiesOfClass(VigilCandle.class, area, VigilCandle::isGreat)) {
+      candle.snuff(level);
+    }
   }
 }

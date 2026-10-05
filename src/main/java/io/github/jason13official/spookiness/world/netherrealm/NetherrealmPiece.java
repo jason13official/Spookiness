@@ -1,6 +1,9 @@
 package io.github.jason13official.spookiness.world.netherrealm;
 
+import io.github.jason13official.spookiness.block.SoullessJackOMimicBlock;
+import io.github.jason13official.spookiness.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -25,7 +28,6 @@ public class NetherrealmPiece extends StructurePiece {
   private static final BlockState PILLAR_FRAME = Blocks.DARK_OAK_LOG.defaultBlockState();
   private static final BlockState PILLAR_CAP = Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState();
   private static final BlockState ALTAR = Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState();
-  private static final BlockState ALTAR_TOP = Blocks.JACK_O_LANTERN.defaultBlockState();
   private static final BlockState PUMPKIN = Blocks.PUMPKIN.defaultBlockState();
   private static final BlockState AIR = Blocks.AIR.defaultBlockState();
 
@@ -118,7 +120,8 @@ public class NetherrealmPiece extends StructurePiece {
         place(level, chunkBB, pos.set(this.center.getX() + ox, this.center.getY() + 1, this.center.getZ() + oz), ALTAR);
       }
     }
-    place(level, chunkBB, pos.set(this.center.getX(), this.center.getY() + 2, this.center.getZ()), ALTAR_TOP);
+    place(level, chunkBB, pos.set(this.center.getX(), this.center.getY() + 2, this.center.getZ()),
+        ModBlocks.SOULLESS_JACK_O_MIMIC.defaultBlockState().setValue(SoullessJackOMimicBlock.FACING, Direction.SOUTH));
   }
 
   private static void place(WorldGenLevel level, BoundingBox chunkBB, BlockPos pos, BlockState state) {

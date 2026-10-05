@@ -365,7 +365,7 @@ public class HallowedMother extends Monster {
     this.spitMealEarly = false;
     this.entityData.set(DATA_GAPING, true);
     this.playSound(SoundEvents.WARDEN_SNIFF, 3.0F, 0.5F);
-    this.playSound(SoundEvents.ELYTRA_FLYING, 1.5F, 0.6F);
+    this.playSound(SoundEvents.BREEZE_IDLE_GROUND, 1.5F, 0.6F);
     return true;
   }
 

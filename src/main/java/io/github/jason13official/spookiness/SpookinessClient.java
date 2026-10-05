@@ -9,6 +9,9 @@ import io.github.jason13official.spookiness.client.renderer.FloatingSwordRendere
 import io.github.jason13official.spookiness.client.renderer.JackOMimicRenderer;
 import io.github.jason13official.spookiness.client.renderer.LamentConfigurationOverlay;
 import io.github.jason13official.spookiness.client.renderer.LamentConfigurationSpecialRenderer;
+import io.github.jason13official.spookiness.client.renderer.SoullessJackOMimicRenderer;
+import io.github.jason13official.spookiness.client.renderer.SoullessJackOMimicSpecialRenderer;
+import io.github.jason13official.spookiness.registry.ModBlockEntities;
 import io.github.jason13official.spookiness.client.renderer.SpectralJackOMimicRenderer;
 import io.github.jason13official.spookiness.client.renderer.BooklessEnchantTableRenderer;
 import io.github.jason13official.spookiness.client.renderer.layer.HeadItemLayer;
@@ -59,12 +62,14 @@ public class SpookinessClient {
       event.registerEntityRenderer(ModEntities.GOURDWYRM, GourdwyrmRenderer::new);
 
       event.registerBlockEntityRenderer(BlockEntityType.ENCHANTING_TABLE, BooklessEnchantTableRenderer::new);
+      event.registerBlockEntityRenderer(ModBlockEntities.SOULLESS_JACK_O_MIMIC, SoullessJackOMimicRenderer::new);
     });
 
     // RegisterSpecialModelRendererEvent
     modEventBus.addListener((RegisterSpecialModelRendererEvent event) -> {
 
       event.register(Spookiness.id("lament"), LamentConfigurationSpecialRenderer.Unbaked.MAP_CODEC);
+      event.register(Spookiness.id("soulless_jack_o_mimic"), SoullessJackOMimicSpecialRenderer.Unbaked.MAP_CODEC);
     });
 
     // ClientTickEvent.Post

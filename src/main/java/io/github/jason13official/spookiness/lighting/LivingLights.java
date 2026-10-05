@@ -32,6 +32,12 @@ public final class LivingLights {
     checkBlock(level, pos);
   }
 
+  public static boolean has(Entity entity) {
+
+    LevelLights lights = LEVELS.get(entity.level());
+    return lights != null && lights.getSources().containsKey(entity);
+  }
+
   public static void move(Entity entity) {
 
     LevelLights lights = LEVELS.get(entity.level());

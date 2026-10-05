@@ -168,7 +168,7 @@ public class JackOMimic extends JumpingPathfinderMob {
   @Override
   protected SoundEvent getJumpSound() {
 
-    return SoundEvents.DONKEY_JUMP;
+    return SoundEvents.SLIME_JUMP_SMALL;
   }
 
   @Override

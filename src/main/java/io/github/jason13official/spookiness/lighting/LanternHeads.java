@@ -1,37 +1,32 @@
 package io.github.jason13official.spookiness.lighting;
 
+import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
+import io.github.jason13official.spookiness.entity.boss.HallowedMother;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import io.github.jason13official.spookiness.entity.boss.WickmanHead;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.LevelAccessor;
 
 public final class LanternHeads {
 
   public static final int EMISSION = 15;
 
-  private static final Set<Entity> LIT = ConcurrentHashMap.newKeySet();
-
   public static void tick(Entity entity) {
 
-    if (!(entity instanceof LivingEntity living) || entity instanceof JackOMimic || entity instanceof SpectralJackOMimic) {
+    if (!isManaged(entity)) {
       return;
     }
 
-    boolean glowing = isLanternHeaded(living);
-    boolean lit = LIT.contains(entity);
+    boolean glowing = isLanternHeaded((LivingEntity) entity);
+    boolean lit = LivingLights.has(entity);
     if (glowing && !lit) {
       LivingLights.add(entity, EMISSION);
-      LIT.add(entity);
     } else if (!glowing && lit) {
       LivingLights.remove(entity);
-      LIT.remove(entity);
     } else if (lit) {
       LivingLights.move(entity);
     }
@@ -39,18 +34,21 @@ public final class LanternHeads {
 
   public static void leave(Entity entity) {
 
-    if (LIT.remove(entity)) {
+    if (isManaged(entity)) {
       LivingLights.remove(entity);
     }
   }
 
-  public static void unload(LevelAccessor level) {
-
-    LIT.removeIf(entity -> entity.level() == level);
+  private static boolean isManaged(Entity entity) {
+    return entity instanceof LivingEntity && !(entity instanceof JackOMimic) && !(entity instanceof SpectralJackOMimic)
+        && !(entity instanceof FloatingCandles);
   }
 
   private static boolean isLanternHeaded(LivingEntity entity) {
 
+    if (entity instanceof HallowedMother) {
+      return true;
+    }
     if (entity instanceof WickmanHead head) {
       return !head.isFrost();
     }

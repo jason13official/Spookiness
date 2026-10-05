@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness.datagen;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import net.minecraft.data.PackOutput;
@@ -17,6 +18,8 @@ public class SpookinessLanguageProvider extends LanguageProvider {
 
     this.add(ModItems.PUMPKIN_MACE, "Pumpkin Mace");
     this.add(ModItems.LAMENT_CONFIGURATION, "Lament Configuration");
+    this.add("item.spookiness.lament_configuration.return_home", "Ready to return home?");
+    this.add(ModBlocks.SOULLESS_JACK_O_MIMIC, "Soulless Jack o'Mimic");
     this.add(ModItems.PIECE_OF_LAMENT_ONE, "Piece of Lament, One");
     this.add(ModItems.PIECE_OF_LAMENT_TWO, "Piece of Lament, Two");
 
@@ -52,8 +55,6 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add("message.spookiness.mother_seizes", "The Hallowed Mother seizes %s! Strike her with the mace to cut the vine");
     this.add("message.spookiness.mother_sinks_dawn", "The Hallowed Mother retreats from the daylight");
     this.add("message.spookiness.mother_sinks_lost", "The Hallowed Mother has reclaimed her children");
-    this.add("message.spookiness.netherrealm_altar", "Bring the Lament to the altar at the heart of the Netherrealm");
-    this.add("message.spookiness.netherrealm_active", "The Gourdwyrm already stirs");
     this.add("death.attack.spookiness.hallowing", "%1$s gave too much of themselves to the harvest");
     this.add("death.attack.spookiness.hallowing.player", "%1$s gave too much of themselves to the harvest");
   }

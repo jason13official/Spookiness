@@ -6,6 +6,7 @@ import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.EnumSet;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
@@ -43,10 +44,14 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 public class Wickman extends Monster {
@@ -66,6 +71,7 @@ public class Wickman extends Monster {
   private static final double VIGIL_RADIUS = 6.0;
   private static final int PUMPKIN_KILL_REWARD = 5;
   private static final int HEAD_CHECK_INTERVAL = 40;
+  private static final float SNOW_TRAIL_SPREAD = 0.4F;
   private static final double GUARD_LEASH = 8.0;
   private static final double GUARD_CLOSE = 4.0;
 
@@ -176,6 +182,29 @@ public class Wickman extends Monster {
           false);
     }
     level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLAZE_AMBIENT, SoundSource.HOSTILE, 1.5F, 0.6F);
+  }
+
+  @Override
+  public void aiStep() {
+    super.aiStep();
+    if (this.getVariant() == Variant.FROST && this.level() instanceof ServerLevel level && EventHooks.canEntityGrief(level, this)) {
+      this.leaveSnowTrail(level);
+    }
+  }
+
+  private void leaveSnowTrail(ServerLevel level) {
+
+    BlockState snow = Blocks.SNOW.defaultBlockState();
+    for (int i = 0; i < 4; i++) {
+      int x = Mth.floor(this.getX() + (i % 2 * 2 - 1) * SNOW_TRAIL_SPREAD);
+      int y = Mth.floor(this.getY());
+      int z = Mth.floor(this.getZ() + (i / 2 % 2 * 2 - 1) * SNOW_TRAIL_SPREAD);
+      BlockPos pos = new BlockPos(x, y, z);
+      if (level.getBlockState(pos).isAir() && snow.canSurvive(level, pos)) {
+        level.setBlockAndUpdate(pos, snow);
+        level.gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(this, snow));
+      }
+    }
   }
 
   @Override
