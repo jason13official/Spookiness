@@ -5,6 +5,7 @@ import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.FloatingSword;
 import io.github.jason13official.spookiness.entity.JackOMimic;
+import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import java.util.function.BiConsumer;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -18,6 +19,7 @@ public class ModEntities {
   public static EntityType<FloatingCandles> FLOATING_CANDLES;
   public static EntityType<FloatingBook> FLOATING_BOOK;
   public static EntityType<FloatingSword> FLOATING_SWORD;
+  public static EntityType<SpectralJackOMimic> SPECTRAL_JACK_O_MIMIC;
 
   public static void register(BiConsumer<EntityType<?>, Identifier> consumer) {
 
@@ -32,6 +34,9 @@ public class ModEntities {
 
     FLOATING_SWORD = EntityType.Builder.of(FloatingSword::new, MobCategory.MONSTER).sized(0.6f, 1.95f).clientTrackingRange(8).build(key("floating_sword"));
     consumer.accept(FLOATING_SWORD, Spookiness.id("floating_sword"));
+
+    SPECTRAL_JACK_O_MIMIC = EntityType.Builder.of(SpectralJackOMimic::new, MobCategory.MISC).sized(1.0f, 1.0f).clientTrackingRange(10).build(key("spectral_jack_o_mimic"));
+    consumer.accept(SPECTRAL_JACK_O_MIMIC, Spookiness.id("spectral_jack_o_mimic"));
   }
 
   private static ResourceKey<EntityType<?>> key(String path) {

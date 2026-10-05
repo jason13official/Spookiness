@@ -1,11 +1,16 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.companion.SpectralCompanions;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.FloatingSword;
 import io.github.jason13official.spookiness.entity.JackOMimic;
+import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
+import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.spookiness.registry.ModAttachments;
+import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
@@ -16,6 +21,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -36,7 +42,10 @@ import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +63,8 @@ public class Spookiness {
 
     EVENT_BUS = modEventBus;
 
+    bind(Registries.DATA_COMPONENT_TYPE, ModDataComponents::register);
+    bind(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, ModAttachments::register);
     bind(Registries.ENTITY_TYPE, ModEntities::register);
     bind(Registries.ITEM, ModItems::register);
     bind(Registries.FEATURE, ModFeatures::register);
@@ -68,6 +79,7 @@ public class Spookiness {
       event.put(ModEntities.FLOATING_CANDLES, FloatingCandles.createAttributes().build());
       event.put(ModEntities.FLOATING_BOOK, FloatingBook.createAttributes().build());
       event.put(ModEntities.FLOATING_SWORD, FloatingSword.createAttributes().build());
+      event.put(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimic.createAttributes().build());
     });
 
     // RegisterSpawnPlacementsEvent
@@ -123,6 +135,40 @@ public class Spookiness {
       ItemStack weapon = source.getWeaponItem();
       if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
         mimic.spawnSoulBurst(level);
+      }
+    });
+
+    // ServerTickEvent.Post
+    NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> SpectralCompanions.tick(event.getServer()));
+
+    // PlayerEvent.PlayerLoggedOutEvent
+    NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> {
+
+      if (event.getEntity() instanceof ServerPlayer player) {
+        SpectralCompanions.stash(player);
+      }
+    });
+
+    // PlayerEvent.PlayerLoggedInEvent
+    NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
+
+      if (event.getEntity() instanceof ServerPlayer player) {
+        SpectralCompanions.restore(player);
+      }
+    });
+
+    // LivingDeathEvent
+    NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> {
+
+      LivingEntity entity = event.getEntity();
+      DamageSource source = event.getSource();
+      if (!(entity.level() instanceof ServerLevel level) || !(source.getEntity() instanceof Player player) || !PumpkinMaceItem.isPumpkinEntity(entity)) {
+        return;
+      }
+
+      ItemStack weapon = source.getWeaponItem();
+      if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
+        PumpkinMaceItem.addPumpkinKill(level, player, weapon);
       }
     });
 

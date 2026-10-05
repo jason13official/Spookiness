@@ -1,8 +1,8 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -29,7 +29,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public class JackOMimic extends JumpingPathfinderMob {
@@ -98,19 +97,7 @@ public class JackOMimic extends JumpingPathfinderMob {
 //  }
 
   public void spawnSoulBurst(ServerLevel level) {
-
-    Vec3 center = this.getBoundingBox().getCenter();
-    double goldenAngle = Math.PI * (3.0 - Math.sqrt(5.0));
-
-    for (int i = 0; i < SOUL_BURST_PARTICLES; i++) {
-      double y = 1.0 - (i + 0.5) * 2.0 / SOUL_BURST_PARTICLES;
-      double radius = Math.sqrt(1.0 - y * y);
-      double theta = goldenAngle * i;
-      double x = Math.cos(theta) * radius;
-      double z = Math.sin(theta) * radius;
-
-      level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.x + x * 0.5, center.y + y * 0.5, center.z + z * 0.5, 0, x, y, z, SOUL_BURST_SPEED);
-    }
+    SoulBurst.spawn(level, this.getBoundingBox().getCenter(), SOUL_BURST_PARTICLES, 0.5, SOUL_BURST_SPEED);
   }
 
   @Override

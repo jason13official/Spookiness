@@ -1,8 +1,14 @@
 package io.github.jason13official.spookiness.item;
 
+import io.github.jason13official.spookiness.companion.SpectralCompanions;
+import io.github.jason13official.spookiness.entity.JackOMimic;
+import io.github.jason13official.spookiness.registry.ModDataComponents;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -10,8 +16,10 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
@@ -20,6 +28,9 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -38,6 +49,7 @@ public class PumpkinMaceItem extends Item {
   private static final int DEFAULT_ATTACK_DAMAGE = 5;
   private static final float SMASH_ATTACK_HEAVY_THRESHOLD = 5.0F;
   private static final float SMASH_ATTACK_KNOCKBACK_POWER = 0.7F;
+  public static final int KILLS_PER_COMPANION = 5;
 
   public PumpkinMaceItem(Item.Properties properties) {
     super(properties);
@@ -48,6 +60,34 @@ public class PumpkinMaceItem extends Item {
         .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_ID, DEFAULT_ATTACK_DAMAGE, Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
         .add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_ID, DEFAULT_ATTACK_SPEED, Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
         .build();
+  }
+
+  public static boolean isPumpkinEntity(LivingEntity entity) {
+
+    if (entity instanceof OwnableEntity ownable && ownable.getOwnerReference() != null) {
+      return false;
+    }
+
+    return entity instanceof JackOMimic || entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN);
+  }
+
+  public static void addPumpkinKill(ServerLevel level, Player player, ItemStack stack) {
+
+    int kills = stack.getOrDefault(ModDataComponents.PUMPKIN_KILLS, 0) + 1;
+    if (kills < KILLS_PER_COMPANION) {
+      stack.set(ModDataComponents.PUMPKIN_KILLS, kills);
+      return;
+    }
+
+    stack.set(ModDataComponents.PUMPKIN_KILLS, 0);
+    SpectralCompanions.summon(level, player, 1);
+  }
+
+  @Override
+  public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+
+    int kills = itemStack.getOrDefault(ModDataComponents.PUMPKIN_KILLS, 0);
+    builder.accept(Component.translatable("item.spookiness.pumpkin_mace.pumpkin_kills", kills, KILLS_PER_COMPANION).withStyle(ChatFormatting.GOLD));
   }
 
   public static Tool createToolProperties() {
