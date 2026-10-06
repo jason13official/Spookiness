@@ -42,6 +42,8 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.EventHooks;
@@ -77,6 +79,8 @@ public final class SpookySpawns {
   private static final float CAMPFIRE_SWORD_CHANCE = 0.025F;
   private static final float SHEARS_CHANCE = 0.03F;
   private static final float HOE_CHANCE = 0.02F;
+  private static final float PLANT_SHEARS_CHANCE = 0.005F;
+  private static final float LAMB_SHEARS_CHANCE = 0.02F;
 
   private static final int NIGHT_CHECK_INTERVAL = 20;
   private static final int LANTERN_RADIUS = 4;
@@ -285,6 +289,26 @@ public final class SpookySpawns {
 
     if (sheep.readyForShearing() && shears.is(Tags.Items.TOOLS_SHEAR) && level.getRandom().nextFloat() < SHEARS_CHANCE) {
       spawnTool(level, ModEntities.FLOATING_SHEARS, sheep.blockPosition(), new ItemStack(shears.getItem()));
+    }
+  }
+
+  public static void onPlantGrown(ServerLevel level, BlockPos pos, BlockState original, BlockState grown) {
+
+    for (Property<?> property : grown.getProperties()) {
+      if (property instanceof IntegerProperty age && property.getName().equals("age") && original.hasProperty(age)) {
+        int max = age.getPossibleValues().getLast();
+        if (grown.getValue(age) == max && original.getValue(age) < max && level.getRandom().nextFloat() < PLANT_SHEARS_CHANCE) {
+          spawnTool(level, ModEntities.FLOATING_SHEARS, pos, ItemStack.EMPTY);
+        }
+        return;
+      }
+    }
+  }
+
+  public static void onSheepGrownUp(Sheep sheep) {
+
+    if (!sheep.isBaby() && sheep.level() instanceof ServerLevel level && level.getRandom().nextFloat() < LAMB_SHEARS_CHANCE) {
+      spawnTool(level, ModEntities.FLOATING_SHEARS, sheep.blockPosition(), ItemStack.EMPTY);
     }
   }
 

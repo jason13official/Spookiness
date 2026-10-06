@@ -78,6 +78,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.level.block.CropGrowEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
@@ -222,6 +223,14 @@ public class Spookiness {
 
     // LivingDeathEvent
     NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> SpookySpawns.onSkeletonDeath(event.getEntity()));
+
+    // CropGrowEvent.Post
+    NeoForge.EVENT_BUS.addListener((CropGrowEvent.Post event) -> {
+
+      if (event.getLevel() instanceof ServerLevel level) {
+        SpookySpawns.onPlantGrown(level, event.getPos(), event.getOriginalState(), event.getState());
+      }
+    });
 
     // PlayerInteractEvent.EntityInteract
     NeoForge.EVENT_BUS.addListener((PlayerInteractEvent.EntityInteract event) -> {

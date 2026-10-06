@@ -42,7 +42,7 @@ import org.jspecify.annotations.Nullable;
 
 public class FloatingLantern extends FloatingPathfinderMob implements PlayerFollower {
 
-  private static final int LIGHT_EMISSION = 10;
+  private static final int LIGHT_EMISSION = Blocks.LANTERN.defaultBlockState().getLightEmission();
   private static final double WILD_SEEK_RANGE = 16.0;
   private static final double GUARD_RANGE = 10.0;
   private static final double HOVER_HEIGHT = 1.5;
