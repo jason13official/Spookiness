@@ -3,13 +3,17 @@ package io.github.jason13official.spookiness.world;
 import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
-import io.github.jason13official.spookiness.entity.FloatingSword;
+import io.github.jason13official.spookiness.entity.FloatingLantern;
+import io.github.jason13official.spookiness.entity.FloatingSkull;
+import io.github.jason13official.spookiness.entity.FloatingTool;
+import io.github.jason13official.spookiness.entity.HauntedArmorStand;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -21,20 +25,27 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.CandleCakeBlock;
+import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.ChiseledBookShelfBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.EventHooks;
+import org.jspecify.annotations.Nullable;
 
 public final class SpookySpawns {
 
@@ -64,6 +75,18 @@ public final class SpookySpawns {
   private static final float BOOKSHELF_AWAKEN_CHANCE = 0.005F;
 
   private static final float CAMPFIRE_SWORD_CHANCE = 0.025F;
+  private static final float SHEARS_CHANCE = 0.03F;
+  private static final float HOE_CHANCE = 0.02F;
+
+  private static final int NIGHT_CHECK_INTERVAL = 20;
+  private static final int LANTERN_RADIUS = 4;
+  private static final int LANTERN_HEIGHT = 4;
+  private static final float LANTERN_AWAKEN_CHANCE = 0.005F;
+  private static final double SKULL_RADIUS = 16.0;
+  private static final float SKULL_AWAKEN_CHANCE = 0.002F;
+  private static final float SKELETON_SKULL_CHANCE = 0.05F;
+  private static final double ARMOR_STAND_RADIUS = 16.0;
+  private static final float ARMOR_STAND_HAUNT_CHANCE = 0.002F;
 
   public static void equipPumpkinHead(Mob mob, RandomSource random) {
 
@@ -149,27 +172,147 @@ public final class SpookySpawns {
 
     ServerLevel level = player.level();
     RandomSource random = player.getRandom();
-    int minX = SectionPos.blockToSectionCoord(player.getX() - BOOKSHELF_RADIUS);
-    int maxX = SectionPos.blockToSectionCoord(player.getX() + BOOKSHELF_RADIUS);
-    int minZ = SectionPos.blockToSectionCoord(player.getZ() - BOOKSHELF_RADIUS);
-    int maxZ = SectionPos.blockToSectionCoord(player.getZ() + BOOKSHELF_RADIUS);
+    forBlockEntitiesNear(player, BOOKSHELF_RADIUS, ChiseledBookShelfBlockEntity.class, shelf -> {
+      if (random.nextFloat() < BOOKSHELF_AWAKEN_CHANCE) {
+        awakenShelfBook(level, shelf, random);
+      }
+    });
+  }
 
-    List<ChiseledBookShelfBlockEntity> shelves = new ArrayList<>();
+  private static <T extends BlockEntity> void forBlockEntitiesNear(ServerPlayer player, double radius, Class<T> type, Consumer<T> action) {
+
+    ServerLevel level = player.level();
+    int minX = SectionPos.blockToSectionCoord(player.getX() - radius);
+    int maxX = SectionPos.blockToSectionCoord(player.getX() + radius);
+    int minZ = SectionPos.blockToSectionCoord(player.getZ() - radius);
+    int maxZ = SectionPos.blockToSectionCoord(player.getZ() + radius);
+
+    List<T> found = new ArrayList<>();
     for (int x = minX; x <= maxX; x++) {
       for (int z = minZ; z <= maxZ; z++) {
         for (BlockEntity blockEntity : level.getChunk(x, z).getBlockEntities().values()) {
-          if (blockEntity instanceof ChiseledBookShelfBlockEntity shelf && shelf.getBlockPos().closerToCenterThan(player.position(), BOOKSHELF_RADIUS)) {
-            shelves.add(shelf);
+          if (type.isInstance(blockEntity) && blockEntity.getBlockPos().closerToCenterThan(player.position(), radius)) {
+            found.add(type.cast(blockEntity));
           }
         }
       }
     }
 
-    for (ChiseledBookShelfBlockEntity shelf : shelves) {
-      if (random.nextFloat() < BOOKSHELF_AWAKEN_CHANCE) {
-        awakenShelfBook(level, shelf, random);
+    found.forEach(action);
+  }
+
+  public static void tickNightAwakenings(ServerPlayer player) {
+
+    if (player.tickCount % NIGHT_CHECK_INTERVAL != 0 || player.isSpectator() || !player.level().isDarkOutside()) {
+      return;
+    }
+
+    ServerLevel level = player.level();
+    RandomSource random = player.getRandom();
+    BlockPos origin = player.blockPosition();
+
+    for (BlockPos pos : BlockPos.betweenClosed(origin.offset(-LANTERN_RADIUS, 0, -LANTERN_RADIUS), origin.offset(LANTERN_RADIUS, LANTERN_HEIGHT, LANTERN_RADIUS))) {
+      BlockState state = level.getBlockState(pos);
+      if (state.is(Blocks.SOUL_LANTERN) && state.getValue(LanternBlock.HANGING) && random.nextFloat() < LANTERN_AWAKEN_CHANCE) {
+        awakenLantern(level, pos.immutable());
       }
     }
+
+    forBlockEntitiesNear(player, SKULL_RADIUS, SkullBlockEntity.class, skull -> {
+      BlockState state = skull.getBlockState();
+      if ((state.is(Blocks.SKELETON_SKULL) || state.is(Blocks.SKELETON_WALL_SKULL)) && random.nextFloat() < SKULL_AWAKEN_CHANCE) {
+        awakenSkull(level, skull.getBlockPos());
+      }
+    });
+
+    List<ArmorStand> stands = level.getEntitiesOfClass(ArmorStand.class, player.getBoundingBox().inflate(ARMOR_STAND_RADIUS),
+        stand -> stand.getType() == EntityType.ARMOR_STAND && !stand.isMarker() && !stand.isInvisible());
+    for (ArmorStand stand : stands) {
+      if (random.nextFloat() < ARMOR_STAND_HAUNT_CHANCE && !HauntedArmorStand.isWatched(level, stand)) {
+        HauntedArmorStand.haunt(level, stand);
+      }
+    }
+  }
+
+  private static void awakenLantern(ServerLevel level, BlockPos pos) {
+
+    FloatingLantern lantern = ModEntities.FLOATING_LANTERN.create(level, EntitySpawnReason.TRIGGERED);
+    if (lantern == null) {
+      return;
+    }
+
+    level.removeBlock(pos, false);
+    Vec3 spawn = Vec3.atBottomCenterOf(pos);
+    lantern.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
+    level.addFreshEntity(lantern);
+
+    SoulBurst.spawn(level, lantern.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    level.playSound(null, pos, SoundEvents.CHAIN_BREAK, SoundSource.BLOCKS, 1.0F, 0.6F);
+  }
+
+  private static void awakenSkull(ServerLevel level, BlockPos pos) {
+
+    if (spawnSkull(level, Vec3.atBottomCenterOf(pos)) instanceof FloatingSkull skull) {
+      level.removeBlock(pos, false);
+      skull.setFromBlock(true);
+    }
+  }
+
+  public static void onSkeletonDeath(LivingEntity entity) {
+
+    if (entity.getType() == EntityType.SKELETON && entity.level() instanceof ServerLevel level && level.isDarkOutside() && level.getRandom().nextFloat() < SKELETON_SKULL_CHANCE) {
+      spawnSkull(level, entity.getEyePosition());
+    }
+  }
+
+  private static @Nullable FloatingSkull spawnSkull(ServerLevel level, Vec3 spawn) {
+
+    FloatingSkull skull = ModEntities.FLOATING_SKULL.create(level, EntitySpawnReason.TRIGGERED);
+    if (skull == null) {
+      return null;
+    }
+
+    skull.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
+    EventHooks.finalizeMobSpawn(skull, level, level.getCurrentDifficultyAt(BlockPos.containing(spawn)), EntitySpawnReason.TRIGGERED, null);
+    level.addFreshEntity(skull);
+
+    SoulBurst.spawn(level, skull.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    level.playSound(null, skull.getX(), skull.getY(), skull.getZ(), SoundEvents.SKELETON_AMBIENT, SoundSource.HOSTILE, 1.0F, 1.8F);
+    return skull;
+  }
+
+  public static void onSheepSheared(ServerLevel level, Sheep sheep, ItemStack shears) {
+
+    if (sheep.readyForShearing() && shears.is(Tags.Items.TOOLS_SHEAR) && level.getRandom().nextFloat() < SHEARS_CHANCE) {
+      spawnTool(level, ModEntities.FLOATING_SHEARS, sheep.blockPosition(), new ItemStack(shears.getItem()));
+    }
+  }
+
+  public static void onHoeTill(ServerLevel level, BlockPos pos, BlockState state, ItemStack hoe) {
+
+    boolean tillable = state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.DIRT_PATH) || state.is(Blocks.COARSE_DIRT);
+    if (tillable && level.isEmptyBlock(pos.above()) && level.getRandom().nextFloat() < HOE_CHANCE) {
+      spawnTool(level, ModEntities.FLOATING_HOE, pos, new ItemStack(hoe.getItem()));
+    }
+  }
+
+  private static void spawnTool(ServerLevel level, EntityType<? extends FloatingTool> type, BlockPos pos, ItemStack held) {
+
+    FloatingTool tool = type.create(level, EntitySpawnReason.TRIGGERED);
+    if (tool == null) {
+      return;
+    }
+
+    Vec3 spawn = Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0);
+    tool.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
+    if (!held.isEmpty()) {
+      tool.setItemSlot(EquipmentSlot.MAINHAND, held);
+    }
+    EventHooks.finalizeMobSpawn(tool, level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.TRIGGERED, null);
+    level.addFreshEntity(tool);
+
+    SoulBurst.spawn(level, tool.getBoundingBox().getCenter(), 32, 0.5, 0.06);
+    level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 0.6F);
   }
 
   private static void awakenShelfBook(ServerLevel level, ChiseledBookShelfBlockEntity shelf, RandomSource random) {
@@ -212,17 +355,6 @@ public final class SpookySpawns {
       return;
     }
 
-    FloatingSword sword = ModEntities.FLOATING_SWORD.create(level, EntitySpawnReason.TRIGGERED);
-    if (sword == null) {
-      return;
-    }
-
-    Vec3 spawn = Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0);
-    sword.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
-    EventHooks.finalizeMobSpawn(sword, level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.TRIGGERED, null);
-    level.addFreshEntity(sword);
-
-    SoulBurst.spawn(level, sword.getBoundingBox().getCenter(), 32, 0.5, 0.06);
-    level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 0.6F);
+    spawnTool(level, ModEntities.FLOATING_SWORD, pos, ItemStack.EMPTY);
   }
 }

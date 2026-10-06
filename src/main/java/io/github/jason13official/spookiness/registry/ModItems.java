@@ -46,6 +46,16 @@ public class ModItems {
 
   public static Item FLOATING_SWORD_SPAWN_EGG;
 
+  public static Item FLOATING_SHEARS_SPAWN_EGG;
+
+  public static Item FLOATING_HOE_SPAWN_EGG;
+
+  public static Item FLOATING_LANTERN_SPAWN_EGG;
+
+  public static Item FLOATING_SKULL_SPAWN_EGG;
+
+  public static Item HAUNTED_ARMOR_STAND_SPAWN_EGG;
+
   public static Item SPECTRAL_JACK_O_MIMIC_SPAWN_EGG;
 
   public static Item WICKMAN_SPAWN_EGG;
@@ -81,6 +91,11 @@ public class ModItems {
     FLOATING_CANDLES_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_CANDLES, consumer);
     FLOATING_BOOK_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_BOOK, consumer);
     FLOATING_SWORD_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SWORD, consumer);
+    FLOATING_SHEARS_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SHEARS, consumer);
+    FLOATING_HOE_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_HOE, consumer);
+    FLOATING_LANTERN_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_LANTERN, consumer);
+    FLOATING_SKULL_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SKULL, consumer);
+    HAUNTED_ARMOR_STAND_SPAWN_EGG = registerSpawnEgg(ModEntities.HAUNTED_ARMOR_STAND, consumer);
     SPECTRAL_JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.SPECTRAL_JACK_O_MIMIC, consumer);
     WICKMAN_SPAWN_EGG = registerSpawnEgg(ModEntities.WICKMAN, consumer);
     HALLOWED_MOTHER_SPAWN_EGG = registerSpawnEgg(ModEntities.HALLOWED_MOTHER, consumer);

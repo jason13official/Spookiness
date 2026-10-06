@@ -10,6 +10,9 @@ import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.effect.LamentRitual;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
+import io.github.jason13official.spookiness.entity.FloatingLantern;
+import io.github.jason13official.spookiness.entity.FloatingSkull;
+import io.github.jason13official.spookiness.entity.FloatingTool;
 import io.github.jason13official.spookiness.entity.FloatingSword;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
@@ -44,6 +47,8 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.inventory.EnchantmentMenu;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.player.Player;
@@ -54,6 +59,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -70,6 +76,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEnchantItemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -119,6 +126,11 @@ public class Spookiness {
       event.put(ModEntities.FLOATING_CANDLES, FloatingCandles.createAttributes().build());
       event.put(ModEntities.FLOATING_BOOK, FloatingBook.createAttributes().build());
       event.put(ModEntities.FLOATING_SWORD, FloatingSword.createAttributes().build());
+      event.put(ModEntities.FLOATING_SHEARS, FloatingTool.createAttributes().build());
+      event.put(ModEntities.FLOATING_HOE, FloatingTool.createAttributes().build());
+      event.put(ModEntities.FLOATING_LANTERN, FloatingLantern.createAttributes().build());
+      event.put(ModEntities.FLOATING_SKULL, FloatingSkull.createAttributes().build());
+      event.put(ModEntities.HAUNTED_ARMOR_STAND, ArmorStand.createAttributes().build());
       event.put(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimic.createAttributes().build());
       event.put(ModEntities.WICKMAN, Wickman.createAttributes().build());
       event.put(ModEntities.WICKMAN_HEAD, WickmanHead.createAttributes().build());
@@ -209,6 +221,25 @@ public class Spookiness {
     });
 
     // LivingDeathEvent
+    NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> SpookySpawns.onSkeletonDeath(event.getEntity()));
+
+    // PlayerInteractEvent.EntityInteract
+    NeoForge.EVENT_BUS.addListener((PlayerInteractEvent.EntityInteract event) -> {
+
+      if (event.getLevel() instanceof ServerLevel level && event.getTarget() instanceof Sheep sheep) {
+        SpookySpawns.onSheepSheared(level, sheep, event.getItemStack());
+      }
+    });
+
+    // BlockEvent.BlockToolModificationEvent
+    NeoForge.EVENT_BUS.addListener((BlockEvent.BlockToolModificationEvent event) -> {
+
+      if (!event.isSimulated() && event.getItemAbility() == ItemAbilities.HOE_TILL && event.getPlayer() != null && event.getContext().getLevel() instanceof ServerLevel level) {
+        SpookySpawns.onHoeTill(level, event.getPos(), event.getState(), event.getHeldItemStack());
+      }
+    });
+
+    // LivingDeathEvent
     NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> {
 
       LivingEntity entity = event.getEntity();
@@ -241,6 +272,7 @@ public class Spookiness {
       if (event.getEntity() instanceof ServerPlayer player) {
         SpookySpawns.tickCandleAwakening(player);
         SpookySpawns.tickBookshelfAwakening(player);
+        SpookySpawns.tickNightAwakenings(player);
         LamentRitual.tick(player);
         HallowedMotherTrigger.tick(player);
       }

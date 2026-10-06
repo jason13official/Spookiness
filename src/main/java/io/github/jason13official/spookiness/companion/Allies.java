@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness.companion;
 
 import io.github.jason13official.spookiness.entity.FloatingCandles;
+import io.github.jason13official.spookiness.entity.FloatingLantern;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,9 @@ public final class Allies {
     if (entity instanceof FloatingCandles candles) {
       candles.joinLine(level, player);
       return true;
+    }
+    if (entity instanceof FloatingLantern lantern) {
+      return lantern.claim(level, player);
     }
     return false;
   }

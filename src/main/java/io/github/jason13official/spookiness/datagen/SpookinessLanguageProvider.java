@@ -27,6 +27,11 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModItems.FLOATING_CANDLES_SPAWN_EGG, "Floating Candles Spawn Egg");
     this.add(ModItems.FLOATING_BOOK_SPAWN_EGG, "Floating Book Spawn Egg");
     this.add(ModItems.FLOATING_SWORD_SPAWN_EGG, "Floating Sword Spawn Egg");
+    this.add(ModItems.FLOATING_SHEARS_SPAWN_EGG, "Floating Shears Spawn Egg");
+    this.add(ModItems.FLOATING_HOE_SPAWN_EGG, "Floating Hoe Spawn Egg");
+    this.add(ModItems.FLOATING_LANTERN_SPAWN_EGG, "Floating Lantern Spawn Egg");
+    this.add(ModItems.FLOATING_SKULL_SPAWN_EGG, "Floating Skull Spawn Egg");
+    this.add(ModItems.HAUNTED_ARMOR_STAND_SPAWN_EGG, "Haunted Armor Stand Spawn Egg");
     this.add(ModItems.SPECTRAL_JACK_O_MIMIC_SPAWN_EGG, "Spectral Jack o'Mimic Spawn Egg");
     this.add(ModItems.WICKMAN_SPAWN_EGG, "Wickman Spawn Egg");
     this.add(ModItems.HALLOWED_MOTHER_SPAWN_EGG, "Hallowed Mother Spawn Egg");
@@ -36,6 +41,11 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModEntities.FLOATING_CANDLES, "Floating Candles");
     this.add(ModEntities.FLOATING_BOOK, "Floating Book");
     this.add(ModEntities.FLOATING_SWORD, "Floating Sword");
+    this.add(ModEntities.FLOATING_SHEARS, "Floating Shears");
+    this.add(ModEntities.FLOATING_HOE, "Floating Hoe");
+    this.add(ModEntities.FLOATING_LANTERN, "Floating Lantern");
+    this.add(ModEntities.FLOATING_SKULL, "Floating Skull");
+    this.add(ModEntities.HAUNTED_ARMOR_STAND, "Haunted Armor Stand");
     this.add(ModEntities.SPECTRAL_JACK_O_MIMIC, "Spectral Jack o'Mimic");
     this.add(ModEntities.WICKMAN, "The Wickman");
     this.add("entity.spookiness.frostwick", "The Frostwick");

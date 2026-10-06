@@ -1,12 +1,12 @@
 package io.github.jason13official.spookiness.client.model;
 
-import io.github.jason13official.spookiness.client.renderer.state.FloatingSwordRenderState;
+import io.github.jason13official.spookiness.client.renderer.state.FloatingToolRenderState;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.monster.illager.IllagerModel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.monster.illager.AbstractIllager;
 
-public class FloatingSwordModel extends IllagerModel<FloatingSwordRenderState> {
+public class FloatingToolModel extends IllagerModel<FloatingToolRenderState> {
 
   private final ModelPart head;
   private final ModelPart body;
@@ -15,7 +15,7 @@ public class FloatingSwordModel extends IllagerModel<FloatingSwordRenderState> {
   private final ModelPart rightLeg;
   private final ModelPart leftLeg;
 
-  public FloatingSwordModel(ModelPart root) {
+  public FloatingToolModel(ModelPart root) {
     super(root);
     this.head = root.getChild("head");
     this.body = root.getChild("body");
@@ -26,7 +26,7 @@ public class FloatingSwordModel extends IllagerModel<FloatingSwordRenderState> {
   }
 
   @Override
-  public void setupAnim(FloatingSwordRenderState state) {
+  public void setupAnim(FloatingToolRenderState state) {
     super.setupAnim(state);
 
     float t = state.ageInTicks;

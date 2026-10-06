@@ -3,7 +3,12 @@ package io.github.jason13official.spookiness.registry;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
+import io.github.jason13official.spookiness.entity.FloatingHoe;
+import io.github.jason13official.spookiness.entity.FloatingLantern;
+import io.github.jason13official.spookiness.entity.FloatingShears;
+import io.github.jason13official.spookiness.entity.FloatingSkull;
 import io.github.jason13official.spookiness.entity.FloatingSword;
+import io.github.jason13official.spookiness.entity.HauntedArmorStand;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
@@ -24,6 +29,11 @@ public class ModEntities {
   public static EntityType<FloatingCandles> FLOATING_CANDLES;
   public static EntityType<FloatingBook> FLOATING_BOOK;
   public static EntityType<FloatingSword> FLOATING_SWORD;
+  public static EntityType<FloatingShears> FLOATING_SHEARS;
+  public static EntityType<FloatingHoe> FLOATING_HOE;
+  public static EntityType<FloatingLantern> FLOATING_LANTERN;
+  public static EntityType<FloatingSkull> FLOATING_SKULL;
+  public static EntityType<HauntedArmorStand> HAUNTED_ARMOR_STAND;
   public static EntityType<SpectralJackOMimic> SPECTRAL_JACK_O_MIMIC;
   public static EntityType<Wickman> WICKMAN;
   public static EntityType<WickmanHead> WICKMAN_HEAD;
@@ -44,6 +54,22 @@ public class ModEntities {
 
     FLOATING_SWORD = EntityType.Builder.of(FloatingSword::new, MobCategory.MONSTER).sized(0.6f, 1.95f).clientTrackingRange(8).build(key("floating_sword"));
     consumer.accept(FLOATING_SWORD, Spookiness.id("floating_sword"));
+
+    FLOATING_SHEARS = EntityType.Builder.of(FloatingShears::new, MobCategory.CREATURE).sized(0.6f, 1.95f).clientTrackingRange(8).build(key("floating_shears"));
+    consumer.accept(FLOATING_SHEARS, Spookiness.id("floating_shears"));
+
+    FLOATING_HOE = EntityType.Builder.of(FloatingHoe::new, MobCategory.CREATURE).sized(0.6f, 1.95f).clientTrackingRange(8).build(key("floating_hoe"));
+    consumer.accept(FLOATING_HOE, Spookiness.id("floating_hoe"));
+
+    FLOATING_LANTERN = EntityType.Builder.of(FloatingLantern::new, MobCategory.AMBIENT).fireImmune().sized(0.4f, 0.6f).clientTrackingRange(16).build(key("floating_lantern"));
+    consumer.accept(FLOATING_LANTERN, Spookiness.id("floating_lantern"));
+
+    FLOATING_SKULL = EntityType.Builder.of(FloatingSkull::new, MobCategory.MONSTER).sized(0.5f, 0.5f).clientTrackingRange(8).build(key("floating_skull"));
+    consumer.accept(FLOATING_SKULL, Spookiness.id("floating_skull"));
+
+    HAUNTED_ARMOR_STAND = EntityType.Builder.<HauntedArmorStand>of(HauntedArmorStand::new, MobCategory.MISC).sized(0.5f, 1.975f).eyeHeight(1.7775f).clientTrackingRange(10)
+        .build(key("haunted_armor_stand"));
+    consumer.accept(HAUNTED_ARMOR_STAND, Spookiness.id("haunted_armor_stand"));
 
     SPECTRAL_JACK_O_MIMIC = EntityType.Builder.of(SpectralJackOMimic::new, MobCategory.MISC).sized(1.0f, 1.0f).clientTrackingRange(10).build(key("spectral_jack_o_mimic"));
     consumer.accept(SPECTRAL_JACK_O_MIMIC, Spookiness.id("spectral_jack_o_mimic"));

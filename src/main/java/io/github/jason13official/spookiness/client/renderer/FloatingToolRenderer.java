@@ -1,9 +1,9 @@
 package io.github.jason13official.spookiness.client.renderer;
 
 import io.github.jason13official.spookiness.Spookiness;
-import io.github.jason13official.spookiness.client.model.FloatingSwordModel;
-import io.github.jason13official.spookiness.client.renderer.state.FloatingSwordRenderState;
-import io.github.jason13official.spookiness.entity.FloatingSword;
+import io.github.jason13official.spookiness.client.model.FloatingToolModel;
+import io.github.jason13official.spookiness.client.renderer.state.FloatingToolRenderState;
+import io.github.jason13official.spookiness.entity.FloatingTool;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -18,30 +18,30 @@ import net.minecraft.world.entity.monster.illager.AbstractIllager;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class FloatingSwordRenderer extends MobRenderer<FloatingSword, FloatingSwordRenderState, FloatingSwordModel> {
+public class FloatingToolRenderer extends MobRenderer<FloatingTool, FloatingToolRenderState, FloatingToolModel> {
 
   private static final Identifier FLOATING_SWORD_LOCATION = Spookiness.id("textures/entity/floating_sword/floating_sword.png");
   private static final float HIDDEN_ALPHA = 0.12F;
 
-  public FloatingSwordRenderer(Context context) {
-    super(context, new FloatingSwordModel(context.bakeLayer(ModelLayers.VINDICATOR)), 0.0F);
+  public FloatingToolRenderer(Context context) {
+    super(context, new FloatingToolModel(context.bakeLayer(ModelLayers.VINDICATOR)), 0.0F);
     this.addLayer(new ItemInHandLayer<>(this));
   }
 
   @Override
-  public Identifier getTextureLocation(FloatingSwordRenderState state) {
+  public Identifier getTextureLocation(FloatingToolRenderState state) {
 
     return FLOATING_SWORD_LOCATION;
   }
 
   @Override
-  public FloatingSwordRenderState createRenderState() {
+  public FloatingToolRenderState createRenderState() {
 
-    return new FloatingSwordRenderState();
+    return new FloatingToolRenderState();
   }
 
   @Override
-  public void extractRenderState(FloatingSword entity, FloatingSwordRenderState state, float partialTicks) {
+  public void extractRenderState(FloatingTool entity, FloatingToolRenderState state, float partialTicks) {
     super.extractRenderState(entity, state, partialTicks);
 
     ArmedEntityRenderState.extractArmedEntityRenderState(entity, state, this.itemModelResolver, partialTicks);
@@ -54,19 +54,19 @@ public class FloatingSwordRenderer extends MobRenderer<FloatingSword, FloatingSw
   }
 
   @Override
-  protected int getModelTint(FloatingSwordRenderState state) {
+  protected int getModelTint(FloatingToolRenderState state) {
 
     return ARGB.white(Mth.lerp(state.visibility, HIDDEN_ALPHA, 1.0F));
   }
 
   @Override
-  protected @Nullable RenderType getRenderType(FloatingSwordRenderState state, boolean isBodyVisible, boolean forceTransparent, boolean appearGlowing) {
+  protected @Nullable RenderType getRenderType(FloatingToolRenderState state, boolean isBodyVisible, boolean forceTransparent, boolean appearGlowing) {
 
     return isBodyVisible ? RenderTypes.entityTranslucent(this.getTextureLocation(state)) : super.getRenderType(state, isBodyVisible, forceTransparent, appearGlowing);
   }
 
   @Override
-  public Vec3 getRenderOffset(FloatingSwordRenderState state) {
+  public Vec3 getRenderOffset(FloatingToolRenderState state) {
 
     return super.getRenderOffset(state).add(0.0, Mth.sin(state.ageInTicks * 0.08F) * 0.08, 0.0);
   }
