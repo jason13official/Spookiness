@@ -4,7 +4,6 @@ import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModEntities;
-import io.github.jason13official.spookiness.world.netherrealm.GourdwyrmFight;
 import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
 import java.util.UUID;
 import io.github.jason13official.spookiness.entity.JackOMimic;
@@ -580,7 +579,6 @@ public class Gourdwyrm extends Mob implements Enemy {
     super.dropCustomDeathLoot(level, source, killedByPlayer);
     this.xpFountain(level);
     if (this.anchor != null) {
-      GourdwyrmFight.get(level).markDefeated(this.anchor);
       NetherrealmArena.onWyrmDefeated(level, this.anchor);
     }
   }
@@ -659,7 +657,6 @@ public class Gourdwyrm extends Mob implements Enemy {
   protected void addAdditionalSaveData(ValueOutput output) {
     super.addAdditionalSaveData(output);
     output.storeNullable("anchor", BlockPos.CODEC, this.anchor);
-    output.putInt("phase", this.getPhase().ordinal());
     output.putInt("length", this.getLength());
   }
 
@@ -667,7 +664,6 @@ public class Gourdwyrm extends Mob implements Enemy {
   protected void readAdditionalSaveData(ValueInput input) {
     super.readAdditionalSaveData(input);
     this.anchor = input.read("anchor", BlockPos.CODEC).orElse(null);
-    this.entityData.set(DATA_PHASE, Phase.CIRCLING.ordinal());
     this.entityData.set(DATA_LENGTH, input.getIntOr("length", SEGMENTS));
     this.bossEvent.setName(this.getDisplayName());
   }

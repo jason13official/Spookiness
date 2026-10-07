@@ -1,6 +1,8 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.entity.projectile.FrostVolley;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
@@ -406,9 +408,22 @@ public class Wickman extends Monster {
     }
   }
 
-  public enum Variant {
-    WICK,
-    FROST;
+  public enum Variant implements StringRepresentable {
+    WICK("wick"),
+    FROST("frost");
+
+    public static final Codec<Variant> CODEC = StringRepresentable.fromEnum(Variant::values);
+
+    private final String name;
+
+    Variant(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String getSerializedName() {
+      return this.name;
+    }
 
     public static Variant byOrdinal(int ordinal) {
       Variant[] values = values();

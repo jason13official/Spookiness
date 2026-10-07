@@ -1,7 +1,6 @@
 package io.github.jason13official.spookiness;
 
 import io.github.jason13official.spookiness.world.HauntedHarvest;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import io.github.jason13official.spookiness.effect.TemporaryBlocks;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
@@ -168,15 +167,10 @@ public class Spookiness {
     NeoForge.EVENT_BUS.addListener((LivingChangeTargetEvent event) -> {
 
       LivingEntity entity = event.getEntity();
-
-      // skip the check if not wearing a jack_o_lantern helmet, or is not jack o mimic
-      if (!entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN) || !entity.is(ModEntities.JACK_O_MIMIC)) {
+      if (!entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN) && !entity.is(ModEntities.JACK_O_MIMIC) || MotherBrood.isBrood(entity)) {
         return;
       }
 
-      // entity is wearing a jack_o_lantern helmet or is Jack O' Mimic
-
-      // do not target players wielding our pumpkin_mace
       if (event.getNewAboutToBeSetTarget() instanceof Player player && player.getMainHandItem().is(ModItems.PUMPKIN_MACE)) {
         event.setCanceled(true);
       }
@@ -222,6 +216,8 @@ public class Spookiness {
       LanternHeads.tick(event.getEntity());
       if (event.getEntity().level().isClientSide()) {
         Hallowing.clientTick(event.getEntity());
+      } else {
+        Kindling.tick(event.getEntity());
       }
     });
 
@@ -327,15 +323,11 @@ public class Spookiness {
       }
     });
 
-    // ServerStoppingEvent
-    NeoForge.EVENT_BUS.addListener((ServerStoppingEvent event) -> TemporaryBlocks.revertAll(event.getServer()));
-
     // ServerTickEvent.Post
     NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> {
 
       PlayerFollowers.tick(event.getServer());
       TemporaryBlocks.tick(event.getServer());
-      Kindling.tick(event.getServer());
     });
 
     // PlayerEvent.PlayerLoggedOutEvent

@@ -1,6 +1,9 @@
 package io.github.jason13official.spookiness.registry;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.boss.Kindling;
+import io.github.jason13official.spookiness.entity.boss.Wickman;
+import net.minecraft.util.Util;
 import com.mojang.serialization.Codec;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +22,7 @@ public class ModAttachments {
   public static AttachmentType<Integer> LAMENT_RITUAL;
   public static AttachmentType<Optional<UUID>> HALLOWED_OWNER;
   public static AttachmentType<Long> MOTHER_NIGHT;
+  public static AttachmentType<Kindling.Kindle> KINDLE;
 
   public static void register(BiConsumer<AttachmentType<?>, Identifier> consumer) {
 
@@ -49,5 +53,10 @@ public class ModAttachments {
         .copyOnDeath()
         .build();
     consumer.accept(MOTHER_NIGHT, Spookiness.id("mother_night"));
+
+    KINDLE = AttachmentType.builder(() -> new Kindling.Kindle(Util.NIL_UUID, Wickman.Variant.WICK, 0))
+        .serialize(Kindling.Kindle.CODEC.fieldOf("kindle"))
+        .build();
+    consumer.accept(KINDLE, Spookiness.id("kindle"));
   }
 }
