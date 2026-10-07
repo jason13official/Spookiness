@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.lighting;
 
+import io.github.jason13official.spookiness.entity.FloatingLantern;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
@@ -46,7 +47,7 @@ public final class LanternHeads {
 
   private static boolean isManaged(Entity entity) {
     return entity instanceof LivingEntity && !(entity instanceof JackOMimic) && !(entity instanceof SpectralJackOMimic)
-        && !(entity instanceof FloatingCandles);
+        && !(entity instanceof FloatingCandles) && !(entity instanceof FloatingLantern);
   }
 
   private static boolean isLanternHeaded(LivingEntity entity) {

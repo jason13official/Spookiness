@@ -1,15 +1,28 @@
 package io.github.jason13official.spookiness.boss;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
-import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.worldgen.ModBiomeModifiers;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -20,10 +33,15 @@ public final class HallowedMotherTrigger {
 
   private static final int CHECK_INTERVAL = 100;
   private static final long DAY_LENGTH = 24000L;
-  private static final long MIDNIGHT_START = 17500L;
-  private static final long MIDNIGHT_END = 18500L;
+  private static final long NIGHT_START = 13000L;
+  private static final long NIGHT_END = 23000L;
+  private static final long ANSWER_TICKS = 1200L;
   private static final double MIN_DISTANCE = 20.0;
   private static final double MAX_DISTANCE = 30.0;
+  private static final String ACCEPT_COMMAND = "/spookiness mother accept";
+  private static final String DENY_COMMAND = "/spookiness mother deny";
+
+  private static final Map<UUID, Long> PENDING = new ConcurrentHashMap<>();
 
   public static void tick(ServerPlayer player) {
 
@@ -38,7 +56,7 @@ public final class HallowedMotherTrigger {
     long time = level.getOverworldClockTime();
     long dayTime = time % DAY_LENGTH;
     long night = time / DAY_LENGTH;
-    if (dayTime < MIDNIGHT_START || dayTime > MIDNIGHT_END || player.getData(ModAttachments.MOTHER_NIGHT) == night) {
+    if (dayTime < NIGHT_START || dayTime > NIGHT_END || player.getData(ModAttachments.MOTHER_NIGHT) == night) {
       return;
     }
 
@@ -48,8 +66,42 @@ public final class HallowedMotherTrigger {
     }
 
     player.setData(ModAttachments.MOTHER_NIGHT, night);
-    player.sendSystemMessage(Component.translatable("message.spookiness.mother_warning").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC));
+    PENDING.put(player.getUUID(), level.getGameTime() + ANSWER_TICKS);
+    player.sendSystemMessage(prompt());
+    level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WARDEN_NEARBY_CLOSEST, SoundSource.HOSTILE, 0.8F, 0.6F);
+  }
 
+  private static Component prompt() {
+
+    MutableComponent accept = Component.translatable("message.spookiness.mother_accept").withStyle(style -> style.withColor(ChatFormatting.GREEN)
+        .withClickEvent(new ClickEvent.RunCommand(ACCEPT_COMMAND)).withHoverEvent(new HoverEvent.ShowText(Component.translatable("message.spookiness.mother_accept_hover"))));
+    MutableComponent deny = Component.translatable("message.spookiness.mother_deny").withStyle(style -> style.withColor(ChatFormatting.RED)
+        .withClickEvent(new ClickEvent.RunCommand(DENY_COMMAND)).withHoverEvent(new HoverEvent.ShowText(Component.translatable("message.spookiness.mother_deny_hover"))));
+    return Component.translatable("message.spookiness.mother_warning").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC)
+        .append(" ").append(accept).append(" ").append(deny);
+  }
+
+  private static boolean takePending(ServerPlayer player) {
+    Long expiry = PENDING.remove(player.getUUID());
+    return expiry != null && player.level().getGameTime() <= expiry;
+  }
+
+  public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
+
+    dispatcher.register(Commands.literal("spookiness").then(Commands.literal("mother")
+        .then(Commands.literal("accept").executes(HallowedMotherTrigger::accept))
+        .then(Commands.literal("deny").executes(HallowedMotherTrigger::deny))));
+  }
+
+  private static int accept(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+
+    ServerPlayer player = context.getSource().getPlayerOrException();
+    if (!takePending(player) || player.level().dimension() != Level.OVERWORLD) {
+      player.sendSystemMessage(Component.translatable("message.spookiness.mother_gone").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+      return 0;
+    }
+
+    ServerLevel level = player.level();
     double angle = player.getRandom().nextDouble() * Math.PI * 2.0;
     double distance = MIN_DISTANCE + player.getRandom().nextDouble() * (MAX_DISTANCE - MIN_DISTANCE);
     int x = (int) Math.floor(player.getX() + Math.cos(angle) * distance);
@@ -57,5 +109,15 @@ public final class HallowedMotherTrigger {
     int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
     HallowedMother.erupt(level, player, new Vec3(x + 0.5, y, z + 0.5));
     SpookyTrigger.award(player, SpookyTrigger.MOTHER_RISES);
+    return 1;
+  }
+
+  private static int deny(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+
+    ServerPlayer player = context.getSource().getPlayerOrException();
+    if (takePending(player)) {
+      player.sendSystemMessage(Component.translatable("message.spookiness.mother_denied").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+    }
+    return 1;
   }
 }

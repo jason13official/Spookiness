@@ -18,12 +18,16 @@ import org.jspecify.annotations.Nullable;
 public class GourdwyrmPart extends PartEntity<Gourdwyrm> {
 
   public final int index;
+  private static final float LIT_GROWTH = 1.4F;
+
   private final EntityDimensions size;
+  private final EntityDimensions litSize;
 
   public GourdwyrmPart(Gourdwyrm parent, int index, float size) {
     super(parent);
     this.index = index;
     this.size = EntityDimensions.scalable(size, size);
+    this.litSize = EntityDimensions.scalable(size * LIT_GROWTH, size * LIT_GROWTH);
     this.refreshDimensions();
   }
 
@@ -66,7 +70,7 @@ public class GourdwyrmPart extends PartEntity<Gourdwyrm> {
 
   @Override
   public EntityDimensions getDimensions(Pose pose) {
-    return this.size;
+    return this.getParent().isSegmentLit(this.index) ? this.litSize : this.size;
   }
 
   @Override

@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.Spookiness;
@@ -58,6 +59,8 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 public class Wickman extends Monster {
 
+  private static final int VIGIL_SEARCH_UP = 3;
+  private static final int VIGIL_SEARCH_DOWN = 4;
   private static final EntityDataAccessor<Integer> DATA_VARIANT = SynchedEntityData.defineId(Wickman.class, EntityDataSerializers.INT);
   private static final EntityDataAccessor<Integer> DATA_PHASE = SynchedEntityData.defineId(Wickman.class, EntityDataSerializers.INT);
 
@@ -180,10 +183,24 @@ public class Wickman extends Monster {
     double startAngle = this.random.nextDouble() * Math.PI * 2.0;
     for (int i = 0; i < VIGIL_CANDLES; i++) {
       double angle = startAngle + Math.PI * 2.0 * i / VIGIL_CANDLES;
-      VigilCandle.plant(level, this, this.position().add(Math.cos(angle) * VIGIL_RADIUS, 0.0, Math.sin(angle) * VIGIL_RADIUS), this.getVariant() == Variant.FROST,
-          false);
+      VigilCandle.plant(level, this, this.findVigilSpot(level, angle), this.getVariant() == Variant.FROST, false);
     }
     level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLAZE_AMBIENT, SoundSource.HOSTILE, 1.5F, 0.6F);
+  }
+
+  private Vec3 findVigilSpot(ServerLevel level, double angle) {
+
+    for (double reach = VIGIL_RADIUS; reach >= 1.0; reach -= 1.5) {
+      for (int dy = VIGIL_SEARCH_UP; dy >= -VIGIL_SEARCH_DOWN; dy--) {
+        BlockPos pos = BlockPos.containing(this.getX() + Math.cos(angle) * reach, this.getY() + dy, this.getZ() + Math.sin(angle) * reach);
+        Vec3 spot = Vec3.atBottomCenterOf(pos);
+        if (level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP) && level.getFluidState(pos).isEmpty()
+            && level.noCollision(ModEntities.VIGIL_CANDLE.getDimensions().makeBoundingBox(spot))) {
+          return spot;
+        }
+      }
+    }
+    return this.position();
   }
 
   @Override

@@ -79,7 +79,7 @@ public final class SpookySpawns {
   private static final float CAMPFIRE_SWORD_CHANCE = 0.025F;
   private static final float SHEARS_CHANCE = 0.03F;
   private static final float HOE_CHANCE = 0.02F;
-  private static final float PLANT_SHEARS_CHANCE = 0.005F;
+  private static final float PLANT_HOE_CHANCE = 0.005F;
   private static final float LAMB_SHEARS_CHANCE = 0.02F;
 
   private static final int NIGHT_CHECK_INTERVAL = 20;
@@ -297,8 +297,8 @@ public final class SpookySpawns {
     for (Property<?> property : grown.getProperties()) {
       if (property instanceof IntegerProperty age && property.getName().equals("age") && original.hasProperty(age)) {
         int max = age.getPossibleValues().getLast();
-        if (grown.getValue(age) == max && original.getValue(age) < max && level.getRandom().nextFloat() < PLANT_SHEARS_CHANCE) {
-          spawnTool(level, ModEntities.FLOATING_SHEARS, pos, ItemStack.EMPTY);
+        if (grown.getValue(age) == max && original.getValue(age) < max && level.getRandom().nextFloat() < PLANT_HOE_CHANCE) {
+          spawnTool(level, ModEntities.FLOATING_HOE, pos, ItemStack.EMPTY);
         }
         return;
       }

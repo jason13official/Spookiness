@@ -1,5 +1,9 @@
 package io.github.jason13official.spookiness.world.netherrealm;
 
+import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
+import net.minecraft.world.level.levelgen.structure.BuiltinStructureSets;
+import java.util.Optional;
+import net.minecraft.core.Vec3i;
 import io.github.jason13official.spookiness.Spookiness;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -27,6 +31,7 @@ public class ModStructures {
   private static final int SPACING = 64;
   private static final int SEPARATION = 32;
   private static final int SALT = 0x5B00C1;
+  private static final int EXCLUSION_CHUNKS = 8;
 
   public static StructureType<NetherrealmStructure> NETHERREALM_TYPE;
   public static StructurePieceType NETHERREALM_PIECE;
@@ -53,7 +58,10 @@ public class ModStructures {
   public static void bootstrapSets(BootstrapContext<StructureSet> context) {
 
     HolderGetter<Structure> structures = context.lookup(Registries.STRUCTURE);
+    HolderGetter<StructureSet> sets = context.lookup(Registries.STRUCTURE_SET);
+    StructurePlacement.ExclusionZone awayFromFortresses = new StructurePlacement.ExclusionZone(sets.getOrThrow(BuiltinStructureSets.NETHER_COMPLEXES), EXCLUSION_CHUNKS);
     context.register(NETHERREALM_SET, new StructureSet(structures.getOrThrow(NETHERREALM),
-        new RandomSpreadStructurePlacement(SPACING, SEPARATION, RandomSpreadType.LINEAR, SALT)));
+        new RandomSpreadStructurePlacement(Vec3i.ZERO, StructurePlacement.FrequencyReductionMethod.DEFAULT, 1.0F, SALT, Optional.of(awayFromFortresses),
+            SPACING, SEPARATION, RandomSpreadType.LINEAR)));
   }
 }

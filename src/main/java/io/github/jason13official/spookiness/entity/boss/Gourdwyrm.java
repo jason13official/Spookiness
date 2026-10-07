@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -85,6 +86,10 @@ public class Gourdwyrm extends Mob implements Enemy {
   private static final double CHARGE_SPEED = 1.4;
   private static final double CHARGE_OVERSHOOT = 12.0;
   private static final float CONTACT_DAMAGE = 10.0F;
+  private static final double HEAD_REACH = 1.5;
+  private static final double SEGMENT_REACH = 0.4;
+  private static final int SEGMENT_LIGHT = 15;
+  private static final double DEATH_HEIGHT = 2.5;
 
   private final GourdwyrmPart[] segments = new GourdwyrmPart[SEGMENTS];
   private final Vec3[] path = new Vec3[HISTORY];
@@ -188,6 +193,49 @@ public class Gourdwyrm extends Mob implements Enemy {
     super.tick();
     this.recordPath();
     this.positionSegments();
+    this.updateSegmentLights();
+  }
+
+  @Override
+  public void onSyncedDataUpdated(EntityDataAccessor<?> accessor) {
+    super.onSyncedDataUpdated(accessor);
+    if (DATA_LIT.equals(accessor) || DATA_LENGTH.equals(accessor)) {
+      for (GourdwyrmPart segment : this.segments) {
+        segment.refreshDimensions();
+      }
+    }
+  }
+
+  private void updateSegmentLights() {
+    for (GourdwyrmPart segment : this.segments) {
+      boolean shouldLight = this.isAlive() && this.isSegmentAlive(segment.index) && this.isSegmentLit(segment.index);
+      boolean lit = LivingLights.has(segment);
+      if (shouldLight && !lit) {
+        LivingLights.add(segment, SEGMENT_LIGHT);
+      } else if (!shouldLight && lit) {
+        LivingLights.remove(segment);
+      } else if (lit) {
+        LivingLights.move(segment);
+      }
+    }
+  }
+
+  @Override
+  public void onRemovedFromLevel() {
+    super.onRemovedFromLevel();
+    for (GourdwyrmPart segment : this.segments) {
+      LivingLights.remove(segment);
+    }
+  }
+
+  @Override
+  public void die(DamageSource source) {
+    if (this.anchor != null && !this.level().isClientSide()) {
+      Vec3 altar = Vec3.atBottomCenterOf(NetherrealmArena.altarPos(this.anchor)).add(0.0, DEATH_HEIGHT, 0.0);
+      this.snapTo(altar.x, altar.y, altar.z, this.getYRot(), this.getXRot());
+      this.setDeltaMovement(Vec3.ZERO);
+    }
+    super.die(source);
   }
 
   private void recordPath() {
@@ -320,6 +368,7 @@ public class Gourdwyrm extends Mob implements Enemy {
       }
       Vec3 below = this.strikePoint.subtract(0.0, BURROW_DEPTH, 0.0);
       this.flyToward(below, DIVE_SPEED);
+      this.contactDamage(level);
       if (this.position().distanceToSqr(below) < 4.0 || this.phaseTicks >= DIVE_TICKS) {
         this.stage = 1;
         this.phaseTicks = 0;
@@ -424,10 +473,18 @@ public class Gourdwyrm extends Mob implements Enemy {
   }
 
   private void contactDamage(ServerLevel level) {
-    for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.5),
-        entity -> entity != this && entity.isAlive() && !(entity instanceof Player player && !EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(player)))) {
+    this.ram(level, this.getBoundingBox().inflate(HEAD_REACH));
+    for (GourdwyrmPart segment : this.segments) {
+      if (this.isSegmentAlive(segment.index)) {
+        this.ram(level, segment.getBoundingBox().inflate(SEGMENT_REACH));
+      }
+    }
+  }
+
+  private void ram(ServerLevel level, AABB area) {
+    for (Player victim : level.getEntitiesOfClass(Player.class, area, player -> player.isAlive() && EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(player))) {
       if (victim.hurtServer(level, this.damageSources().mobAttack(this), CONTACT_DAMAGE)) {
-        Vec3 push = victim.position().subtract(this.position()).normalize().scale(1.5);
+        Vec3 push = victim.position().subtract(area.getCenter()).normalize().scale(1.5);
         victim.setDeltaMovement(push.x, 0.6, push.z);
         victim.hurtMarked = true;
       }

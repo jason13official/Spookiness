@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness;
 
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
 import io.github.jason13official.spookiness.boss.Kindling;
@@ -120,6 +121,9 @@ public class Spookiness {
     bind(Registries.TRIGGER_TYPE, ModTriggers::register);
     bind(Registries.SOUND_EVENT, ModSounds::register);
     // game rule
+
+    // RegisterCommandsEvent
+    NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> HallowedMotherTrigger.registerCommands(event.getDispatcher()));
 
     // GatherDataEvent.Client
     EVENT_BUS.addListener(SpookinessDatagen::init);

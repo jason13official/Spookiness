@@ -12,6 +12,8 @@ public class GourdwyrmRenderer extends BlockPartsRenderer<Gourdwyrm> {
 
   private static final float HEAD_SCALE = 3.0F;
   private static final float SEGMENT_SCALE = 2.0F;
+  private static final float LIT_SCALE = 2.6F;
+  private static final float LIT_SPIN_SPEED = 12.0F;
 
   public GourdwyrmRenderer(Context context) {
     super(context, 0.0F);
@@ -42,8 +44,13 @@ public class GourdwyrmRenderer extends BlockPartsRenderer<Gourdwyrm> {
       double y = Mth.lerp(partialTicks, segment.yo, segment.getY()) - baseY;
       double z = Mth.lerp(partialTicks, segment.zo, segment.getZ()) - baseZ;
       float segmentYRot = (float) (Mth.atan2(previousZ - z, previousX - x) * Mth.RAD_TO_DEG) - 90.0F;
-      this.part(state, (entity.isSegmentLit(segment.index) ? Blocks.JACK_O_LANTERN : Blocks.CARVED_PUMPKIN).defaultBlockState(), x, y, z, SEGMENT_SCALE,
-          segmentYRot + 180.0F, 0.0F);
+      if (entity.isSegmentLit(segment.index)) {
+        float spin = state.ageInTicks * LIT_SPIN_SPEED + segment.index * 40.0F;
+        float pulse = LIT_SCALE + Mth.sin(state.ageInTicks * 0.3F + segment.index) * 0.15F;
+        this.part(state, Blocks.JACK_O_LANTERN.defaultBlockState(), x, y, z, pulse, spin, 0.0F);
+      } else {
+        this.part(state, Blocks.CARVED_PUMPKIN.defaultBlockState(), x, y, z, SEGMENT_SCALE, segmentYRot + 180.0F, 0.0F);
+      }
       previousX = x;
       previousZ = z;
     }
