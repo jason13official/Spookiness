@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.ritual;
 
+import io.github.jason13official.spookiness.effect.Particles;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
@@ -12,7 +13,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
@@ -28,6 +28,7 @@ public final class Kindling {
   private static final double LIFT_SPEED = 0.04;
   private static final double RING_RADIUS = 1.0;
   private static final int RING_ARMS = 3;
+  private static final double RING_SPIN = 0.5;
 
   public static boolean isKindling(Mob mob) {
 
@@ -88,12 +89,8 @@ public final class Kindling {
   private static void emit(ServerLevel level, Mob vessel, Wickman.Variant variant, int ticks) {
 
     boolean frost = variant == Wickman.Variant.FROST;
-    double rise = (ticks % 20) / 20.0 * (vessel.getBbHeight() + 1.0);
-    for (int arm = 0; arm < RING_ARMS; arm++) {
-      double angle = ticks * 0.5 + arm * Mth.TWO_PI / RING_ARMS;
-      level.sendParticles(frost ? ParticleTypes.SNOWFLAKE : ParticleTypes.FLAME, vessel.getX() + Math.cos(angle) * RING_RADIUS, vessel.getY() + rise,
-          vessel.getZ() + Math.sin(angle) * RING_RADIUS, 1, 0.0, 0.0, 0.0, 0.0);
-    }
+    Particles.risingSpiral(level, frost ? ParticleTypes.SNOWFLAKE : ParticleTypes.FLAME, vessel.position(), RING_RADIUS, vessel.getBbHeight() + 1.0, RING_ARMS,
+        ticks, RING_SPIN);
     Vec3 head = vessel.getEyePosition();
     level.sendParticles(frost ? ParticleTypes.ITEM_SNOWBALL : ParticleTypes.LAVA, head.x, head.y, head.z, 1, 0.1, 0.1, 0.1, 0.0);
     if (ticks % 5 == 0) {

@@ -3,7 +3,7 @@ package io.github.jason13official.spookiness.entity;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -178,7 +178,7 @@ public class FloatingCandles extends FloatingCompanion implements LightEmitter {
       List<FloatingCandles> consumed = new ArrayList<>(line);
       consumed.add(this);
       for (FloatingCandles candles : consumed) {
-        SoulBurst.spawn(level, candles.getBoundingBox().getCenter(), 24, 0.3, 0.06);
+        Particles.soulBurst(level, candles.getBoundingBox().getCenter(), 24, 0.3, 0.06);
         candles.dropCandles(level);
         candles.discard();
       }

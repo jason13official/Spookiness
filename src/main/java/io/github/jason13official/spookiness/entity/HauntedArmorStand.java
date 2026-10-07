@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -92,7 +93,7 @@ public class HauntedArmorStand extends ArmorStand {
   }
 
   private void face(Player player, float maxTurn) {
-    float yaw = (float) (Mth.atan2(player.getZ() - this.getZ(), player.getX() - this.getX()) * Mth.RAD_TO_DEG) - 90.0F;
+    float yaw = SpookyMath.yawToward(player.getX() - this.getX(), player.getZ() - this.getZ());
     this.setYRot(Mth.approachDegrees(this.getYRot(), yaw, maxTurn));
   }
 

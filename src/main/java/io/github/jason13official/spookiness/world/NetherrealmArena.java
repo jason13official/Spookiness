@@ -1,9 +1,10 @@
 package io.github.jason13official.spookiness.world;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.registry.ModStructures;
 import com.mojang.datafixers.util.Pair;
 import io.github.jason13official.spookiness.block.entity.SoullessJackOMimicBlockEntity;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.entity.boss.VigilCandle;
 import java.util.ArrayList;
@@ -50,8 +51,8 @@ public final class NetherrealmArena {
 
     List<BlockPos> bases = new ArrayList<>(PILLARS);
     for (int i = 0; i < PILLARS; i++) {
-      double angle = Math.PI * 2.0 * i / PILLARS;
-      bases.add(center.offset((int) Math.round(Math.cos(angle) * PILLAR_RING), 0, (int) Math.round(Math.sin(angle) * PILLAR_RING)));
+      Vec3 offset = SpookyMath.onRing(Vec3.ZERO, SpookyMath.ringAngle(0.0, i, PILLARS), PILLAR_RING);
+      bases.add(center.offset((int) Math.round(offset.x), 0, (int) Math.round(offset.z)));
     }
     return bases;
   }
@@ -128,7 +129,7 @@ public final class NetherrealmArena {
     for (BlockPos base : pillarBases(center)) {
       VigilCandle.plant(level, wyrm, Vec3.atBottomCenterOf(base.above(PILLAR_HEIGHT + 1)), false, true);
     }
-    SoulBurst.spawn(level, Vec3.atCenterOf(altarPos(center)), 64, 0.6, 0.12);
+    Particles.soulBurst(level, Vec3.atCenterOf(altarPos(center)), 64, 0.6, 0.12);
   }
 
   private static void forfeit(ServerLevel level, BlockPos center) {

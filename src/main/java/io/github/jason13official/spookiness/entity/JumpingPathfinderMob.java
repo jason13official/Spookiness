@@ -1,10 +1,10 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.entity.control.HoppingJumpControl;
 import io.github.jason13official.spookiness.entity.control.HoppingMoveControl;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -192,7 +192,7 @@ public abstract class JumpingPathfinderMob extends PathfinderMob {
   }
 
   protected void facePoint(double faceX, double faceZ) {
-    this.setYRot((float) (Mth.atan2(faceZ - this.getZ(), faceX - this.getX()) * (double) 180.0F / (double) (float) Math.PI) - 90.0F);
+    this.setYRot(SpookyMath.yawToward(faceX - this.getX(), faceZ - this.getZ()));
   }
 
   private void checkLandingDelay() {

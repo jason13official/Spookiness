@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.entity.projectile.FrostVolley;
 import java.util.function.IntFunction;
@@ -192,9 +193,9 @@ public class Wickman extends Monster implements LightEmitter {
 
   private void plantVigilCandles(ServerLevel level) {
 
-    double startAngle = this.random.nextDouble() * Math.PI * 2.0;
+    double startAngle = SpookyMath.randomAngle(this.random);
     for (int i = 0; i < VIGIL_CANDLES; i++) {
-      double angle = startAngle + Math.PI * 2.0 * i / VIGIL_CANDLES;
+      double angle = SpookyMath.ringAngle(startAngle, i, VIGIL_CANDLES);
       VigilCandle.plant(level, this, this.findVigilSpot(level, angle), this.getVariant() == Variant.FROST, false);
     }
     level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLAZE_AMBIENT, SoundSource.HOSTILE, 1.5F, 0.6F);

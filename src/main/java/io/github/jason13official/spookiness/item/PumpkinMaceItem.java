@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.List;
@@ -96,7 +96,7 @@ public class PumpkinMaceItem extends Item {
     }
 
     stack.set(ModDataComponents.MACE_STAGE, stage);
-    SoulBurst.spawn(level, player.getBoundingBox().getCenter(), 32, 0.6, 0.06);
+    Particles.soulBurst(level, player.getBoundingBox().getCenter(), 32, 0.6, 0.06);
     level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.MACE_EVOLVE, player.getSoundSource(), 0.6F, 1.0F);
     SpookyTrigger.award(player, SpookyTrigger.MACE_EVOLVED + stage.getSerializedName());
   }

@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.client.renderer;
 
+import io.github.jason13official.spookiness.world.SpookyTime;
+import io.github.jason13official.spookiness.util.SpookyMath;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.spookiness.block.entity.GourdwyrmTrophyBlockEntity;
@@ -60,14 +62,14 @@ public class GourdwyrmTrophyRenderer implements BlockEntityRenderer<GourdwyrmTro
     state.used = 0;
 
     long gameTime = blockEntity.getLevel() == null ? 0L : blockEntity.getLevel().getGameTime();
-    float ticks = (gameTime % 24000L) + partialTicks;
+    float ticks = (gameTime % SpookyTime.DAY_TICKS) + partialTicks;
     float head = ticks * SPEED + blockEntity.getBlockPos().hashCode() * 0.37F;
 
     for (int i = 0; i <= SEGMENTS; i++) {
       float t = head - i * SPACING;
       Vec3 pos = pathAt(t);
       Vec3 ahead = pathAt(t + 0.05F);
-      float yaw = (float) (Mth.atan2(ahead.z - pos.z, ahead.x - pos.x) * Mth.RAD_TO_DEG) - 90.0F;
+      float yaw = SpookyMath.yawToward(ahead.subtract(pos));
       float pitch = (float) (Mth.atan2(ahead.y - pos.y, ahead.subtract(pos).horizontalDistance()) * Mth.RAD_TO_DEG);
 
       BlockState block;

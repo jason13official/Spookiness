@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.entity.control;
 
-import net.minecraft.util.Mth;
+import io.github.jason13official.spookiness.util.SpookyMath;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
@@ -46,7 +46,7 @@ public class FloatingMoveControl extends MoveControl {
     this.mob.setDeltaMovement(steered);
 
     if (delta.horizontalDistanceSqr() > 1.0E-4) {
-      float yRot = (float) (Mth.atan2(delta.z, delta.x) * Mth.RAD_TO_DEG) - 90.0F;
+      float yRot = SpookyMath.yawToward(delta);
       this.mob.setYRot(this.rotlerp(this.mob.getYRot(), yRot, this.maxTurn));
       this.mob.yBodyRot = this.mob.getYRot();
     }

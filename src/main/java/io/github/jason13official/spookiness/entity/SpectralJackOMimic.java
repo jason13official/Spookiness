@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.DefendOwnerGoal;
 import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
@@ -36,7 +37,6 @@ public class SpectralJackOMimic extends FloatingCompanion implements LightEmitte
   private static final double SLOT_RADIUS = 2.5;
   private static final double SLOT_HEIGHT = 1.2;
   private static final double SLOT_TOLERANCE = 0.75;
-  private static final double GOLDEN_ANGLE = 2.399963;
 
   private static final int LIGHT_EMISSION = 10;
   private static final byte ATTACK_EVENT = 4;
@@ -180,8 +180,7 @@ public class SpectralJackOMimic extends FloatingCompanion implements LightEmitte
 
     @Override
     protected Vec3 anchor(Entity leader) {
-      double angle = this.mob.getId() * GOLDEN_ANGLE;
-      return leader.position().add(Math.cos(angle) * SLOT_RADIUS, SLOT_HEIGHT, Math.sin(angle) * SLOT_RADIUS);
+      return SpookyMath.onRing(leader.position(), this.mob.getId() * SpookyMath.GOLDEN_ANGLE, SLOT_RADIUS).add(0.0, SLOT_HEIGHT, 0.0);
     }
 
     @Override

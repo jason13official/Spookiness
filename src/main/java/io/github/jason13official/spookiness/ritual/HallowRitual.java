@@ -2,7 +2,7 @@ package io.github.jason13official.spookiness.ritual;
 
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.Hallowing;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.registry.ModDamageTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -32,11 +32,11 @@ public final class HallowRitual {
 
     mace.hurtAndBreak(DURABILITY_COST, player, hand);
     player.hurtServer(level, level.damageSources().source(ModDamageTypes.HALLOWING), HEALTH_COST);
-    SoulBurst.spawn(level, player.getBoundingBox().getCenter(), 16, 0.3, 0.05);
+    Particles.soulBurst(level, player.getBoundingBox().getCenter(), 16, 0.3, 0.05);
 
     Hallowing.hallow(mob, player);
 
-    SoulBurst.spawn(level, mob.getBoundingBox().getCenter(), 32, 0.4, 0.08);
+    Particles.soulBurst(level, mob.getBoundingBox().getCenter(), 32, 0.4, 0.08);
     level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.5F, 1.2F);
     player.sendOverlayMessage(Component.translatable("message.spookiness.hallowed", mob.getDisplayName()));
     SpookyTrigger.award(player, SpookyTrigger.HALLOW);

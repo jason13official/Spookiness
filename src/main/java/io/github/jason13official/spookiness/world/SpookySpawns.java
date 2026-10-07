@@ -1,7 +1,7 @@
 package io.github.jason13official.spookiness.world;
 
 import net.minecraft.world.level.levelgen.Heightmap;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.FloatingLantern;
@@ -125,7 +125,7 @@ public final class SpookySpawns {
     book.setTarget(player);
     level.addFreshEntity(book);
 
-    SoulBurst.spawn(level, book.getBoundingBox().getCenter(), 24, 0.3, 0.05);
+    Particles.soulBurst(level, book.getBoundingBox().getCenter(), 24, 0.3, 0.05);
     level.playSound(null, pos, SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 0.6F);
   }
 
@@ -167,7 +167,7 @@ public final class SpookySpawns {
     candles.setColor(FloatingCandles.colorOf(state.getBlock()));
     level.addFreshEntity(candles);
 
-    SoulBurst.spawn(level, candles.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    Particles.soulBurst(level, candles.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, pos, SoundEvents.CANDLE_EXTINGUISH, SoundSource.BLOCKS, 1.0F, 0.6F);
   }
 
@@ -272,7 +272,7 @@ public final class SpookySpawns {
     lantern.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
     level.addFreshEntity(lantern);
 
-    SoulBurst.spawn(level, lantern.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    Particles.soulBurst(level, lantern.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, pos, SoundEvents.CHAIN_BREAK, SoundSource.BLOCKS, 1.0F, 0.6F);
   }
 
@@ -302,7 +302,7 @@ public final class SpookySpawns {
     EventHooks.finalizeMobSpawn(skull, level, level.getCurrentDifficultyAt(BlockPos.containing(spawn)), EntitySpawnReason.TRIGGERED, null);
     level.addFreshEntity(skull);
 
-    SoulBurst.spawn(level, skull.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    Particles.soulBurst(level, skull.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, skull.getX(), skull.getY(), skull.getZ(), SoundEvents.SKELETON_AMBIENT, SoundSource.HOSTILE, 1.0F, 1.8F);
     return skull;
   }
@@ -357,7 +357,7 @@ public final class SpookySpawns {
     EventHooks.finalizeMobSpawn(tool, level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.TRIGGERED, null);
     level.addFreshEntity(tool);
 
-    SoulBurst.spawn(level, tool.getBoundingBox().getCenter(), 32, 0.5, 0.06);
+    Particles.soulBurst(level, tool.getBoundingBox().getCenter(), 32, 0.5, 0.06);
     level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 0.6F);
   }
 
@@ -391,7 +391,7 @@ public final class SpookySpawns {
     book.setShelfHome(pos, slot, taken);
     level.addFreshEntity(book);
 
-    SoulBurst.spawn(level, book.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    Particles.soulBurst(level, book.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, pos, SoundEvents.CHISELED_BOOKSHELF_PICKUP, SoundSource.BLOCKS, 1.0F, 0.6F);
   }
 

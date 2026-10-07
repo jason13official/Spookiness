@@ -14,9 +14,6 @@ public final class HauntedHarvest {
 
   public static final float WAKE_MULTIPLIER = 4.0F;
 
-  private static final long CYCLE_TICKS = 192000L;
-  private static final long START = 13000L;
-  private static final long END = 23000L;
 
   private static final Map<UUID, Long> ANNOUNCED = new ConcurrentHashMap<>();
 
@@ -24,8 +21,7 @@ public final class HauntedHarvest {
     if (level.dimension() != Level.OVERWORLD) {
       return false;
     }
-    long time = level.getOverworldClockTime() % CYCLE_TICKS;
-    return time >= START && time <= END;
+    return SpookyTime.isNight(level.getOverworldClockTime() % SpookyTime.HARVEST_CYCLE_TICKS);
   }
 
   public static float scale(Level level, float chance) {
@@ -42,7 +38,7 @@ public final class HauntedHarvest {
     if (player.tickCount % 20 != 0 || !isActive(player.level())) {
       return;
     }
-    long cycle = player.level().getOverworldClockTime() / CYCLE_TICKS;
+    long cycle = player.level().getOverworldClockTime() / SpookyTime.HARVEST_CYCLE_TICKS;
     Long previous = ANNOUNCED.put(player.getUUID(), cycle);
     if (previous == null || previous != cycle) {
       player.sendSystemMessage(Component.translatable("message.spookiness.haunted_harvest").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC));

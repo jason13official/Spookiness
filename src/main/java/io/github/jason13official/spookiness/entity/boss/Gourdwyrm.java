@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
@@ -27,7 +28,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
 import java.util.function.IntFunction;
 import net.minecraft.util.ByIdMap;
-import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -380,9 +380,8 @@ public class Gourdwyrm extends Mob implements Enemy {
       double radius = GEYSER_RADIUS * this.phaseTicks / RIPPLE_TICKS;
       BlockState ground = level.getBlockState(BlockPos.containing(point).below());
       for (int i = 0; i < 12; i++) {
-        double angle = Math.PI * 2.0 * i / 12.0 + this.phaseTicks * 0.2;
-        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, ground), point.x + Math.cos(angle) * radius, point.y + 0.1,
-            point.z + Math.sin(angle) * radius, 1, 0.05, 0.0, 0.05, 0.0);
+        Vec3 ripple = SpookyMath.onRing(point, SpookyMath.ringAngle(this.phaseTicks * 0.2, i, 12), radius);
+        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, ground), ripple.x, ripple.y + 0.1, ripple.z, 1, 0.05, 0.0, 0.05, 0.0);
       }
       if (this.phaseTicks % 10 == 0) {
         level.playSound(null, point.x, point.y, point.z, SoundEvents.WARDEN_DIG, SoundSource.HOSTILE, 2.0F, 0.6F + this.phaseTicks / (float) RIPPLE_TICKS * 0.4F);
@@ -504,7 +503,7 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   private void faceToward(Vec3 direction) {
     if (direction.horizontalDistanceSqr() > 1.0E-4) {
-      float yRot = (float) (Mth.atan2(direction.z, direction.x) * Mth.RAD_TO_DEG) - 90.0F;
+      float yRot = SpookyMath.yawToward(direction);
       this.setYRot(yRot);
       this.yBodyRot = yRot;
       this.yHeadRot = yRot;
@@ -517,7 +516,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     Vec3 velocity = delta.lengthSqr() > speed * speed ? delta.normalize().scale(speed) : delta;
     this.setDeltaMovement(velocity);
     if (velocity.horizontalDistanceSqr() > 1.0E-4) {
-      float yRot = (float) (Mth.atan2(velocity.z, velocity.x) * Mth.RAD_TO_DEG) - 90.0F;
+      float yRot = SpookyMath.yawToward(velocity);
       this.setYRot(yRot);
       this.yBodyRot = yRot;
       this.yHeadRot = yRot;

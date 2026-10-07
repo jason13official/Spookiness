@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.world.SpookyTime;
+import io.github.jason13official.spookiness.util.SpookyMath;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.lighting.LanternHeads;
@@ -7,7 +9,7 @@ import io.github.jason13official.spookiness.lighting.LightEmitter;
 import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -126,9 +128,6 @@ public class HallowedMother extends Monster implements LightEmitter {
   private static final float PROJECTILE_MULTIPLIER = 0.4F;
   private static final float MACE_MULTIPLIER = 2.0F;
   private static final int BROOD_PARTICLE_INTERVAL = 4;
-  private static final long DAY_LENGTH = 24000L;
-  private static final long NOON = 6000L;
-  private static final long DUSK = 12000L;
 
   private final ServerBossEvent bossEvent = new ServerBossEvent(UUID.randomUUID(), this.getDisplayName(), BossEvent.BossBarColor.PURPLE,
       BossEvent.BossBarOverlay.NOTCHED_10);
@@ -226,8 +225,7 @@ public class HallowedMother extends Monster implements LightEmitter {
     super.customServerAiStep(level);
     this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-    long dayTime = level.getOverworldClockTime() % DAY_LENGTH;
-    if (dayTime >= NOON && dayTime < DUSK) {
+    if (SpookyTime.isAfternoon(SpookyTime.timeOfDay(level))) {
       this.sink(level, "message.spookiness.mother_sinks_dawn");
       return;
     }
@@ -449,9 +447,9 @@ public class HallowedMother extends Monster implements LightEmitter {
 
   private void spawnCloud(ServerLevel level) {
 
-    double angle = this.random.nextDouble() * Math.PI * 2.0;
     double distance = CLOUD_MIN_DISTANCE + this.random.nextDouble() * (CLOUD_MAX_DISTANCE - CLOUD_MIN_DISTANCE);
-    AreaEffectCloud cloud = new AreaEffectCloud(level, this.getX() + Math.cos(angle) * distance, this.getY(), this.getZ() + Math.sin(angle) * distance);
+    Vec3 spot = SpookyMath.onRing(this.position(), SpookyMath.randomAngle(this.random), distance);
+    AreaEffectCloud cloud = new AreaEffectCloud(level, spot.x, spot.y, spot.z);
     cloud.setOwner(this);
     cloud.setRadius(CLOUD_RADIUS);
     cloud.setDuration(CLOUD_DURATION);
@@ -546,9 +544,7 @@ public class HallowedMother extends Monster implements LightEmitter {
 
   private void faceTarget(LivingEntity target) {
 
-    double dx = target.getX() - this.getX();
-    double dz = target.getZ() - this.getZ();
-    float wanted = (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90.0F;
+    float wanted = SpookyMath.yawToward(target.position().subtract(this.position()));
     float yRot = Mth.approachDegrees(this.getYRot(), wanted, TURN_SPEED);
     this.setYRot(yRot);
     this.yBodyRot = yRot;
@@ -702,7 +698,7 @@ public class HallowedMother extends Monster implements LightEmitter {
     if (this.summoner != null && level.getServer().getPlayerList().getPlayer(this.summoner) instanceof ServerPlayer owner) {
       for (Mob ally : PlayerFollowers.followers(owner, Hallowing::isHallowed)) {
         Hallowing.bless(ally);
-        SoulBurst.spawn(level, ally.getBoundingBox().getCenter(), 24, 0.3, 0.06);
+        Particles.soulBurst(level, ally.getBoundingBox().getCenter(), 24, 0.3, 0.06);
       }
     }
   }

@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.companion;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,8 +64,7 @@ public final class PlayerFollowers {
 
   public static Vec3 ringPosition(Vec3 center, double startAngle, int index, int count) {
 
-    double angle = startAngle + Math.PI * 2.0 * index / count;
-    return center.add(Math.cos(angle) * RING_RADIUS, 1.0, Math.sin(angle) * RING_RADIUS);
+    return SpookyMath.onRing(center, SpookyMath.ringAngle(startAngle, index, count), RING_RADIUS).add(0.0, 1.0, 0.0);
   }
 
   private static boolean isFollowing(Mob follower, ServerPlayer owner) {
@@ -81,7 +81,7 @@ public final class PlayerFollowers {
       }
 
       if (follower.level() != owner.level() || follower.distanceTo(owner) > RECALL_DISTANCE) {
-        Vec3 pos = ringPosition(owner.position(), owner.getRandom().nextDouble() * Math.PI * 2.0, 0, 1);
+        Vec3 pos = ringPosition(owner.position(), SpookyMath.randomAngle(owner.getRandom()), 0, 1);
         follower.teleport(new TeleportTransition(owner.level(), pos, Vec3.ZERO, owner.getYRot(), 0.0F, TeleportTransition.DO_NOTHING));
       }
     }
@@ -114,7 +114,7 @@ public final class PlayerFollowers {
     owner.removeData(ModAttachments.STASHED_COMPANIONS);
 
     ServerLevel level = owner.level();
-    double startAngle = owner.getRandom().nextDouble() * Math.PI * 2.0;
+    double startAngle = SpookyMath.randomAngle(owner.getRandom());
     for (int i = 0; i < stashed.size(); i++) {
       Vec3 pos = ringPosition(owner.position(), startAngle, i, stashed.size());
       Entity entity = EntityType.loadEntityRecursive(stashed.get(i), level, EntitySpawnReason.LOAD, loaded -> {

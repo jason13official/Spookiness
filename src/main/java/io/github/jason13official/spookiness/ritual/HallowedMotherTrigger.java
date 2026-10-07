@@ -1,5 +1,8 @@
 package io.github.jason13official.spookiness.ritual;
 
+import net.minecraft.util.Mth;
+import io.github.jason13official.spookiness.world.SpookyTime;
+import io.github.jason13official.spookiness.util.SpookyMath;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -32,9 +35,6 @@ public final class HallowedMotherTrigger {
   public static final int REQUIRED_ALLIES = 5;
 
   private static final int CHECK_INTERVAL = 100;
-  private static final long DAY_LENGTH = 24000L;
-  private static final long NIGHT_START = 13000L;
-  private static final long NIGHT_END = 23000L;
   private static final long ANSWER_TICKS = 1200L;
   private static final double MIN_DISTANCE = 20.0;
   private static final double MAX_DISTANCE = 30.0;
@@ -53,10 +53,8 @@ public final class HallowedMotherTrigger {
       return;
     }
 
-    long time = level.getOverworldClockTime();
-    long dayTime = time % DAY_LENGTH;
-    long night = time / DAY_LENGTH;
-    if (dayTime < NIGHT_START || dayTime > NIGHT_END || player.getData(ModAttachments.MOTHER_NIGHT) == night) {
+    long night = SpookyTime.day(level);
+    if (!SpookyTime.isNight(SpookyTime.timeOfDay(level)) || player.getData(ModAttachments.MOTHER_NIGHT) == night) {
       return;
     }
 
@@ -112,10 +110,10 @@ public final class HallowedMotherTrigger {
     }
 
     ServerLevel level = player.level();
-    double angle = player.getRandom().nextDouble() * Math.PI * 2.0;
     double distance = MIN_DISTANCE + player.getRandom().nextDouble() * (MAX_DISTANCE - MIN_DISTANCE);
-    int x = (int) Math.floor(player.getX() + Math.cos(angle) * distance);
-    int z = (int) Math.floor(player.getZ() + Math.sin(angle) * distance);
+    Vec3 spot = SpookyMath.onRing(player.position(), SpookyMath.randomAngle(player.getRandom()), distance);
+    int x = Mth.floor(spot.x);
+    int z = Mth.floor(spot.z);
     int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
     HallowedMother.erupt(level, player, new Vec3(x + 0.5, y, z + 0.5));
     SpookyTrigger.award(player, SpookyTrigger.MOTHER_RISES);

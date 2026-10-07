@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.client.renderer.boss;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.client.renderer.BlockPartsRenderer;
 import io.github.jason13official.spookiness.client.renderer.state.BlockPartsRenderState;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
@@ -43,7 +44,7 @@ public class GourdwyrmRenderer extends BlockPartsRenderer<Gourdwyrm> {
       double x = Mth.lerp(partialTicks, segment.xo, segment.getX()) - baseX;
       double y = Mth.lerp(partialTicks, segment.yo, segment.getY()) - baseY;
       double z = Mth.lerp(partialTicks, segment.zo, segment.getZ()) - baseZ;
-      float segmentYRot = (float) (Mth.atan2(previousZ - z, previousX - x) * Mth.RAD_TO_DEG) - 90.0F;
+      float segmentYRot = SpookyMath.yawToward(previousX - x, previousZ - z);
       if (entity.isSegmentLit(segment.index)) {
         float spin = state.ageInTicks * LIT_SPIN_SPEED + segment.index * 40.0F;
         float pulse = LIT_SCALE + Mth.sin(state.ageInTicks * 0.3F + segment.index) * 0.15F;

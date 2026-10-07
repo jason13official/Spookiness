@@ -1,7 +1,7 @@
 package io.github.jason13official.spookiness.entity;
 
 import io.github.jason13official.spookiness.registry.ModSounds;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -95,7 +95,7 @@ public class JackOMimic extends JumpingPathfinderMob implements LightEmitter {
 //  }
 
   public void spawnSoulBurst(ServerLevel level) {
-    SoulBurst.spawn(level, this.getBoundingBox().getCenter(), SOUL_BURST_PARTICLES, 0.5, SOUL_BURST_SPEED);
+    Particles.soulBurst(level, this.getBoundingBox().getCenter(), SOUL_BURST_PARTICLES, 0.5, SOUL_BURST_SPEED);
   }
 
   @Override

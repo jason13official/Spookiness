@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -93,7 +93,7 @@ public class FloatingLantern extends FloatingCompanion implements LightEmitter {
     }
 
     this.setOwner(player);
-    SoulBurst.spawn(level, this.getBoundingBox().getCenter(), 16, 0.25, 0.04);
+    Particles.soulBurst(level, this.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     this.playSound(SoundEvents.LANTERN_PLACE, 1.0F, 0.6F);
     SpookyTrigger.award(player, SpookyTrigger.CLAIM_LANTERN);
     return true;

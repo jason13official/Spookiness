@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness.companion;
 
-import io.github.jason13official.spookiness.effect.SoulBurst;
+import io.github.jason13official.spookiness.util.SpookyMath;
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.network.chat.Component;
@@ -15,7 +16,7 @@ public final class SpectralCompanions {
 
   public static void summon(ServerLevel level, Player owner, int count) {
 
-    double startAngle = level.getRandom().nextDouble() * Math.PI * 2.0;
+    double startAngle = SpookyMath.randomAngle(level.getRandom());
     for (int i = 0; i < count; i++) {
       SpectralJackOMimic mimic = ModEntities.SPECTRAL_JACK_O_MIMIC.create(level, EntitySpawnReason.MOB_SUMMONED);
       if (mimic == null) {
@@ -26,7 +27,7 @@ public final class SpectralCompanions {
       mimic.snapTo(pos.x, pos.y, pos.z, owner.getYRot(), 0.0F);
       mimic.befriend(level, owner);
       level.addFreshEntity(mimic);
-      SoulBurst.spawn(level, mimic.getBoundingBox().getCenter(), 32, 0.4, 0.08);
+      Particles.soulBurst(level, mimic.getBoundingBox().getCenter(), 32, 0.4, 0.08);
     }
 
     level.playSound(null, owner.getX(), owner.getY(), owner.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.5F, 0.8F);

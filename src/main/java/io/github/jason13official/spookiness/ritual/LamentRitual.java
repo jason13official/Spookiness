@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.ritual;
 
+import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModAttachments;
@@ -46,6 +47,7 @@ public final class LamentRitual {
   private static final double RING_RADIUS = 1.2;
   private static final double RING_HEIGHT = 2.2;
   private static final int RING_ARMS = 3;
+  private static final double RING_SPIN = 0.45;
   private static final int SEARCH_RADIUS = 16;
   private static final int NETHER_ROOF_MARGIN = 6;
   private static final int FALLBACK_Y = 64;
@@ -127,11 +129,7 @@ public final class LamentRitual {
       level.sendParticles(ParticleTypes.FLAME, item.x, item.y, item.z, 0, dir.x, dir.y, dir.z, 0.12 + random.nextDouble() * 0.1);
     }
 
-    double rise = (ticks % 20) / 20.0 * RING_HEIGHT;
-    for (int arm = 0; arm < RING_ARMS; arm++) {
-      double angle = ticks * 0.45 + arm * Mth.TWO_PI / RING_ARMS;
-      level.sendParticles(ParticleTypes.FLAME, player.getX() + Math.cos(angle) * RING_RADIUS, player.getY() + rise, player.getZ() + Math.sin(angle) * RING_RADIUS, 1, 0.0, 0.0, 0.0, 0.0);
-    }
+    Particles.risingSpiral(level, ParticleTypes.FLAME, player.position(), RING_RADIUS, RING_HEIGHT, RING_ARMS, ticks, RING_SPIN);
 
     if (random.nextInt(4) == 0) {
       level.sendParticles(ParticleTypes.LAVA, item.x, item.y, item.z, 1, 0.1, 0.1, 0.1, 0.0);
