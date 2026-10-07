@@ -143,10 +143,6 @@ public class HallowedMother extends SpookyBoss implements LightEmitter {
     return id == NO_TETHER ? null : this.level().getEntity(id);
   }
 
-  public boolean isEnraged() {
-    return this.getHealth() < this.getMaxHealth() * 0.5F;
-  }
-
   void setGaping(boolean gaping) {
     this.entityData.set(DATA_GAPING, gaping);
   }
@@ -236,7 +232,6 @@ public class HallowedMother extends SpookyBoss implements LightEmitter {
   public float getGape(float partialTicks) {
     return Mth.lerp(partialTicks, this.oGape, this.gape);
   }
-
 
   private void spawnCloud(ServerLevel level) {
 

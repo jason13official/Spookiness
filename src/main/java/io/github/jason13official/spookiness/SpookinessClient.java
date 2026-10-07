@@ -24,13 +24,11 @@ import io.github.jason13official.spookiness.client.renderer.boss.VigilCandleRend
 import io.github.jason13official.spookiness.client.renderer.boss.WickmanHeadRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.WickmanRenderer;
 import io.github.jason13official.spookiness.registry.ModEntities;
-import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.EndermanRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -109,11 +107,6 @@ public class SpookinessClient {
       }
     });
   }
-
-//  private static <S extends LivingEntityRenderState, M extends EntityModel<? super S>> void addHeadItemLayer(LivingEntityRenderer<?, S, M> renderer, float headCenterZ) {
-//
-//    renderer.addLayer(new HeadItemLayer<>(renderer, headCenterZ));
-//  }
 
   private static void addHeadItemLayer(LivingEntityRenderer<?, ?, ?> renderer, float headCenterZ) {
 

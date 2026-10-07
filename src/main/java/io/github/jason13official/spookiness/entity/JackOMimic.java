@@ -9,7 +9,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AnimationState;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -69,30 +68,21 @@ public class JackOMimic extends JumpingPathfinderMob implements LightEmitter {
 
       @Override
       protected boolean canAttack(@Nullable LivingEntity target, TargetingConditions targetConditions) {
-
-        // return super.canAttack(target, targetConditions);
-        return target != null && target.canBeSeenAsEnemy();
+        return canTargetInPeaceful(target);
       }
     }.setAlertOthers());
     this.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(this, Player.class, true) {
+
       @Override
       protected boolean canAttack(@Nullable LivingEntity target, TargetingConditions targetConditions) {
-
-        // return super.canAttack(target, targetConditions);
-        return target != null && target.canBeSeenAsEnemy();
+        return canTargetInPeaceful(target);
       }
     });
   }
 
-  @Override
-  public boolean doHurtTarget(ServerLevel level, Entity target) {
-    return super.doHurtTarget(level, target);
+  private static boolean canTargetInPeaceful(@Nullable LivingEntity target) {
+    return target != null && target.canBeSeenAsEnemy();
   }
-
-  //  @Override
-//  public void die(DamageSource source) {
-//    super.die(source);
-//  }
 
   public void spawnSoulBurst(ServerLevel level) {
     Particles.soulBurst(level, this.getBoundingBox().getCenter(), SOUL_BURST_PARTICLES, 0.5, SOUL_BURST_SPEED);

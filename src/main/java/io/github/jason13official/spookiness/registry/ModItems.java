@@ -5,13 +5,9 @@ import io.github.jason13official.spookiness.item.AlliedSpawnEggItem;
 import io.github.jason13official.spookiness.item.LamentConfigurationItem;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -61,11 +57,9 @@ public class ModItems {
 
   public static List<Item> SPAWN_EGGS = new ArrayList<>();
 
-  public static List<Item> CREATIVE_TAB_ITEMS = new LinkedList<>();
+  public static List<Item> CREATIVE_TAB_ITEMS = new ArrayList<>();
 
   public static void register(BiConsumer<Item, Identifier> consumer) {
-
-    CREATIVE_TAB_ITEMS.clear(); // just in case ?
 
     PUMPKIN_MACE = registerItem("pumpkin_mace", PumpkinMaceItem::new, new Item.Properties() // format
         .rarity(Rarity.EPIC).durability(500).repairable(Items.STICK) // format
@@ -123,50 +117,13 @@ public class ModItems {
 
   private static Item registerBlock(Block block, BiConsumer<Item, Identifier> consumer) {
 
-    return registerBlock(block, BlockItem::new, consumer);
+    return registerBlock(block, new Item.Properties(), consumer);
   }
 
   private static Item registerBlock(Block block, Item.Properties properties, BiConsumer<Item, Identifier> consumer) {
 
-    return registerBlock(block, BlockItem::new, properties, consumer);
-  }
-
-  private static Item registerBlock(Block block, UnaryOperator<Properties> propertiesFunction, BiConsumer<Item, Identifier> consumer) {
-
-    return registerBlock(block, (b, p) -> new BlockItem(b, propertiesFunction.apply(p)), consumer);
-  }
-
-  /// what does it do ?
-  @SuppressWarnings("deprecation")
-  private static Item registerBlock(Block block, Block[] alternatives, BiConsumer<Item, Identifier> consumer) {
-
-    return registerItem(blockIdToItemId(block.builtInRegistryHolder().key()), (p) -> new BlockItem(block, p) {
-
-      public void registerBlocks(Map<Block, Item> map, Item self) {
-        super.registerBlocks(map, self);
-
-        for (Block block : alternatives) {
-          map.put(block, self);
-        }
-
-      }
-    }, (new Item.Properties()).useBlockDescriptionPrefix(), consumer);
-  }
-
-  private static Item registerBlock(Block block, BiFunction<Block, Item.Properties, Item> itemFactory, BiConsumer<Item, Identifier> consumer) {
-
-    return registerBlock(block, itemFactory, new Item.Properties(), consumer);
-  }
-
-  private static Item registerBlock(Block block, BiFunction<Block, Item.Properties, Item> itemFactory, Item.Properties properties, BiConsumer<Item, Identifier> consumer) {
-
-    return registerItem(blockIdToItemId(block.builtInRegistryHolder().key()), (p) -> itemFactory.apply(block, p), properties.useBlockDescriptionPrefix().requiredFeatures(block.requiredFeatures()),
-        consumer);
-  }
-
-  private static Item registerItem(String name, Function<Properties, Item> itemFactory, BiConsumer<Item, Identifier> consumer) {
-
-    return registerItem(modItemId(name), itemFactory, new Item.Properties(), consumer);
+    return registerItem(blockIdToItemId(block.builtInRegistryHolder().key()), p -> new BlockItem(block, p),
+        properties.useBlockDescriptionPrefix().requiredFeatures(block.requiredFeatures()), consumer);
   }
 
   /// adds to our creative mode tab
@@ -179,16 +136,6 @@ public class ModItems {
   private static Item registerItem(String name, Item.Properties properties, BiConsumer<Item, Identifier> consumer) {
 
     return registerItem(modItemId(name), Item::new, properties, consumer);
-  }
-
-  private static Item registerItem(String name, BiConsumer<Item, Identifier> consumer) {
-
-    return registerItem(modItemId(name), Item::new, new Item.Properties(), consumer);
-  }
-
-  private static Item registerItem(ResourceKey<Item> key, Function<Item.Properties, Item> itemFactory, BiConsumer<Item, Identifier> consumer) {
-
-    return registerItem(key, itemFactory, new Item.Properties(), consumer);
   }
 
   private static Item registerItem(ResourceKey<Item> key, Function<Item.Properties, Item> itemFactory, Item.Properties properties, BiConsumer<Item, Identifier> consumer) {
