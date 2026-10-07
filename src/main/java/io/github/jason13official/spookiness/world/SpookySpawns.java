@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.world;
 
+import io.github.jason13official.spookiness.util.BlockEntities;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.util.Spawning;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -16,10 +17,8 @@ import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -40,7 +39,6 @@ import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.CandleCakeBlock;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.ChiseledBookShelfBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
@@ -176,33 +174,11 @@ public final class SpookySpawns {
 
     ServerLevel level = player.level();
     RandomSource random = player.getRandom();
-    forBlockEntitiesNear(player, BOOKSHELF_RADIUS, ChiseledBookShelfBlockEntity.class, shelf -> {
+    for (ChiseledBookShelfBlockEntity shelf : BlockEntities.near(level, player.position(), BOOKSHELF_RADIUS, ChiseledBookShelfBlockEntity.class)) {
       if (random.nextFloat() < HauntedHarvest.scale(level, BOOKSHELF_AWAKEN_CHANCE)) {
         awakenShelfBook(level, shelf, random);
       }
-    });
-  }
-
-  private static <T extends BlockEntity> void forBlockEntitiesNear(ServerPlayer player, double radius, Class<T> type, Consumer<T> action) {
-
-    ServerLevel level = player.level();
-    int minX = SectionPos.blockToSectionCoord(player.getX() - radius);
-    int maxX = SectionPos.blockToSectionCoord(player.getX() + radius);
-    int minZ = SectionPos.blockToSectionCoord(player.getZ() - radius);
-    int maxZ = SectionPos.blockToSectionCoord(player.getZ() + radius);
-
-    List<T> found = new ArrayList<>();
-    for (int x = minX; x <= maxX; x++) {
-      for (int z = minZ; z <= maxZ; z++) {
-        for (BlockEntity blockEntity : level.getChunk(x, z).getBlockEntities().values()) {
-          if (type.isInstance(blockEntity) && blockEntity.getBlockPos().closerToCenterThan(player.position(), radius)) {
-            found.add(type.cast(blockEntity));
-          }
-        }
-      }
     }
-
-    found.forEach(action);
   }
 
   public static void tickNightAwakenings(ServerPlayer player) {
@@ -222,12 +198,12 @@ public final class SpookySpawns {
       }
     }
 
-    forBlockEntitiesNear(player, SKULL_RADIUS, SkullBlockEntity.class, skull -> {
+    for (SkullBlockEntity skull : BlockEntities.near(level, player.position(), SKULL_RADIUS, SkullBlockEntity.class)) {
       BlockState state = skull.getBlockState();
       if ((state.is(Blocks.SKELETON_SKULL) || state.is(Blocks.SKELETON_WALL_SKULL)) && random.nextFloat() < HauntedHarvest.scale(level, SKULL_AWAKEN_CHANCE)) {
         awakenSkull(level, skull.getBlockPos());
       }
-    });
+    }
 
     List<ArmorStand> stands = level.getEntitiesOfClass(ArmorStand.class, player.getBoundingBox().inflate(ARMOR_STAND_RADIUS),
         stand -> stand.getType() == EntityType.ARMOR_STAND && !stand.isMarker() && !stand.isInvisible());
