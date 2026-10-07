@@ -23,7 +23,6 @@ import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -401,9 +400,6 @@ public class HallowedMother extends Monster implements LightEmitter {
       Vec3 pull = toBelly.normalize().scale(Math.min(INHALE_PULL, toBelly.length()));
       prey.setDeltaMovement(pull);
       prey.hurtMarked = true;
-      if (prey instanceof ServerPlayer player) {
-        player.connection.send(new ClientboundSetEntityMotionPacket(player));
-      }
       level.sendParticles(ParticleTypes.CLOUD, prey.getX(), prey.getY() + prey.getBbHeight() * 0.5, prey.getZ(), 3, 0.3, 0.3, 0.3, 0.02);
       if (toBelly.length() < SWALLOW_DISTANCE || this.feastTicks >= INHALE_TICKS) {
         this.feast = Feast.DIGESTING;
@@ -436,9 +432,6 @@ public class HallowedMother extends Monster implements LightEmitter {
     prey.teleportTo(mouth.x, mouth.y, mouth.z);
     prey.setDeltaMovement(forward.x * SPIT_OUT_SPEED, SPIT_OUT_LIFT, forward.z * SPIT_OUT_SPEED);
     prey.hurtMarked = true;
-    if (prey instanceof ServerPlayer player) {
-      player.connection.send(new ClientboundSetEntityMotionPacket(player));
-    }
     level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, CLOUD_ORANGE), mouth.x, mouth.y, mouth.z, 24, 0.5, 0.5, 0.5, 0.0);
     this.playSound(SoundEvents.PLAYER_BURP, 3.0F, 0.5F);
     this.endFeast();
@@ -538,9 +531,6 @@ public class HallowedMother extends Monster implements LightEmitter {
       Vec3 direction = away.lengthSqr() > 1.0E-4 ? away.normalize() : Vec3.directionFromRotation(0.0F, this.random.nextFloat() * 360.0F);
       entity.setDeltaMovement(direction.x * BLAST_SPEED, BLAST_LIFT, direction.z * BLAST_SPEED);
       entity.hurtMarked = true;
-      if (entity instanceof ServerPlayer player) {
-        player.connection.send(new ClientboundSetEntityMotionPacket(player));
-      }
     }
 
     level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y + 1.5, center.z, 1, 0.0, 0.0, 0.0, 0.0);
