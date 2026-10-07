@@ -28,5 +28,7 @@ public class SpookinessDatagen {
     event.createProvider(SpookinessModelProvider::new);
     event.createProvider(SpookinessLanguageProvider::new);
     event.createProvider(SpookinessLootTableProvider::create);
+    event.createProvider(SpookinessAdvancementProvider::create);
+    event.createProvider(SpookinessSoundDefinitionsProvider::new);
   }
 }

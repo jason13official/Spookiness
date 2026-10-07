@@ -26,17 +26,26 @@ public class SpookinessRecipeProvider extends RecipeProvider {
         .unlockedBy(getHasName(Items.CARVED_PUMPKIN), this.has(Items.CARVED_PUMPKIN))
         .save(this.output);
 
-    // this.shapeless(RecipeCategory.MISC, ModItems.PIECE_OF_LAMENT_ONE)
-    //     .requires(Items.GOLD_INGOT, 2)
-    //     .requires(Items.BLAZE_ROD)
-    //     .unlockedBy(getHasName(Items.BLAZE_ROD), this.has(Items.BLAZE_ROD))
-    //     .save(this.output);
+    this.shaped(RecipeCategory.MISC, ModItems.PIECE_OF_LAMENT_ONE)
+        .define('G', Items.GOLD_BLOCK)
+        .define('B', Items.BLAZE_ROD)
+        .define('J', Items.JACK_O_LANTERN)
+        .pattern("GBG")
+        .pattern("BJB")
+        .pattern("GBG")
+        .unlockedBy(getHasName(ModItems.PUMPKIN_MACE), this.has(ModItems.PUMPKIN_MACE))
+        .save(this.output);
 
-    // this.shapeless(RecipeCategory.MISC, ModItems.PIECE_OF_LAMENT_TWO)
-    //     .requires(Items.GOLD_NUGGET, 4)
-    //     .requires(Items.MAGMA_CREAM)
-    //     .unlockedBy(getHasName(Items.MAGMA_CREAM), this.has(Items.MAGMA_CREAM))
-    //     .save(this.output);
+    this.shaped(RecipeCategory.MISC, ModItems.PIECE_OF_LAMENT_TWO)
+        .define('G', Items.GOLD_BLOCK)
+        .define('M', Items.MAGMA_CREAM)
+        .define('P', Items.CARVED_PUMPKIN)
+        .define('E', Items.FERMENTED_SPIDER_EYE)
+        .pattern("GMG")
+        .pattern("EPE")
+        .pattern("GMG")
+        .unlockedBy(getHasName(ModItems.PUMPKIN_MACE), this.has(ModItems.PUMPKIN_MACE))
+        .save(this.output);
 
     this.shapeless(RecipeCategory.MISC, ModItems.LAMENT_CONFIGURATION)
         .requires(ModItems.PIECE_OF_LAMENT_ONE)

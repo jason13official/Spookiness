@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.PlayerFollower;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.effect.SoulBurst;
@@ -121,6 +122,7 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
     PlayerFollowers.track(this);
     SoulBurst.spawn(level, this.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     this.playSound(SoundEvents.LANTERN_PLACE, 1.0F, 0.6F);
+    SpookyTrigger.award(player, SpookyTrigger.CLAIM_LANTERN);
     return true;
   }
 

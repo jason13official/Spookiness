@@ -38,6 +38,13 @@ public final class LivingLights {
     return lights != null && lights.getSources().containsKey(entity);
   }
 
+  public static int emissionOf(Entity entity) {
+
+    LevelLights lights = LEVELS.get(entity.level());
+    Source source = lights == null ? null : lights.getSources().get(entity);
+    return source == null ? 0 : source.emission();
+  }
+
   public static void move(Entity entity) {
 
     LevelLights lights = LEVELS.get(entity.level());

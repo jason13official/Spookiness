@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.client.fog.KindleFog;
 import io.github.jason13official.spookiness.client.model.FloatingBookModel;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
 import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
@@ -26,6 +27,7 @@ import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.EndermanRenderer;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -68,6 +70,7 @@ public class SpookinessClient {
       event.registerEntityRenderer(ModEntities.VIGIL_CANDLE, VigilCandleRenderer::new);
       event.registerEntityRenderer(ModEntities.HALLOWED_MOTHER, HallowedMotherRenderer::new);
       event.registerEntityRenderer(ModEntities.GOURDWYRM, GourdwyrmRenderer::new);
+      event.registerEntityRenderer(ModEntities.PUMPKIN_BOMB, context -> new ThrownItemRenderer<>(context, 1.5F, true));
 
       event.registerBlockEntityRenderer(BlockEntityType.ENCHANTING_TABLE, BooklessEnchantTableRenderer::new);
       event.registerBlockEntityRenderer(ModBlockEntities.SOULLESS_JACK_O_MIMIC, SoullessJackOMimicRenderer::new);
@@ -85,6 +88,15 @@ public class SpookinessClient {
 
     // RenderHandEvent
     NeoForge.EVENT_BUS.addListener(LamentConfigurationOverlay::render);
+
+    // ClientTickEvent.Post
+    NeoForge.EVENT_BUS.addListener(KindleFog::tick);
+
+    // ViewportEvent.RenderFog
+    NeoForge.EVENT_BUS.addListener(KindleFog::renderFog);
+
+    // ViewportEvent.ComputeFogColor
+    NeoForge.EVENT_BUS.addListener(KindleFog::fogColor);
 
     // EntityRenderersEvent.AddLayers
     modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {

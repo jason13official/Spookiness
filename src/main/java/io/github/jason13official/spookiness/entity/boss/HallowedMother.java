@@ -1,5 +1,8 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import net.minecraft.sounds.SoundEvent;
+import io.github.jason13official.spookiness.registry.ModSounds;
+import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.effect.SoulBurst;
@@ -49,7 +52,6 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.ValueInput;
@@ -400,9 +402,6 @@ public class HallowedMother extends Monster {
         this.feast = Feast.DIGESTING;
         this.feastTicks = 0;
         this.playSound(SoundEvents.GENERIC_EAT.value(), 3.0F, 0.5F);
-        if (prey instanceof ServerPlayer player) {
-          player.sendOverlayMessage(Component.translatable("message.spookiness.mother_digesting"));
-        }
       }
       return;
     }
@@ -631,9 +630,6 @@ public class HallowedMother extends Monster {
             this.tetherTicks = 0;
             this.playSound(SoundEvents.VINE_STEP, 3.0F, 0.5F);
             this.playSound(SoundEvents.EVOKER_PREPARE_ATTACK, 2.0F, 0.6F);
-            for (ServerPlayer player : this.bossEvent.getPlayers()) {
-              player.sendOverlayMessage(Component.translatable("message.spookiness.mother_seizes", mob.getDisplayName()));
-            }
           });
       return;
     }
@@ -675,7 +671,7 @@ public class HallowedMother extends Monster {
   private void sink(ServerLevel level, String message) {
 
     for (ServerPlayer player : this.bossEvent.getPlayers()) {
-      player.sendOverlayMessage(Component.translatable(message));
+      player.sendSystemMessage(Component.translatable(message).withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC));
     }
     level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.ROOTED_DIRT.defaultBlockState()), this.getX(), this.getY() + 0.5, this.getZ(), 120, 2.0,
         0.5, 2.0, 0.2);
@@ -706,16 +702,32 @@ public class HallowedMother extends Monster {
   protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
     super.dropCustomDeathLoot(level, source, killedByPlayer);
 
-    this.spawnAtLocation(level, new ItemStack(ModItems.PIECE_OF_LAMENT_TWO));
-    this.spawnAtLocation(level, new ItemStack(Items.MAGMA_CREAM, 2));
-    this.spawnAtLocation(level, new ItemStack(Items.PUMPKIN_PIE, 3));
-
     if (this.summoner != null && level.getServer().getPlayerList().getPlayer(this.summoner) instanceof ServerPlayer owner) {
       for (Mob ally : PlayerFollowers.followers(owner, Hallowing::isHallowed)) {
         Hallowing.bless(ally);
         SoulBurst.spawn(level, ally.getBoundingBox().getCenter(), 24, 0.3, 0.06);
       }
     }
+  }
+
+  @Override
+  protected SoundEvent getAmbientSound() {
+    return ModSounds.HALLOWED_MOTHER_AMBIENT;
+  }
+
+  @Override
+  public int getAmbientSoundInterval() {
+    return 200;
+  }
+
+  @Override
+  protected SoundEvent getHurtSound(DamageSource source) {
+    return ModSounds.HALLOWED_MOTHER_HURT;
+  }
+
+  @Override
+  protected SoundEvent getDeathSound() {
+    return ModSounds.HALLOWED_MOTHER_DEATH;
   }
 
   @Override

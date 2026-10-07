@@ -12,6 +12,7 @@ import io.github.jason13official.spookiness.entity.HauntedArmorStand;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
+import io.github.jason13official.spookiness.entity.projectile.PumpkinBomb;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
 import io.github.jason13official.spookiness.entity.boss.VigilCandle;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
@@ -40,6 +41,7 @@ public class ModEntities {
   public static EntityType<VigilCandle> VIGIL_CANDLE;
   public static EntityType<HallowedMother> HALLOWED_MOTHER;
   public static EntityType<Gourdwyrm> GOURDWYRM;
+  public static EntityType<PumpkinBomb> PUMPKIN_BOMB;
 
   public static void register(BiConsumer<EntityType<?>, Identifier> consumer) {
 
@@ -90,6 +92,10 @@ public class ModEntities {
 
     GOURDWYRM = EntityType.Builder.of(Gourdwyrm::new, MobCategory.MONSTER).fireImmune().sized(3.0f, 3.0f).clientTrackingRange(16).build(key("gourdwyrm"));
     consumer.accept(GOURDWYRM, Spookiness.id("gourdwyrm"));
+
+    PUMPKIN_BOMB = EntityType.Builder.<PumpkinBomb>of(PumpkinBomb::new, MobCategory.MISC).noLootTable().sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(10)
+        .build(key("pumpkin_bomb"));
+    consumer.accept(PUMPKIN_BOMB, Spookiness.id("pumpkin_bomb"));
   }
 
   private static ResourceKey<EntityType<?>> key(String path) {

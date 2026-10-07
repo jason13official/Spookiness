@@ -1,13 +1,12 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
@@ -25,7 +24,6 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -168,25 +166,25 @@ public class JackOMimic extends JumpingPathfinderMob {
   @Override
   protected SoundEvent getJumpSound() {
 
-    return SoundEvents.SLIME_JUMP_SMALL;
+    return ModSounds.JACK_O_MIMIC_HOP;
   }
 
   @Override
   protected SoundEvent getAmbientSound() {
 
-    return SoundEvents.BOGGED_AMBIENT;
+    return ModSounds.JACK_O_MIMIC_AMBIENT;
   }
 
   @Override
   protected SoundEvent getHurtSound(DamageSource source) {
 
-    return SoundEvents.POLAR_BEAR_HURT;
+    return ModSounds.JACK_O_MIMIC_HURT;
   }
 
   @Override
   protected SoundEvent getDeathSound() {
 
-    return SoundEvents.SNOW_GOLEM_DEATH;
+    return ModSounds.JACK_O_MIMIC_DEATH;
   }
 
   // endregion sounds

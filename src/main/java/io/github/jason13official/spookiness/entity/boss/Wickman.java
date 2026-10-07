@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import net.minecraft.sounds.SoundEvent;
+import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -39,7 +41,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import io.github.jason13official.spookiness.entity.projectile.PumpkinBomb;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -267,10 +269,10 @@ public class Wickman extends Monster {
       this.playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.0F, 0.6F);
       return;
     }
-    SmallFireball fireball = new SmallFireball(level, this, delta.normalize());
-    fireball.setPos(eye.x, eye.y, eye.z);
-    level.addFreshEntity(fireball);
-    this.playSound(SoundEvents.BLAZE_SHOOT, 1.0F, 0.6F);
+    PumpkinBomb bomb = new PumpkinBomb(level, this);
+    bomb.shoot(delta.x, delta.y + delta.horizontalDistance() * 0.35, delta.z, 1.0F, 4.0F);
+    level.addFreshEntity(bomb);
+    this.playSound(SoundEvents.WITCH_THROW, 1.0F, 0.5F);
   }
 
   public static void onIncomingDamage(LivingIncomingDamageEvent event) {
@@ -281,17 +283,28 @@ public class Wickman extends Monster {
   }
 
   @Override
+  protected SoundEvent getAmbientSound() {
+    return ModSounds.WICKMAN_AMBIENT;
+  }
+
+  @Override
+  public int getAmbientSoundInterval() {
+    return 160;
+  }
+
+  @Override
+  protected SoundEvent getHurtSound(DamageSource source) {
+    return ModSounds.WICKMAN_HURT;
+  }
+
+  @Override
+  protected SoundEvent getDeathSound() {
+    return ModSounds.WICKMAN_DEATH;
+  }
+
+  @Override
   protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
     super.dropCustomDeathLoot(level, source, killedByPlayer);
-
-    this.spawnAtLocation(level, new ItemStack(ModItems.PIECE_OF_LAMENT_ONE));
-    if (this.getVariant() == Variant.FROST) {
-      this.spawnAtLocation(level, new ItemStack(Items.SNOWBALL, Mth.nextInt(this.random, 4, 12)));
-      this.spawnAtLocation(level, new ItemStack(Items.PACKED_ICE, Mth.nextInt(this.random, 1, 4)));
-    } else {
-      this.spawnAtLocation(level, new ItemStack(Items.BLAZE_ROD, Mth.nextInt(this.random, 1, 3)));
-      this.spawnAtLocation(level, new ItemStack(Items.HONEYCOMB, Mth.nextInt(this.random, 1, 4)));
-    }
 
     ItemStack weapon = source.getWeaponItem();
     if (source.getEntity() instanceof Player player && weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {

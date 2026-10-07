@@ -10,6 +10,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Items;
+import io.github.jason13official.spookiness.item.PumpkinMaceItem;
+import io.github.jason13official.spookiness.registry.ModItems;
 
 public final class LanternHeads {
 
@@ -21,15 +23,18 @@ public final class LanternHeads {
       return;
     }
 
-    boolean glowing = isLanternHeaded((LivingEntity) entity);
-    boolean lit = LivingLights.has(entity);
-    if (glowing && !lit) {
-      LivingLights.add(entity, EMISSION);
-    } else if (!glowing && lit) {
-      LivingLights.remove(entity);
-    } else if (lit) {
-      LivingLights.move(entity);
+    LivingEntity living = (LivingEntity) entity;
+    int wanted = Math.max(isLanternHeaded(living) ? EMISSION : 0,
+        Math.max(PumpkinMaceItem.getLight(living.getMainHandItem()), PumpkinMaceItem.getLight(living.getOffhandItem())));
+    int current = LivingLights.emissionOf(entity);
+    if (wanted == current) {
+      if (current > 0) {
+        LivingLights.move(entity);
+      }
+      return;
     }
+    LivingLights.remove(entity);
+    LivingLights.add(entity, wanted);
   }
 
   public static void leave(Entity entity) {
@@ -55,6 +60,6 @@ public final class LanternHeads {
     if (entity instanceof Wickman wickman) {
       return wickman.getVariant() == Wickman.Variant.WICK && wickman.getPhase() != Wickman.Phase.HEADLESS;
     }
-    return entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN);
+    return entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN) || entity.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.HARVEST_CROWN);
   }
 }

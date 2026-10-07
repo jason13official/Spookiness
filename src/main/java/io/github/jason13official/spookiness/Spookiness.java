@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
 import io.github.jason13official.spookiness.boss.Kindling;
 import io.github.jason13official.spookiness.boss.MaceRituals;
@@ -32,6 +33,7 @@ import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
 import io.github.jason13official.spookiness.registry.ModTabs;
+import io.github.jason13official.spookiness.registry.ModTriggers;
 import io.github.jason13official.spookiness.world.SpookySpawns;
 import io.github.jason13official.spookiness.world.netherrealm.ModStructures;
 import java.util.function.BiConsumer;
@@ -115,6 +117,8 @@ public class Spookiness {
     bind(Registries.STRUCTURE_TYPE, ModStructures::registerTypes);
     bind(Registries.STRUCTURE_PIECE, ModStructures::registerPieces);
     bind(Registries.CREATIVE_MODE_TAB, ModTabs::register);
+    bind(Registries.TRIGGER_TYPE, ModTriggers::register);
+    bind(Registries.SOUND_EVENT, ModSounds::register);
     // game rule
 
     // GatherDataEvent.Client
@@ -173,6 +177,15 @@ public class Spookiness {
 
     // LivingChangeTargetEvent
     NeoForge.EVENT_BUS.addListener(Hallowing::onChangeTarget);
+
+    // LivingChangeTargetEvent
+    NeoForge.EVENT_BUS.addListener((LivingChangeTargetEvent event) -> {
+
+      if (event.getEntity() instanceof JackOMimic && !MotherBrood.isBrood((Mob) event.getEntity())
+          && event.getNewAboutToBeSetTarget() instanceof Player player && player.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.HARVEST_CROWN)) {
+        event.setCanceled(true);
+      }
+    });
 
     // LivingIncomingDamageEvent
     NeoForge.EVENT_BUS.addListener((LivingIncomingDamageEvent event) -> {

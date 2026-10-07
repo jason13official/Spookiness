@@ -22,8 +22,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.Weapon;
+import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.Block;
 
 public class ModItems {
@@ -37,6 +40,8 @@ public class ModItems {
   public static Item PIECE_OF_LAMENT_ONE;
 
   public static Item PIECE_OF_LAMENT_TWO;
+
+  public static Item HARVEST_CROWN;
 
   public static Item JACK_O_MIMIC_SPAWN_EGG;
 
@@ -85,6 +90,9 @@ public class ModItems {
     PIECE_OF_LAMENT_ONE = registerItem("piece_of_lament_one", new Item.Properties().stacksTo(1), consumer);
 
     PIECE_OF_LAMENT_TWO = registerItem("piece_of_lament_two", new Item.Properties().stacksTo(1), consumer);
+
+    HARVEST_CROWN = registerItem("harvest_crown", new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()
+        .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setAsset(EquipmentAssets.GOLD).setEquipSound(SoundEvents.ARMOR_EQUIP_GOLD).build()), consumer);
 
     SPAWN_EGGS.clear();
     JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.JACK_O_MIMIC, consumer);

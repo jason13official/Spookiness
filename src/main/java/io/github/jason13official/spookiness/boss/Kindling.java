@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.boss;
 
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import java.util.Map;
 import java.util.UUID;
@@ -75,6 +76,7 @@ public final class Kindling {
         ACTIVE.remove(vessel);
         Player kindler = level.getPlayerByUUID(kindle.kindler);
         Wickman.kindle(level, vessel, kindle.variant, kindler);
+        SpookyTrigger.award(kindler, SpookyTrigger.KINDLE);
         burst(level, vessel.position(), kindle.variant);
         vessel.discard();
       }

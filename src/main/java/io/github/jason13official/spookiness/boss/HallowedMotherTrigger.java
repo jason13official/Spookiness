@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.boss;
 
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
+import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.entity.boss.HallowedMother;
 import io.github.jason13official.spookiness.registry.ModAttachments;
@@ -46,7 +48,7 @@ public final class HallowedMotherTrigger {
     }
 
     player.setData(ModAttachments.MOTHER_NIGHT, night);
-    player.sendSystemMessage(Component.translatable("message.spookiness.mother_warning"));
+    player.sendSystemMessage(Component.translatable("message.spookiness.mother_warning").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC));
 
     double angle = player.getRandom().nextDouble() * Math.PI * 2.0;
     double distance = MIN_DISTANCE + player.getRandom().nextDouble() * (MAX_DISTANCE - MIN_DISTANCE);
@@ -54,5 +56,6 @@ public final class HallowedMotherTrigger {
     int z = (int) Math.floor(player.getZ() + Math.sin(angle) * distance);
     int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
     HallowedMother.erupt(level, player, new Vec3(x + 0.5, y, z + 0.5));
+    SpookyTrigger.award(player, SpookyTrigger.MOTHER_RISES);
   }
 }

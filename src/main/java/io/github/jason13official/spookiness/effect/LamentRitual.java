@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.effect;
 
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
@@ -177,6 +178,7 @@ public final class LamentRitual {
     player.teleport(new TeleportTransition(destination, target, Vec3.ZERO, player.getYRot(), player.getXRot(),
         TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET)));
     burst(destination, target);
+    SpookyTrigger.award(player, SpookyTrigger.LAMENT_RITUAL);
   }
 
   private static @Nullable ItemStack findHomeward(ServerPlayer player) {

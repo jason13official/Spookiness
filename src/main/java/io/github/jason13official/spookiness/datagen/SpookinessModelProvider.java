@@ -20,6 +20,12 @@ import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
+import io.github.jason13official.spookiness.item.MaceStage;
+import io.github.jason13official.spookiness.registry.ModDataComponents;
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.client.renderer.item.SelectItemModel;
+import net.minecraft.client.renderer.item.properties.select.ComponentContents;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.client.model.generators.template.ExtendedModelTemplate;
@@ -71,7 +77,15 @@ public class SpookinessModelProvider extends ModelProvider {
         SOULLESS_TRANSFORMATION, new SoullessJackOMimicSpecialRenderer.Unbaked()));
     LAMENT_BASE.create(ModItems.SOULLESS_JACK_O_MIMIC, TextureMapping.particle(Blocks.CARVED_PUMPKIN), itemModels.modelOutput);
 
-    itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.PUMPKIN_MACE)));
+    Identifier mace = ModelLocationUtils.getModelLocation(ModItems.PUMPKIN_MACE);
+    List<SelectItemModel.SwitchCase<MaceStage>> maceStages = new ArrayList<>();
+    for (MaceStage stage : MaceStage.values()) {
+      if (stage != MaceStage.PUMPKIN) {
+        maceStages.add(ItemModelUtils.when(stage, ItemModelUtils.plainModel(mace.withSuffix("_" + stage.getSerializedName()))));
+      }
+    }
+    itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.select(new ComponentContents<>(ModDataComponents.MACE_STAGE), ItemModelUtils.plainModel(mace), maceStages));
+    itemModels.itemModelOutput.accept(ModItems.HARVEST_CROWN, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/golden_helmet")));
 
     Identifier lamentBase = LAMENT_BASE.create(ModItems.LAMENT_CONFIGURATION, TextureMapping.particle(Blocks.GOLD_BLOCK), itemModels.modelOutput);
     lament(itemModels, ModItems.LAMENT_CONFIGURATION, lamentBase, LamentConfigurationModel.Part.ALL);

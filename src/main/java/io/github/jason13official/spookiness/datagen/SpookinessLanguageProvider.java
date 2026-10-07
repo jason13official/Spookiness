@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.datagen;
 
+import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -53,19 +54,30 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModEntities.VIGIL_CANDLE, "Vigil Candle");
     this.add(ModEntities.HALLOWED_MOTHER, "Hallowed Mother");
     this.add(ModEntities.GOURDWYRM, "Gourdwyrm");
+    this.add(ModEntities.PUMPKIN_BOMB, "Pumpkin Bomb");
 
     this.add("item.spookiness.pumpkin_mace.pumpkin_kills", "Pumpkin Kills: %s/%s");
+    this.add("item.spookiness.pumpkin_mace.harvest", "Harvest: %s/%s");
+    this.add("item.spookiness.pumpkin_mace.stage.pumpkin", "Unripe");
+    this.add("item.spookiness.pumpkin_mace.stage.carved", "Carved");
+    this.add("item.spookiness.pumpkin_mace.stage.lantern", "Lit");
+    this.add("item.spookiness.pumpkin_mace.stage.blazing", "Blazing");
+    this.add("item.spookiness.pumpkin_mace.stage.thorned", "Thorned");
+    this.add(ModItems.HARVEST_CROWN, "Harvest Crown");
     this.add("message.spookiness.companion_summoned", "A spectral Jack o'Mimic joins you!");
     this.add("message.spookiness.companions_summoned", "%s spectral Jack o'Mimics join you!");
     this.add("message.spookiness.hallowed", "%s is hallowed and joins you");
     this.add("message.spookiness.hallow_too_weak", "You are too weak to give any more of yourself");
     this.add("message.spookiness.hallow_too_many", "Your lantern cannot guide any more souls");
     this.add("message.spookiness.mother_warning", "Your lanterns grow restless...");
-    this.add("message.spookiness.mother_digesting", "You are being digested! Strike her with the mace to break free");
-    this.add("message.spookiness.mother_seizes", "The Hallowed Mother seizes %s! Strike her with the mace to cut the vine");
     this.add("message.spookiness.mother_sinks_dawn", "The Hallowed Mother retreats from the daylight");
     this.add("message.spookiness.mother_sinks_lost", "The Hallowed Mother has reclaimed her children");
     this.add("death.attack.spookiness.hallowing", "%1$s gave too much of themselves to the harvest");
+    ModSounds.PLACEHOLDERS.forEach(placeholder -> this.add(ModSounds.subtitleKey(placeholder.event()), placeholder.subtitle()));
+    SpookinessAdvancementProvider.TEXT.forEach((name, text) -> {
+      this.add(SpookinessAdvancementProvider.key(name, "title"), text[0]);
+      this.add(SpookinessAdvancementProvider.key(name, "description"), text[1]);
+    });
     this.add("death.attack.spookiness.hallowing.player", "%1$s gave too much of themselves to the harvest");
   }
 }

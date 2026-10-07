@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.companion;
 
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
@@ -108,6 +109,7 @@ public final class Hallowing {
     SoulBurst.spawn(level, mob.getBoundingBox().getCenter(), 32, 0.4, 0.08);
     level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.5F, 1.2F);
     player.sendOverlayMessage(Component.translatable("message.spookiness.hallowed", mob.getDisplayName()));
+    SpookyTrigger.award(player, SpookyTrigger.HALLOW);
     return true;
   }
 

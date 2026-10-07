@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.PlayerFollower;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
@@ -210,6 +211,7 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
         candles.discard();
       }
       SpectralCompanions.summon(level, player, COMPANIONS_PER_LINE);
+      SpookyTrigger.award(player, SpookyTrigger.CANDLE_OVERFLOW);
       return;
     }
 
@@ -220,6 +222,9 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     this.getNavigation().stop();
     PlayerFollowers.track(this);
     this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 0.8F + line.size() * 0.1F);
+    if (line.size() + 1 >= MAX_LINE_LENGTH) {
+      SpookyTrigger.award(player, SpookyTrigger.FULL_CONGA);
+    }
   }
 
   @Override

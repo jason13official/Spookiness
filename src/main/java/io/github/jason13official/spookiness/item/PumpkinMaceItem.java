@@ -1,8 +1,12 @@
 package io.github.jason13official.spookiness.item;
 
+import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
 import io.github.jason13official.spookiness.entity.JackOMimic;
+import io.github.jason13official.spookiness.advancement.SpookyTrigger;
+import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
+import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -77,7 +81,33 @@ public class PumpkinMaceItem extends Item {
     return entity instanceof JackOMimic || head.is(Items.JACK_O_LANTERN) || head.is(Items.CARVED_PUMPKIN);
   }
 
+  public static MaceStage getStage(ItemStack stack) {
+    return stack.getOrDefault(ModDataComponents.MACE_STAGE, MaceStage.PUMPKIN);
+  }
+
+  public static int getLight(ItemStack stack) {
+    return stack.is(ModItems.PUMPKIN_MACE) ? getStage(stack).light() : 0;
+  }
+
+  private static void addHarvest(ServerLevel level, Player player, ItemStack stack) {
+
+    int harvest = stack.getOrDefault(ModDataComponents.MACE_HARVEST, 0) + 1;
+    stack.set(ModDataComponents.MACE_HARVEST, harvest);
+
+    MaceStage stage = MaceStage.forKills(harvest);
+    if (stage == getStage(stack)) {
+      return;
+    }
+
+    stack.set(ModDataComponents.MACE_STAGE, stage);
+    SoulBurst.spawn(level, player.getBoundingBox().getCenter(), 32, 0.6, 0.06);
+    level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.MACE_EVOLVE, player.getSoundSource(), 0.6F, 1.0F);
+    SpookyTrigger.award(player, SpookyTrigger.MACE_EVOLVED + stage.getSerializedName());
+  }
+
   public static void addPumpkinKill(ServerLevel level, Player player, ItemStack stack) {
+
+    addHarvest(level, player, stack);
 
     int kills = stack.getOrDefault(ModDataComponents.PUMPKIN_KILLS, 0) + 1;
     if (kills < KILLS_PER_COMPANION) {
@@ -94,6 +124,13 @@ public class PumpkinMaceItem extends Item {
 
     int kills = itemStack.getOrDefault(ModDataComponents.PUMPKIN_KILLS, 0);
     builder.accept(Component.translatable("item.spookiness.pumpkin_mace.pumpkin_kills", kills, KILLS_PER_COMPANION).withStyle(ChatFormatting.GOLD));
+
+    MaceStage stage = getStage(itemStack);
+    builder.accept(Component.translatable("item.spookiness.pumpkin_mace.stage." + stage.getSerializedName()).withStyle(ChatFormatting.DARK_GREEN));
+    if (!stage.isFinal()) {
+      int harvest = itemStack.getOrDefault(ModDataComponents.MACE_HARVEST, 0);
+      builder.accept(Component.translatable("item.spookiness.pumpkin_mace.harvest", harvest, stage.next().kills()).withStyle(ChatFormatting.GRAY));
+    }
   }
 
   public static Tool createToolProperties() {
