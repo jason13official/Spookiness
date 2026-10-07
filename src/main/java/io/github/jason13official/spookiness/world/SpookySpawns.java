@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.world;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
+import io.github.jason13official.spookiness.util.Spawning;
 import net.minecraft.world.level.levelgen.Heightmap;
 import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.FloatingBook;
@@ -47,7 +49,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.event.EventHooks;
 import org.jspecify.annotations.Nullable;
 
 public final class SpookySpawns {
@@ -111,19 +112,17 @@ public final class SpookySpawns {
       return;
     }
 
-    FloatingBook book = ModEntities.FLOATING_BOOK.create(level, EntitySpawnReason.TRIGGERED);
+    FloatingBook book = Spawning.spawn(level, ModEntities.FLOATING_BOOK, EntitySpawnReason.TRIGGERED, Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0),
+        player.getYRot() + 180.0F, spawned -> {
+          spawned.setEnchantingTableHome(pos);
+          spawned.setTarget(player);
+        });
     if (book == null) {
       return;
     }
 
     table.setData(ModAttachments.BOOK_AWAKENED, true);
     table.setChanged();
-
-    Vec3 spawn = Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0);
-    book.snapTo(spawn.x, spawn.y, spawn.z, player.getYRot() + 180.0F, 0.0F);
-    book.setEnchantingTableHome(pos);
-    book.setTarget(player);
-    level.addFreshEntity(book);
 
     Particles.soulBurst(level, book.getBoundingBox().getCenter(), 24, 0.3, 0.05);
     level.playSound(null, pos, SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 0.6F);
@@ -149,23 +148,21 @@ public final class SpookySpawns {
 
   private static void awakenCandles(ServerLevel level, BlockPos pos, BlockState state) {
 
-    FloatingCandles candles = ModEntities.FLOATING_CANDLES.create(level, EntitySpawnReason.TRIGGERED);
+    boolean cake = state.getBlock() instanceof CandleCakeBlock;
+    FloatingCandles candles = Spawning.spawn(level, ModEntities.FLOATING_CANDLES, EntitySpawnReason.TRIGGERED,
+        Vec3.atBottomCenterOf(pos).add(0.0, cake ? 0.5 : 0.0, 0.0), SpookyMath.randomYaw(level.getRandom()), spawned -> {
+          spawned.setCandles(cake ? 1 : state.getValue(CandleBlock.CANDLES));
+          spawned.setColor(FloatingCandles.colorOf(state.getBlock()));
+        });
     if (candles == null) {
       return;
     }
 
-    boolean cake = state.getBlock() instanceof CandleCakeBlock;
     if (cake) {
       level.setBlockAndUpdate(pos, Blocks.CAKE.defaultBlockState());
     } else {
       level.removeBlock(pos, false);
     }
-
-    Vec3 spawn = Vec3.atBottomCenterOf(pos).add(0.0, cake ? 0.5 : 0.0, 0.0);
-    candles.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
-    candles.setCandles(cake ? 1 : state.getValue(CandleBlock.CANDLES));
-    candles.setColor(FloatingCandles.colorOf(state.getBlock()));
-    level.addFreshEntity(candles);
 
     Particles.soulBurst(level, candles.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, pos, SoundEvents.CANDLE_EXTINGUISH, SoundSource.BLOCKS, 1.0F, 0.6F);
@@ -262,15 +259,13 @@ public final class SpookySpawns {
 
   private static void awakenLantern(ServerLevel level, BlockPos pos) {
 
-    FloatingLantern lantern = ModEntities.FLOATING_LANTERN.create(level, EntitySpawnReason.TRIGGERED);
+    FloatingLantern lantern = Spawning.spawn(level, ModEntities.FLOATING_LANTERN, EntitySpawnReason.TRIGGERED, Vec3.atBottomCenterOf(pos),
+        SpookyMath.randomYaw(level.getRandom()));
     if (lantern == null) {
       return;
     }
 
     level.removeBlock(pos, false);
-    Vec3 spawn = Vec3.atBottomCenterOf(pos);
-    lantern.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
-    level.addFreshEntity(lantern);
 
     Particles.soulBurst(level, lantern.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, pos, SoundEvents.CHAIN_BREAK, SoundSource.BLOCKS, 1.0F, 0.6F);
@@ -293,14 +288,10 @@ public final class SpookySpawns {
 
   private static @Nullable FloatingSkull spawnSkull(ServerLevel level, Vec3 spawn) {
 
-    FloatingSkull skull = ModEntities.FLOATING_SKULL.create(level, EntitySpawnReason.TRIGGERED);
+    FloatingSkull skull = Spawning.spawnFinalized(level, ModEntities.FLOATING_SKULL, EntitySpawnReason.TRIGGERED, spawn, SpookyMath.randomYaw(level.getRandom()));
     if (skull == null) {
       return null;
     }
-
-    skull.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
-    EventHooks.finalizeMobSpawn(skull, level, level.getCurrentDifficultyAt(BlockPos.containing(spawn)), EntitySpawnReason.TRIGGERED, null);
-    level.addFreshEntity(skull);
 
     Particles.soulBurst(level, skull.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, skull.getX(), skull.getY(), skull.getZ(), SoundEvents.SKELETON_AMBIENT, SoundSource.HOSTILE, 1.0F, 1.8F);
@@ -344,18 +335,15 @@ public final class SpookySpawns {
 
   private static void spawnTool(ServerLevel level, EntityType<? extends FloatingTool> type, BlockPos pos, ItemStack held) {
 
-    FloatingTool tool = type.create(level, EntitySpawnReason.TRIGGERED);
+    FloatingTool tool = Spawning.spawnFinalized(level, type, EntitySpawnReason.TRIGGERED, Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0),
+        SpookyMath.randomYaw(level.getRandom()), spawned -> {
+          if (!held.isEmpty()) {
+            spawned.setItemSlot(EquipmentSlot.MAINHAND, held);
+          }
+        });
     if (tool == null) {
       return;
     }
-
-    Vec3 spawn = Vec3.atBottomCenterOf(pos).add(0.0, 1.0, 0.0);
-    tool.snapTo(spawn.x, spawn.y, spawn.z, level.getRandom().nextFloat() * 360.0F, 0.0F);
-    if (!held.isEmpty()) {
-      tool.setItemSlot(EquipmentSlot.MAINHAND, held);
-    }
-    EventHooks.finalizeMobSpawn(tool, level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.TRIGGERED, null);
-    level.addFreshEntity(tool);
 
     Particles.soulBurst(level, tool.getBoundingBox().getCenter(), 32, 0.5, 0.06);
     level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 0.6F);
@@ -373,11 +361,6 @@ public final class SpookySpawns {
       return;
     }
 
-    FloatingBook book = ModEntities.FLOATING_BOOK.create(level, EntitySpawnReason.TRIGGERED);
-    if (book == null) {
-      return;
-    }
-
     int slot = filled.get(random.nextInt(filled.size()));
     ItemStack taken = shelf.removeItem(slot, 1);
     if (taken.isEmpty()) {
@@ -386,10 +369,12 @@ public final class SpookySpawns {
 
     BlockPos pos = shelf.getBlockPos();
     Direction facing = shelf.getBlockState().getValue(ChiseledBookShelfBlock.FACING);
-    Vec3 spawn = book.shelfFront(shelf);
-    book.snapTo(spawn.x, spawn.y, spawn.z, facing.toYRot(), 0.0F);
-    book.setShelfHome(pos, slot, taken);
-    level.addFreshEntity(book);
+    FloatingBook book = Spawning.spawn(level, ModEntities.FLOATING_BOOK, EntitySpawnReason.TRIGGERED, FloatingBook.shelfFront(shelf), facing.toYRot(),
+        spawned -> spawned.setShelfHome(pos, slot, taken));
+    if (book == null) {
+      shelf.setItem(slot, taken);
+      return;
+    }
 
     Particles.soulBurst(level, book.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     level.playSound(null, pos, SoundEvents.CHISELED_BOOKSHELF_PICKUP, SoundSource.BLOCKS, 1.0F, 0.6F);

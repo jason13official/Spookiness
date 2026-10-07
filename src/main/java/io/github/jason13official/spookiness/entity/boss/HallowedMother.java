@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.world.SpookyTime;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import net.minecraft.sounds.SoundEvent;
@@ -168,13 +169,11 @@ public class HallowedMother extends Monster implements LightEmitter {
 
   public static @Nullable HallowedMother erupt(ServerLevel level, ServerPlayer summoner, Vec3 pos) {
 
-    HallowedMother mother = ModEntities.HALLOWED_MOTHER.create(level, EntitySpawnReason.EVENT);
+    HallowedMother mother = Spawning.spawn(level, ModEntities.HALLOWED_MOTHER, EntitySpawnReason.EVENT, pos, SpookyMath.randomYaw(level.getRandom()),
+        spawned -> spawned.summoner = summoner.getUUID());
     if (mother == null) {
       return null;
     }
-    mother.summoner = summoner.getUUID();
-    mother.snapTo(pos.x, pos.y, pos.z, mother.random.nextFloat() * 360.0F, 0.0F);
-    level.addFreshEntity(mother);
     level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.ROOTED_DIRT.defaultBlockState()), pos.x, pos.y + 0.5, pos.z, 120, 2.0, 0.5, 2.0, 0.2);
     level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.WARDEN_EMERGE, SoundSource.HOSTILE, 2.0F, 0.7F);
     return mother;
@@ -526,7 +525,7 @@ public class HallowedMother extends Monster implements LightEmitter {
         entity.hurtServer(level, this.damageSources().mobAttack(this), BLAST_DAMAGE);
       }
       Vec3 away = entity.position().subtract(center).multiply(1.0, 0.0, 1.0);
-      Vec3 direction = away.lengthSqr() > 1.0E-4 ? away.normalize() : Vec3.directionFromRotation(0.0F, this.random.nextFloat() * 360.0F);
+      Vec3 direction = away.lengthSqr() > 1.0E-4 ? away.normalize() : Vec3.directionFromRotation(0.0F, SpookyMath.randomYaw(this.random));
       entity.setDeltaMovement(direction.x * BLAST_SPEED, BLAST_LIFT, direction.z * BLAST_SPEED);
       entity.hurtMarked = true;
     }
@@ -580,15 +579,14 @@ public class HallowedMother extends Monster implements LightEmitter {
     Vec3 direction = (aim.lengthSqr() > 1.0E-4 ? aim.normalize() : Vec3.directionFromRotation(0.0F, this.yBodyRot))
         .yRot((this.random.nextFloat() - 0.5F) * 2.0F * spread * Mth.DEG_TO_RAD);
 
-    JackOMimic gourdling = ModEntities.JACK_O_MIMIC.create(level, EntitySpawnReason.MOB_SUMMONED);
+    JackOMimic gourdling = Spawning.spawn(level, ModEntities.JACK_O_MIMIC, EntitySpawnReason.MOB_SUMMONED, mouth, this.yBodyRot, spawned -> {
+      spawned.setDeltaMovement(direction.scale(FLING_SPEED).add(0.0, FLING_LIFT, 0.0));
+      MotherBrood.adopt(spawned);
+      spawned.setTarget(this.broodTarget());
+    });
     if (gourdling == null) {
       return;
     }
-    gourdling.snapTo(mouth.x, mouth.y, mouth.z, this.yBodyRot, 0.0F);
-    gourdling.setDeltaMovement(direction.scale(FLING_SPEED).add(0.0, FLING_LIFT, 0.0));
-    MotherBrood.adopt(gourdling);
-    gourdling.setTarget(this.broodTarget());
-    level.addFreshEntity(gourdling);
     this.brood.add(gourdling.getUUID());
 
     level.sendParticles(ParticleTypes.FLAME, mouth.x, mouth.y, mouth.z, 12, 0.3, 0.3, 0.3, 0.05);

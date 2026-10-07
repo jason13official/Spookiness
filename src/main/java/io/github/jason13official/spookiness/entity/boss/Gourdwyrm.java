@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.sounds.SoundEvent;
@@ -7,7 +8,6 @@ import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.world.NetherrealmArena;
 import java.util.UUID;
-import io.github.jason13official.spookiness.entity.JackOMimic;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -128,13 +128,10 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   public static @Nullable Gourdwyrm awaken(ServerLevel level, BlockPos anchor, Vec3 pos) {
 
-    Gourdwyrm wyrm = ModEntities.GOURDWYRM.create(level, EntitySpawnReason.EVENT);
+    Gourdwyrm wyrm = Spawning.spawn(level, ModEntities.GOURDWYRM, EntitySpawnReason.EVENT, pos, 0.0F, spawned -> spawned.anchor = anchor);
     if (wyrm == null) {
       return null;
     }
-    wyrm.anchor = anchor;
-    wyrm.snapTo(pos.x, pos.y, pos.z, 0.0F, 0.0F);
-    level.addFreshEntity(wyrm);
     level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENDER_DRAGON_GROWL, wyrm.getSoundSource(), 4.0F, 0.6F);
     return wyrm;
   }
@@ -489,11 +486,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     for (int i = SHED_LENGTH; i < SEGMENTS; i++) {
       GourdwyrmPart segment = this.segments[i];
       level.sendParticles(ParticleTypes.EXPLOSION, segment.getX(), segment.getY() + 1.0, segment.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-      JackOMimic husk = ModEntities.JACK_O_MIMIC.create(level, EntitySpawnReason.EVENT);
-      if (husk != null) {
-        husk.snapTo(segment.getX(), segment.getY(), segment.getZ(), this.random.nextFloat() * 360.0F, 0.0F);
-        level.addFreshEntity(husk);
-      }
+      Spawning.spawn(level, ModEntities.JACK_O_MIMIC, EntitySpawnReason.EVENT, segment.position(), SpookyMath.randomYaw(this.random));
     }
     this.entityData.set(DATA_LENGTH, SHED_LENGTH);
     this.entityData.set(DATA_LIT, this.entityData.get(DATA_LIT) & ((1 << SHED_LENGTH) - 1));

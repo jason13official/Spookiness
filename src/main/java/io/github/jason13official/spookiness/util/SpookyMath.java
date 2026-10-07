@@ -21,6 +21,10 @@ public final class SpookyMath {
     return random.nextDouble() * FULL_TURN;
   }
 
+  public static float randomYaw(RandomSource random) {
+    return random.nextFloat() * 360.0F;
+  }
+
   public static double ringAngle(double startAngle, int index, int count) {
     return startAngle + FULL_TURN * index / count;
   }

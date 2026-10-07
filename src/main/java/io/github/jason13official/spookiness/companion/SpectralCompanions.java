@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.companion;
 
+import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
@@ -18,16 +19,12 @@ public final class SpectralCompanions {
 
     double startAngle = SpookyMath.randomAngle(level.getRandom());
     for (int i = 0; i < count; i++) {
-      SpectralJackOMimic mimic = ModEntities.SPECTRAL_JACK_O_MIMIC.create(level, EntitySpawnReason.MOB_SUMMONED);
-      if (mimic == null) {
-        continue;
-      }
-
       Vec3 pos = PlayerFollowers.ringPosition(owner.position(), startAngle, i, count);
-      mimic.snapTo(pos.x, pos.y, pos.z, owner.getYRot(), 0.0F);
-      mimic.befriend(level, owner);
-      level.addFreshEntity(mimic);
-      Particles.soulBurst(level, mimic.getBoundingBox().getCenter(), 32, 0.4, 0.08);
+      SpectralJackOMimic mimic = Spawning.spawn(level, ModEntities.SPECTRAL_JACK_O_MIMIC, EntitySpawnReason.MOB_SUMMONED, pos, owner.getYRot(),
+          spawned -> spawned.befriend(level, owner));
+      if (mimic != null) {
+        Particles.soulBurst(level, mimic.getBoundingBox().getCenter(), 32, 0.4, 0.08);
+      }
     }
 
     level.playSound(null, owner.getX(), owner.getY(), owner.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.5F, 0.8F);

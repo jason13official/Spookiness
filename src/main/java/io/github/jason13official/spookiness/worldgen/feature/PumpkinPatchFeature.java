@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.worldgen.feature;
 
+import io.github.jason13official.spookiness.util.SpookyMath;
 import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -100,7 +101,7 @@ public class PumpkinPatchFeature extends Feature<PumpkinPatchConfiguration> {
         return;
       }
 
-      mimic.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
+      mimic.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, SpookyMath.randomYaw(random), 0.0F);
       EventHooks.finalizeMobSpawn(mimic, level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.CHUNK_GENERATION, null);
       mimic.setPersistenceRequired();
       level.addFreshEntityWithPassengers(mimic);

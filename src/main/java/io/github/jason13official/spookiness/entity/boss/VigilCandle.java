@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import java.util.UUID;
@@ -47,16 +48,14 @@ public class VigilCandle extends Entity implements LightEmitter {
 
   public static @Nullable VigilCandle plant(ServerLevel level, LivingEntity keeper, Vec3 pos, boolean frost, boolean great) {
 
-    VigilCandle candle = ModEntities.VIGIL_CANDLE.create(level, EntitySpawnReason.MOB_SUMMONED);
+    VigilCandle candle = Spawning.spawn(level, ModEntities.VIGIL_CANDLE, EntitySpawnReason.MOB_SUMMONED, pos, 0.0F, spawned -> {
+      spawned.keeper = keeper.getUUID();
+      spawned.entityData.set(DATA_FROST, frost);
+      spawned.entityData.set(DATA_GREAT, great);
+    });
     if (candle == null) {
       return null;
     }
-    candle.keeper = keeper.getUUID();
-    candle.entityData.set(DATA_FROST, frost);
-    candle.entityData.set(DATA_GREAT, great);
-    candle.refreshDimensions();
-    candle.snapTo(pos.x, pos.y, pos.z, 0.0F, 0.0F);
-    level.addFreshEntity(candle);
     level.sendParticles(frost ? ParticleTypes.SNOWFLAKE : ParticleTypes.FLAME, pos.x, pos.y + 0.5, pos.z, 12, 0.2, 0.3, 0.2, 0.02);
     return candle;
   }

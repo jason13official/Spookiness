@@ -41,7 +41,8 @@ import org.jspecify.annotations.Nullable;
 
 public class FloatingLantern extends FloatingCompanion implements LightEmitter {
 
-  private static final int LIGHT_EMISSION = Blocks.LANTERN.defaultBlockState().getLightEmission();
+  private static final int CLAIMED_LIGHT = Blocks.LANTERN.defaultBlockState().getLightEmission();
+  private static final int UNCLAIMED_LIGHT = 5;
   private static final double WILD_SEEK_RANGE = 16.0;
   private static final double GUARD_RANGE = 10.0;
   private static final double HOVER_HEIGHT = 1.5;
@@ -127,7 +128,7 @@ public class FloatingLantern extends FloatingCompanion implements LightEmitter {
 
   @Override
   public int getLightEmission() {
-    return LIGHT_EMISSION;
+    return this.isClaimed() ? CLAIMED_LIGHT : UNCLAIMED_LIGHT;
   }
 
   @Override

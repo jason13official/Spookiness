@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.entity.projectile.FrostVolley;
@@ -126,17 +127,12 @@ public class Wickman extends Monster implements LightEmitter {
     entityData.define(DATA_PHASE, Phase.STALKER.getId());
   }
 
-  public static Wickman kindle(ServerLevel level, LivingEntity vessel, Variant variant, LivingEntity kindler) {
+  public static @Nullable Wickman kindle(ServerLevel level, LivingEntity vessel, Variant variant, @Nullable LivingEntity kindler) {
 
-    Wickman wickman = ModEntities.WICKMAN.create(level, EntitySpawnReason.CONVERSION);
-    if (wickman == null) {
-      return null;
-    }
-    wickman.snapTo(vessel.getX(), vessel.getY(), vessel.getZ(), vessel.getYRot(), 0.0F);
-    wickman.setVariant(variant);
-    wickman.setTarget(kindler);
-    level.addFreshEntity(wickman);
-    return wickman;
+    return Spawning.spawn(level, ModEntities.WICKMAN, EntitySpawnReason.CONVERSION, vessel.position(), vessel.getYRot(), spawned -> {
+      spawned.setVariant(variant);
+      spawned.setTarget(kindler);
+    });
   }
 
   @Override

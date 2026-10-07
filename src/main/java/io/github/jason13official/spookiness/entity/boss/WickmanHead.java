@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.entity.FloatingPathfinderMob;
 import io.github.jason13official.spookiness.lighting.LanternHeads;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
@@ -62,17 +63,16 @@ public class WickmanHead extends FloatingPathfinderMob implements Enemy, LightEm
 
   public static @Nullable WickmanHead detach(ServerLevel level, Wickman body) {
 
-    WickmanHead head = ModEntities.WICKMAN_HEAD.create(level, EntitySpawnReason.MOB_SUMMONED);
+    Vec3 eye = body.getEyePosition();
+    WickmanHead head = Spawning.spawn(level, ModEntities.WICKMAN_HEAD, EntitySpawnReason.MOB_SUMMONED, eye, body.getYHeadRot(), spawned -> {
+      spawned.body = body.getUUID();
+      spawned.entityData.set(DATA_FROST, body.getVariant() == Wickman.Variant.FROST);
+      spawned.setDeltaMovement(0.0, 0.6, 0.0);
+      spawned.setTarget(body.getTarget());
+    });
     if (head == null) {
       return null;
     }
-    Vec3 eye = body.getEyePosition();
-    head.body = body.getUUID();
-    head.entityData.set(DATA_FROST, body.getVariant() == Wickman.Variant.FROST);
-    head.snapTo(eye.x, eye.y, eye.z, body.getYHeadRot(), 0.0F);
-    head.setDeltaMovement(0.0, 0.6, 0.0);
-    head.setTarget(body.getTarget());
-    level.addFreshEntity(head);
     level.sendParticles(head.isFrost() ? ParticleTypes.SNOWFLAKE : ParticleTypes.FLAME, eye.x, eye.y, eye.z, 40, 0.3, 0.3, 0.3, 0.1);
     level.playSound(null, eye.x, eye.y, eye.z, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, head.getSoundSource(), 1.5F, 0.6F);
     return head;

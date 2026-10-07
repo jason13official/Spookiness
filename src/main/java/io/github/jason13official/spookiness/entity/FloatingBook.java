@@ -1,5 +1,7 @@
 package io.github.jason13official.spookiness.entity;
 
+import io.github.jason13official.spookiness.registry.ModEntities;
+import net.minecraft.world.entity.EntityDimensions;
 import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import java.util.EnumSet;
@@ -383,10 +385,11 @@ public class FloatingBook extends FloatingPathfinderMob {
     return -1;
   }
 
-  public Vec3 shelfFront(ChiseledBookShelfBlockEntity shelf) {
+  public static Vec3 shelfFront(ChiseledBookShelfBlockEntity shelf) {
     Direction facing = shelf.getBlockState().getValue(ChiseledBookShelfBlock.FACING);
-    double out = 0.5 + this.getBbWidth() / 2.0 + SHELF_CLEARANCE;
-    return Vec3.atCenterOf(shelf.getBlockPos()).add(facing.getStepX() * out, -this.getBbHeight() / 2.0, facing.getStepZ() * out);
+    EntityDimensions size = ModEntities.FLOATING_BOOK.getDimensions();
+    double out = 0.5 + size.width() / 2.0 + SHELF_CLEARANCE;
+    return Vec3.atCenterOf(shelf.getBlockPos()).add(facing.getStepX() * out, -size.height() / 2.0, facing.getStepZ() * out);
   }
 
   private @Nullable ChiseledBookShelfBlockEntity getHomeShelf() {
@@ -568,7 +571,7 @@ public class FloatingBook extends FloatingPathfinderMob {
         return;
       }
 
-      Vec3 front = book.shelfFront(shelf);
+      Vec3 front = shelfFront(shelf);
       if (book.position().distanceTo(front) < ENTER_DISTANCE || ++this.returnTicks > MAX_RETURN_TICKS) {
         book.enterShelf(shelf);
         return;
