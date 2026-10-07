@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
-import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +26,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class VigilCandle extends Entity {
+public class VigilCandle extends Entity implements LightEmitter {
 
   private static final EntityDataAccessor<Boolean> DATA_FROST = SynchedEntityData.defineId(VigilCandle.class, EntityDataSerializers.BOOLEAN);
   private static final EntityDataAccessor<Boolean> DATA_GREAT = SynchedEntityData.defineId(VigilCandle.class, EntityDataSerializers.BOOLEAN);
@@ -86,10 +86,6 @@ public class VigilCandle extends Entity {
     super.onSyncedDataUpdated(accessor);
     if (DATA_GREAT.equals(accessor)) {
       this.refreshDimensions();
-      if (this.isAddedToLevel()) {
-        LivingLights.remove(this);
-        LivingLights.add(this, this.getLightEmission());
-      }
     }
   }
 
@@ -101,20 +97,9 @@ public class VigilCandle extends Entity {
     return this.isGreat() ? GREAT_SCALE : 1.0F;
   }
 
-  private int getLightEmission() {
+  @Override
+  public int getLightEmission() {
     return CandleBlock.LIGHT_PER_CANDLE * this.getCandles();
-  }
-
-  @Override
-  public void onAddedToLevel() {
-    super.onAddedToLevel();
-    LivingLights.add(this, this.getLightEmission());
-  }
-
-  @Override
-  public void onRemovedFromLevel() {
-    super.onRemovedFromLevel();
-    LivingLights.remove(this);
   }
 
   private void flicker() {
@@ -143,7 +128,6 @@ public class VigilCandle extends Entity {
   public void tick() {
     super.tick();
 
-    LivingLights.move(this);
     if (this.level().isClientSide()) {
       this.flicker();
       return;

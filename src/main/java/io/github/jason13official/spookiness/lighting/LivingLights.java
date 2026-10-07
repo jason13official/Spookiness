@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
@@ -14,71 +15,50 @@ public final class LivingLights {
   public static int getEmission(BlockGetter level, long blockNode) {
 
     LevelLights lights = LEVELS.get(level);
-    return lights == null ? 0 : lights.getEmissions().getOrDefault(blockNode, 0);
+    return lights == null ? 0 : lights.getEmission(blockNode);
   }
 
-  public static void add(Entity entity, int emission) {
+  public static void tick(Entity entity) {
 
-    if (emission <= 0) {
-      return;
+    if (entity instanceof LightEmitter emitter) {
+      update(entity, emitter.getLightEmission());
+    } else if (entity instanceof LivingEntity living) {
+      update(entity, LanternHeads.getEmission(living));
     }
+  }
+
+  public static void update(Entity entity, int emission) {
 
     Level level = entity.level();
-    LevelLights lights = LEVELS.computeIfAbsent(level, key -> new LevelLights());
+    LevelLights lights = LEVELS.get(level);
+    Source current = lights == null ? null : lights.get(entity);
+
+    if (emission <= 0) {
+      if (current != null) {
+        lights.remove(entity);
+        checkBlock(level, current.pos());
+      }
+      return;
+    }
+
     long pos = entity.blockPosition().asLong();
+    if (current != null && current.pos() == pos && current.emission() == emission) {
+      return;
+    }
 
-    lights.getSources().put(entity, new Source(pos, emission));
-    lights.recompute(pos);
-    checkBlock(level, pos);
-  }
-
-  public static boolean has(Entity entity) {
-
-    LevelLights lights = LEVELS.get(entity.level());
-    return lights != null && lights.getSources().containsKey(entity);
-  }
-
-  public static int emissionOf(Entity entity) {
-
-    LevelLights lights = LEVELS.get(entity.level());
-    Source source = lights == null ? null : lights.getSources().get(entity);
-    return source == null ? 0 : source.emission();
-  }
-
-  public static void move(Entity entity) {
-
-    LevelLights lights = LEVELS.get(entity.level());
     if (lights == null) {
-      return;
+      lights = LEVELS.computeIfAbsent(level, key -> new LevelLights());
     }
-
-    Source source = lights.getSources().get(entity);
-    long to = entity.blockPosition().asLong();
-    if (source == null || source.pos() == to) {
-      return;
+    lights.put(entity, new Source(pos, emission));
+    if (current != null && current.pos() != pos) {
+      checkBlock(level, current.pos());
     }
-
-    lights.getSources().put(entity, new Source(to, source.emission()));
-    lights.recompute(source.pos());
-    lights.recompute(to);
-    checkBlock(entity.level(), source.pos());
-    checkBlock(entity.level(), to);
+    checkBlock(level, pos);
   }
 
   public static void remove(Entity entity) {
 
-    LevelLights lights = LEVELS.get(entity.level());
-    if (lights == null) {
-      return;
-    }
-
-    Source source = lights.getSources().remove(entity);
-    if (source == null) {
-      return;
-    }
-
-    lights.recompute(source.pos());
-    checkBlock(entity.level(), source.pos());
+    update(entity, 0);
   }
 
   public static void unload(BlockGetter level) {

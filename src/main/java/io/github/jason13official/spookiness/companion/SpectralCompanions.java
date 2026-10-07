@@ -24,7 +24,7 @@ public final class SpectralCompanions {
 
       Vec3 pos = PlayerFollowers.ringPosition(owner.position(), startAngle, i, count);
       mimic.snapTo(pos.x, pos.y, pos.z, owner.getYRot(), 0.0F);
-      mimic.setOwner(owner);
+      mimic.befriend(level, owner);
       level.addFreshEntity(mimic);
       SoulBurst.spawn(level, mimic.getBoundingBox().getCenter(), 32, 0.4, 0.08);
     }

@@ -3,11 +3,9 @@ package io.github.jason13official.spookiness.companion;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.effect.SoulBurst;
-import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.registry.ModDamageTypes;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -21,23 +19,18 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.goal.target.TargetGoal;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import org.jspecify.annotations.Nullable;
 
@@ -73,18 +66,6 @@ public final class Hallowing {
     return PlayerFollowers.count(owner, Hallowing::isHallowed);
   }
 
-  public static boolean isAlly(Entity hallowed, Entity other) {
-
-    UUID owner = ownerOf(hallowed);
-    if (owner == null) {
-      return false;
-    }
-    if (owner.equals(other.getUUID()) || owner.equals(ownerOf(other))) {
-      return true;
-    }
-    return other instanceof SpectralJackOMimic mimic && owner.equals(mimic.getOwnerUUID());
-  }
-
   public static boolean hallow(ServerLevel level, ServerPlayer player, Mob mob, ItemStack mace, InteractionHand hand) {
 
     if (player.getHealth() <= HEALTH_COST) {
@@ -104,7 +85,6 @@ public final class Hallowing {
     mob.setTarget(null);
     mob.setPersistenceRequired();
     applyGoals(mob);
-    PlayerFollowers.track(mob);
 
     SoulBurst.spawn(level, mob.getBoundingBox().getCenter(), 32, 0.4, 0.08);
     level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.5F, 1.2F);
@@ -119,7 +99,7 @@ public final class Hallowing {
     GOALS_APPLIED.remove(mob);
     PlayerFollowers.untrack(mob);
     mob.setTarget(null);
-    mob.goalSelector.removeAllGoals(goal -> goal instanceof FollowOwnerGoal);
+    mob.goalSelector.removeAllGoals(goal -> goal instanceof FollowGoal);
     mob.targetSelector.removeAllGoals(goal -> true);
     if (mob instanceof PathfinderMob pathfinder) {
       mob.targetSelector.addGoal(1, new HurtByTargetGoal(pathfinder));
@@ -144,22 +124,14 @@ public final class Hallowing {
     }
 
     mob.targetSelector.removeAllGoals(goal -> true);
-    mob.goalSelector.addGoal(FOLLOW_PRIORITY, new FollowOwnerGoal(pathfinder));
+    mob.goalSelector.addGoal(FOLLOW_PRIORITY, new FollowGoal(pathfinder));
 
     int targetPriority = 1;
-    mob.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(pathfinder, true));
-    mob.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(pathfinder, false));
+    mob.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(mob, true, target -> true));
+    mob.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(mob, false, target -> true));
     mob.targetSelector.addGoal(targetPriority++, new HurtByTargetGoal(pathfinder));
     mob.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(mob, Mob.class, true,
-        (target, level) -> target instanceof Enemy && !(target instanceof Creeper) && !isAlly(mob, target)));
-  }
-
-  public static void onChangeTarget(LivingChangeTargetEvent event) {
-
-    LivingEntity target = event.getNewAboutToBeSetTarget();
-    if (target != null && isAlly(event.getEntity(), target)) {
-      event.setCanceled(true);
-    }
+        (target, level) -> target instanceof Enemy && !(target instanceof Creeper) && !Allies.isAlly(mob, target)));
   }
 
   public static void onIncomingDamage(LivingIncomingDamageEvent event) {
@@ -188,97 +160,35 @@ public final class Hallowing {
     level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 0.6F, 0.5F);
   }
 
-  private static @Nullable LivingEntity owner(Mob mob) {
+  private static final class FollowGoal extends FollowOwnerGoal {
 
-    UUID owner = ownerOf(mob);
-    return owner == null ? null : mob.level().getPlayerByUUID(owner);
-  }
+    private final PathfinderMob pathfinder;
 
-  private static final class FollowOwnerGoal extends Goal {
-
-    private final PathfinderMob mob;
-    private @Nullable LivingEntity followed;
-
-    FollowOwnerGoal(PathfinderMob mob) {
-      this.mob = mob;
-      this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+    FollowGoal(PathfinderMob pathfinder) {
+      super(pathfinder, TELEPORT_DISTANCE);
+      this.pathfinder = pathfinder;
     }
 
     @Override
-    public boolean canUse() {
-      LivingEntity owner = owner(this.mob);
-      if (owner == null || owner.isSpectator() || this.mob.getTarget() != null || this.mob.distanceTo(owner) < FOLLOW_START_DISTANCE) {
-        return false;
-      }
-      this.followed = owner;
-      return true;
+    protected boolean canStart(Player owner) {
+      return this.mob.getTarget() == null && this.mob.distanceTo(owner) >= FOLLOW_START_DISTANCE;
     }
 
     @Override
-    public boolean canContinueToUse() {
-      return this.followed != null && this.followed.isAlive() && !this.followed.isSpectator() && this.mob.getTarget() == null
-          && this.mob.distanceTo(this.followed) > FOLLOW_STOP_DISTANCE;
+    protected boolean canKeepFollowing(Player owner) {
+      return this.mob.getTarget() == null && this.mob.distanceTo(owner) > FOLLOW_STOP_DISTANCE;
     }
 
     @Override
-    public void stop() {
-      this.followed = null;
-      this.mob.getNavigation().stop();
+    protected Vec3 anchor(Entity leader) {
+      return leader.position();
     }
 
     @Override
-    public boolean requiresUpdateEveryTick() {
-      return true;
-    }
-
-    @Override
-    public void tick() {
-      if (this.followed == null) {
-        return;
-      }
-      this.mob.getLookControl().setLookAt(this.followed, 10.0F, this.mob.getMaxHeadXRot());
-      if (this.mob.distanceTo(this.followed) > TELEPORT_DISTANCE) {
-        this.mob.teleportTo(this.followed.getX(), this.followed.getY(), this.followed.getZ());
-        this.mob.getNavigation().stop();
-        return;
-      }
+    protected void approach(Entity leader, Vec3 anchor, double distance) {
       if (this.mob.tickCount % 10 == 0) {
-        this.mob.getNavigation().moveTo(this.followed, 1.2);
+        this.pathfinder.getNavigation().moveTo(leader, 1.2);
       }
-    }
-  }
-
-  private static final class DefendOwnerGoal extends TargetGoal {
-
-    private final boolean retaliate;
-    private @Nullable LivingEntity candidate;
-    private int timestamp;
-
-    DefendOwnerGoal(PathfinderMob mob, boolean retaliate) {
-      super(mob, false);
-      this.retaliate = retaliate;
-      this.setFlags(EnumSet.of(Goal.Flag.TARGET));
-    }
-
-    @Override
-    public boolean canUse() {
-      LivingEntity owner = owner(this.mob);
-      if (owner == null) {
-        return false;
-      }
-      this.candidate = this.retaliate ? owner.getLastHurtByMob() : owner.getLastHurtMob();
-      int ts = this.retaliate ? owner.getLastHurtByMobTimestamp() : owner.getLastHurtMobTimestamp();
-      return ts != this.timestamp && this.candidate != null && !isAlly(this.mob, this.candidate) && this.canAttack(this.candidate, TargetingConditions.DEFAULT);
-    }
-
-    @Override
-    public void start() {
-      this.mob.setTarget(this.candidate);
-      LivingEntity owner = owner(this.mob);
-      if (owner != null) {
-        this.timestamp = this.retaliate ? owner.getLastHurtByMobTimestamp() : owner.getLastHurtMobTimestamp();
-      }
-      super.start();
     }
   }
 }

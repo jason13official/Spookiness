@@ -1,18 +1,47 @@
 package io.github.jason13official.spookiness.companion;
 
-import io.github.jason13official.spookiness.entity.FloatingCandles;
-import io.github.jason13official.spookiness.entity.FloatingLantern;
-import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
+import org.jspecify.annotations.Nullable;
 
 public final class Allies {
 
   private static final ThreadLocal<List<Entity>> CAPTURED = new ThreadLocal<>();
+
+  public static @Nullable UUID ownerOf(Entity entity) {
+
+    if (entity instanceof PlayerFollower follower) {
+      return follower.getOwnerUUID();
+    }
+    return Hallowing.ownerOf(entity);
+  }
+
+  public static @Nullable Player owner(Entity entity) {
+
+    UUID owner = ownerOf(entity);
+    return owner == null ? null : entity.level().getPlayerByUUID(owner);
+  }
+
+  public static boolean isAlly(Entity entity, Entity other) {
+
+    UUID owner = ownerOf(entity);
+    return owner != null && (owner.equals(other.getUUID()) || owner.equals(ownerOf(other)));
+  }
+
+  public static void onChangeTarget(LivingChangeTargetEvent event) {
+
+    LivingEntity target = event.getNewAboutToBeSetTarget();
+    if (target != null && isAlly(event.getEntity(), target)) {
+      event.setCanceled(true);
+    }
+  }
 
   public static <T> T allySpawned(Player player, Supplier<T> action) {
 
@@ -37,20 +66,6 @@ public final class Allies {
 
   public static boolean ally(Entity entity, Player player) {
 
-    if (!(entity.level() instanceof ServerLevel level) || !entity.isAlive()) {
-      return false;
-    }
-    if (entity instanceof SpectralJackOMimic mimic) {
-      mimic.setOwner(player);
-      return true;
-    }
-    if (entity instanceof FloatingCandles candles) {
-      candles.joinLine(level, player);
-      return true;
-    }
-    if (entity instanceof FloatingLantern lantern) {
-      return lantern.claim(level, player);
-    }
-    return false;
+    return entity.level() instanceof ServerLevel level && entity.isAlive() && entity instanceof PlayerFollower follower && follower.befriend(level, player);
   }
 }

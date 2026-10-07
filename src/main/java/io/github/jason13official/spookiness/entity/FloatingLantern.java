@@ -1,13 +1,13 @@
 package io.github.jason13official.spookiness.entity;
 
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
-import io.github.jason13official.spookiness.companion.PlayerFollower;
+import io.github.jason13official.spookiness.companion.Allies;
+import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.effect.SoulBurst;
-import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,8 +20,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -36,12 +36,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class FloatingLantern extends FloatingPathfinderMob implements PlayerFollower {
+public class FloatingLantern extends FloatingCompanion implements LightEmitter {
 
   private static final int LIGHT_EMISSION = Blocks.LANTERN.defaultBlockState().getLightEmission();
   private static final double WILD_SEEK_RANGE = 16.0;
@@ -52,8 +50,6 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
   private static final float SEAR_SECONDS = 3.0F;
   private static final double OWNER_OFFSET = 1.2;
   private static final double TELEPORT_DISTANCE = 16.0;
-
-  private @Nullable EntityReference<Player> owner;
 
   public FloatingLantern(EntityType<? extends FloatingLantern> type, Level level) {
     super(type, level);
@@ -69,7 +65,7 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
     int goalPriority = 1;
 
     this.goalSelector.addGoal(goalPriority++, new SearGoal());
-    this.goalSelector.addGoal(goalPriority++, new FollowOwnerGoal());
+    this.goalSelector.addGoal(goalPriority++, new FollowGoal());
     this.goalSelector.addGoal(goalPriority++, new WaterAvoidingRandomFlyingGoal(this, 1.0) {
 
       @Override
@@ -81,32 +77,12 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
     this.goalSelector.addGoal(goalPriority++, new RandomLookAroundGoal(this));
   }
 
-  @Override
-  protected void addAdditionalSaveData(ValueOutput output) {
-    super.addAdditionalSaveData(output);
-    EntityReference.store(this.owner, output, "owner");
-  }
-
-  @Override
-  protected void readAdditionalSaveData(ValueInput input) {
-    super.readAdditionalSaveData(input);
-    this.owner = EntityReference.read(input, "owner");
-  }
-
-  @Override
-  public @Nullable UUID getOwnerUUID() {
-    return this.owner == null ? null : this.owner.getUUID();
-  }
-
   public boolean isClaimed() {
-    return this.owner != null;
+    return this.hasOwner();
   }
 
-  private @Nullable Player getOwner() {
-    return this.owner == null ? null : EntityReference.getPlayer(this.owner, this.level());
-  }
-
-  public boolean claim(ServerLevel level, Player player) {
+  @Override
+  public boolean befriend(ServerLevel level, Player player) {
     if (this.isClaimed()) {
       return false;
     }
@@ -116,10 +92,7 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
       return false;
     }
 
-    this.owner = EntityReference.of(player);
-    this.setPersistenceRequired();
-    this.getNavigation().stop();
-    PlayerFollowers.track(this);
+    this.setOwner(player);
     SoulBurst.spawn(level, this.getBoundingBox().getCenter(), 16, 0.25, 0.04);
     this.playSound(SoundEvents.LANTERN_PLACE, 1.0F, 0.6F);
     SpookyTrigger.award(player, SpookyTrigger.CLAIM_LANTERN);
@@ -138,13 +111,13 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
       return InteractionResult.SUCCESS;
     }
     if (this.isClaimed()) {
-      if (player.isSecondaryUseActive() && this.owner != null && this.owner.matches(player)) {
+      if (player.isSecondaryUseActive() && this.isOwnedBy(player)) {
         this.release(level);
         return InteractionResult.SUCCESS_SERVER;
       }
       return super.mobInteract(player, hand);
     }
-    this.claim(level, player);
+    this.befriend(level, player);
     return InteractionResult.SUCCESS_SERVER;
   }
 
@@ -153,23 +126,13 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
   }
 
   @Override
-  public void onAddedToLevel() {
-    super.onAddedToLevel();
-    LivingLights.add(this, LIGHT_EMISSION);
-    PlayerFollowers.track(this);
-  }
-
-  @Override
-  public void onRemovedFromLevel() {
-    super.onRemovedFromLevel();
-    LivingLights.remove(this);
-    PlayerFollowers.untrack(this);
+  public int getLightEmission() {
+    return LIGHT_EMISSION;
   }
 
   @Override
   public void tick() {
     super.tick();
-    LivingLights.move(this);
     if (this.level().isClientSide() && this.isAlive() && this.random.nextInt(6) == 0) {
       this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, this.getX() + (this.random.nextDouble() - 0.5) * 0.2, this.getY() + 0.2,
           this.getZ() + (this.random.nextDouble() - 0.5) * 0.2, 0.0, 0.01, 0.0);
@@ -183,11 +146,6 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
   }
 
   @Override
-  public boolean canBeLeashed() {
-    return false;
-  }
-
-  @Override
   protected SoundEvent getHurtSound(DamageSource source) {
     return SoundEvents.LANTERN_HIT;
   }
@@ -198,7 +156,7 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
   }
 
   private boolean isSearable(Mob mob) {
-    return mob.isAlive() && mob.is(EntityTypeTags.BURN_IN_DAYLIGHT) && PlayerFollowers.ownerOf(mob) == null && !mob.fireImmune();
+    return mob.isAlive() && mob.is(EntityTypeTags.BURN_IN_DAYLIGHT) && Allies.ownerOf(mob) == null && !mob.fireImmune();
   }
 
   private class SearGoal extends Goal {
@@ -212,7 +170,7 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
 
     private @Nullable Mob findPrey() {
       FloatingLantern lantern = FloatingLantern.this;
-      Player player = lantern.getOwner();
+      LivingEntity player = lantern.getOwner();
       Entity center = lantern.isClaimed() ? player : lantern;
       if (center == null) {
         return null;
@@ -237,7 +195,7 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
       if (this.prey == null || !lantern.isSearable(this.prey)) {
         return false;
       }
-      Player player = lantern.getOwner();
+      LivingEntity player = lantern.getOwner();
       return player == null || this.prey.distanceTo(player) <= GUARD_RANGE * 1.5;
     }
 
@@ -276,54 +234,22 @@ public class FloatingLantern extends FloatingPathfinderMob implements PlayerFoll
     }
   }
 
-  private class FollowOwnerGoal extends Goal {
+  private class FollowGoal extends FollowOwnerGoal {
 
-    private @Nullable Player player;
-
-    FollowOwnerGoal() {
-      this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+    FollowGoal() {
+      super(FloatingLantern.this, TELEPORT_DISTANCE);
     }
 
     @Override
-    public boolean canUse() {
-      this.player = FloatingLantern.this.getOwner();
-      return this.player != null && !this.player.isSpectator();
+    protected Vec3 anchor(Entity leader) {
+      float yaw = leader.getYRot() * Mth.DEG_TO_RAD;
+      return leader.position().add(-Mth.cos(yaw) * OWNER_OFFSET, leader.getBbHeight() + 0.3, -Mth.sin(yaw) * OWNER_OFFSET);
     }
 
     @Override
-    public boolean canContinueToUse() {
-      return this.player != null && this.player.isAlive() && !this.player.isRemoved() && !this.player.isSpectator();
-    }
-
-    @Override
-    public void stop() {
-      this.player = null;
-    }
-
-    @Override
-    public boolean requiresUpdateEveryTick() {
-      return true;
-    }
-
-    @Override
-    public void tick() {
-      FloatingLantern lantern = FloatingLantern.this;
-      if (this.player == null) {
-        return;
-      }
-
-      float yaw = this.player.getYRot() * Mth.DEG_TO_RAD;
-      Vec3 shoulder = this.player.position().add(-Mth.cos(yaw) * OWNER_OFFSET, this.player.getBbHeight() + 0.3, -Mth.sin(yaw) * OWNER_OFFSET);
-      double distance = lantern.position().distanceTo(shoulder);
-      lantern.getLookControl().setLookAt(this.player);
-
-      if (distance > TELEPORT_DISTANCE) {
-        lantern.teleportTo(shoulder.x, shoulder.y, shoulder.z);
-        lantern.setDeltaMovement(Vec3.ZERO);
-        return;
-      }
+    protected void approach(Entity leader, Vec3 anchor, double distance) {
       if (distance > 0.3) {
-        lantern.getMoveControl().setWantedPosition(shoulder.x, shoulder.y, shoulder.z, Mth.clamp(distance * 1.5, 0.5, 6.0));
+        this.mob.getMoveControl().setWantedPosition(anchor.x, anchor.y, anchor.z, Mth.clamp(distance * 1.5, 0.5, 6.0));
       }
     }
   }

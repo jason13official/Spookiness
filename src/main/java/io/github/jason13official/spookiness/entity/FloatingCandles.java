@@ -1,15 +1,13 @@
 package io.github.jason13official.spookiness.entity;
 
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
-import io.github.jason13official.spookiness.companion.PlayerFollower;
-import io.github.jason13official.spookiness.companion.PlayerFollowers;
+import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
 import io.github.jason13official.spookiness.effect.SoulBurst;
-import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -24,7 +22,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnGroupData;
@@ -49,11 +46,10 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class FloatingCandles extends FloatingPathfinderMob implements PlayerFollower {
+public class FloatingCandles extends FloatingCompanion implements LightEmitter {
 
   private static final EntityDataAccessor<Integer> DATA_CANDLES = SynchedEntityData.defineId(FloatingCandles.class, EntityDataSerializers.INT);
   private static final EntityDataAccessor<Integer> DATA_COLOR = SynchedEntityData.defineId(FloatingCandles.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Boolean> DATA_FOLLOWING = SynchedEntityData.defineId(FloatingCandles.class, EntityDataSerializers.BOOLEAN);
 
   public static final int MAX_LINE_LENGTH = 12;
   public static final int COMPANIONS_PER_LINE = 3;
@@ -76,7 +72,6 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
       List.of(new Vec3(7.0, 5.0, 9.0), new Vec3(10.0, 7.0, 9.0), new Vec3(6.0, 7.0, 6.0), new Vec3(9.0, 8.0, 6.0))
   );
 
-  private @Nullable EntityReference<Player> owner;
   private int lineIndex;
 
   public FloatingCandles(EntityType<? extends FloatingCandles> type, Level level) {
@@ -110,7 +105,6 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     super.defineSynchedData(entityData);
     entityData.define(DATA_CANDLES, CandleBlock.MIN_CANDLES);
     entityData.define(DATA_COLOR, 0);
-    entityData.define(DATA_FOLLOWING, false);
   }
 
   @Override
@@ -126,7 +120,6 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     super.addAdditionalSaveData(output);
     output.putInt("candles", this.getCandles());
     output.putInt("color", this.getColor());
-    EntityReference.store(this.owner, output, "owner");
     output.putInt("line_index", this.lineIndex);
   }
 
@@ -135,9 +128,7 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     super.readAdditionalSaveData(input);
     this.setCandles(input.getIntOr("candles", CandleBlock.MIN_CANDLES));
     this.setColor(input.getIntOr("color", 0));
-    this.owner = EntityReference.read(input, "owner");
     this.lineIndex = input.getIntOr("line_index", 0);
-    this.setFollowing(this.owner != null);
   }
 
   public int getCandles() {
@@ -166,20 +157,7 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
   }
 
   public boolean isFollowing() {
-    return this.entityData.get(DATA_FOLLOWING);
-  }
-
-  private void setFollowing(boolean following) {
-    this.entityData.set(DATA_FOLLOWING, following);
-  }
-
-  @Override
-  public @Nullable UUID getOwnerUUID() {
-    return this.owner == null ? null : this.owner.getUUID();
-  }
-
-  public boolean isOwnedBy(Player player) {
-    return this.owner != null && this.owner.matches(player);
+    return this.hasOwner();
   }
 
   private static List<FloatingCandles> getLine(ServerLevel level, Player player) {
@@ -196,9 +174,10 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     return leader != null ? leader : player;
   }
 
-  public void joinLine(ServerLevel level, Player player) {
+  @Override
+  public boolean befriend(ServerLevel level, Player player) {
     if (this.isFollowing()) {
-      return;
+      return false;
     }
 
     List<FloatingCandles> line = getLine(level, player);
@@ -212,19 +191,16 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
       }
       SpectralCompanions.summon(level, player, COMPANIONS_PER_LINE);
       SpookyTrigger.award(player, SpookyTrigger.CANDLE_OVERFLOW);
-      return;
+      return true;
     }
 
-    this.owner = EntityReference.of(player);
     this.lineIndex = line.stream().mapToInt(candles -> candles.lineIndex).max().orElse(0) + 1;
-    this.setFollowing(true);
-    this.setPersistenceRequired();
-    this.getNavigation().stop();
-    PlayerFollowers.track(this);
+    this.setOwner(player);
     this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 0.8F + line.size() * 0.1F);
     if (line.size() + 1 >= MAX_LINE_LENGTH) {
       SpookyTrigger.award(player, SpookyTrigger.FULL_CONGA);
     }
+    return true;
   }
 
   @Override
@@ -233,7 +209,7 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
       return super.mobInteract(player, hand);
     }
     if (this.level() instanceof ServerLevel level) {
-      this.joinLine(level, player);
+      this.befriend(level, player);
     }
     return InteractionResult.SUCCESS;
   }
@@ -246,7 +222,7 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     }
     List<Player> touching = level.getEntitiesOfClass(Player.class, this.getBoundingBox(), player -> player.isAlive() && !player.isSpectator());
     if (!touching.isEmpty()) {
-      this.joinLine(level, touching.getFirst());
+      this.befriend(level, touching.getFirst());
     }
   }
 
@@ -254,37 +230,14 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     return CANDLE_BLOCKS[this.getColor()].defaultBlockState().setValue(CandleBlock.CANDLES, this.getCandles()).setValue(CandleBlock.LIT, true);
   }
 
-  private int getLightEmission() {
+  @Override
+  public int getLightEmission() {
     return CandleBlock.LIGHT_PER_CANDLE * this.getCandles();
-  }
-
-  @Override
-  public void onSyncedDataUpdated(EntityDataAccessor<?> accessor) {
-    super.onSyncedDataUpdated(accessor);
-    if (DATA_CANDLES.equals(accessor) && this.isAddedToLevel()) {
-      LivingLights.remove(this);
-      LivingLights.add(this, this.getLightEmission());
-    }
-  }
-
-  @Override
-  public void onAddedToLevel() {
-    super.onAddedToLevel();
-    LivingLights.add(this, this.getLightEmission());
-    PlayerFollowers.track(this);
-  }
-
-  @Override
-  public void onRemovedFromLevel() {
-    super.onRemovedFromLevel();
-    LivingLights.remove(this);
-    PlayerFollowers.untrack(this);
   }
 
   @Override
   public void tick() {
     super.tick();
-    LivingLights.move(this);
     if (this.level().isClientSide() && this.isAlive()) {
       this.spawnFlameParticles();
     }
@@ -320,11 +273,6 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
   }
 
   @Override
-  public boolean canBeLeashed() {
-    return false;
-  }
-
-  @Override
   protected SoundEvent getAmbientSound() {
     return SoundEvents.CANDLE_AMBIENT;
   }
@@ -339,68 +287,30 @@ public class FloatingCandles extends FloatingPathfinderMob implements PlayerFoll
     return SoundEvents.CANDLE_EXTINGUISH;
   }
 
-  private class FollowLineGoal extends Goal {
-
-    private @Nullable Player player;
+  private class FollowLineGoal extends FollowOwnerGoal {
 
     FollowLineGoal() {
-      this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+      super(FloatingCandles.this, TELEPORT_DISTANCE);
     }
 
     @Override
-    public boolean canUse() {
-      FloatingCandles candles = FloatingCandles.this;
-      if (!candles.isFollowing() || candles.owner == null) {
-        return false;
-      }
-      this.player = EntityReference.getPlayer(candles.owner, candles.level());
-      return this.player != null && !this.player.isSpectator();
+    protected Entity leader(Player owner) {
+      return FloatingCandles.this.level() instanceof ServerLevel level ? FloatingCandles.this.getLeader(level, owner) : owner;
     }
 
     @Override
-    public boolean canContinueToUse() {
-      return this.player != null && this.player.isAlive() && !this.player.isRemoved() && !this.player.isSpectator();
+    protected Vec3 anchor(Entity leader) {
+      return leader instanceof Player ? leader.position().add(0.0, 1.2, 0.0) : leader.position();
     }
 
     @Override
-    public void stop() {
-      this.player = null;
-    }
-
-    @Override
-    public boolean requiresUpdateEveryTick() {
-      return true;
-    }
-
-    @Override
-    public void tick() {
-      FloatingCandles candles = FloatingCandles.this;
-      if (this.player == null || !(candles.level() instanceof ServerLevel level)) {
-        return;
-      }
-
-      Entity leader = candles.getLeader(level, this.player);
-      boolean ledByPlayer = leader == this.player;
-      Vec3 anchor = ledByPlayer ? leader.position().add(0.0, 1.2, 0.0) : leader.position();
-      Vec3 offset = candles.position().subtract(anchor);
-      double distance = offset.length();
-      double spacing = ledByPlayer ? PLAYER_SPACING : CANDLE_SPACING;
-
-      candles.getLookControl().setLookAt(leader);
-
-      if (distance > TELEPORT_DISTANCE) {
-        candles.teleportTo(anchor.x, anchor.y, anchor.z);
-        candles.setDeltaMovement(Vec3.ZERO);
-        return;
-      }
-
+    protected void approach(Entity leader, Vec3 anchor, double distance) {
+      double spacing = leader instanceof Player ? PLAYER_SPACING : CANDLE_SPACING;
       if (distance <= spacing) {
         return;
       }
-
-      Vec3 target = anchor.add(offset.scale(spacing / distance));
-      double speed = Mth.clamp((distance - spacing) * 2.0, 0.5, 8.0);
-      candles.getMoveControl().setWantedPosition(target.x, target.y, target.z, speed);
+      Vec3 target = anchor.add(this.mob.position().subtract(anchor).scale(spacing / distance));
+      this.mob.getMoveControl().setWantedPosition(target.x, target.y, target.z, Mth.clamp((distance - spacing) * 2.0, 0.5, 8.0));
     }
   }
 

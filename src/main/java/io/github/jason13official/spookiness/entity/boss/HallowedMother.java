@@ -2,6 +2,8 @@ package io.github.jason13official.spookiness.entity.boss;
 
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
+import io.github.jason13official.spookiness.lighting.LanternHeads;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
@@ -59,7 +61,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class HallowedMother extends Monster {
+public class HallowedMother extends Monster implements LightEmitter {
 
   public static final float SCALE = 4.0F;
 
@@ -194,6 +196,11 @@ public class HallowedMother extends Monster {
     super.defineSynchedData(entityData);
     entityData.define(DATA_TETHER, NO_TETHER);
     entityData.define(DATA_GAPING, false);
+  }
+
+  @Override
+  public int getLightEmission() {
+    return LanternHeads.EMISSION;
   }
 
   public @Nullable Entity getTethered() {

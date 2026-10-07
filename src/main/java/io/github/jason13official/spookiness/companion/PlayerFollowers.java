@@ -19,7 +19,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
 
 public final class PlayerFollowers {
 
@@ -27,13 +26,6 @@ public final class PlayerFollowers {
   private static final double RECALL_DISTANCE = 32.0;
 
   private static final Set<Mob> LOADED = ConcurrentHashMap.newKeySet();
-
-  public static @Nullable UUID ownerOf(Mob mob) {
-    if (mob instanceof PlayerFollower following) {
-      return following.getOwnerUUID();
-    }
-    return Hallowing.ownerOf(mob);
-  }
 
   public static int count(ServerPlayer owner, Predicate<Mob> filter) {
     int count = 0;
@@ -55,8 +47,8 @@ public final class PlayerFollowers {
     return followers;
   }
 
-  public static void track(Mob follower) {
-    if (follower.isAddedToLevel() && !follower.level().isClientSide() && ownerOf(follower) != null) {
+  public static void track(Entity entity) {
+    if (entity instanceof Mob follower && follower.isAddedToLevel() && !follower.level().isClientSide() && Allies.ownerOf(follower) != null) {
       LOADED.add(follower);
     }
   }
@@ -72,13 +64,13 @@ public final class PlayerFollowers {
   }
 
   private static boolean isFollowing(Mob follower, ServerPlayer owner) {
-    return owner.getUUID().equals(ownerOf(follower)) && follower.isAlive() && !follower.isRemoved();
+    return owner.getUUID().equals(Allies.ownerOf(follower)) && follower.isAlive() && !follower.isRemoved();
   }
 
   public static void tick(MinecraftServer server) {
 
     for (Mob follower : List.copyOf(LOADED)) {
-      UUID ownerId = ownerOf(follower);
+      UUID ownerId = Allies.ownerOf(follower);
       ServerPlayer owner = ownerId == null ? null : server.getPlayerList().getPlayer(ownerId);
       if (owner == null || !owner.isAlive() || owner.isSpectator() || !isFollowing(follower, owner)) {
         continue;

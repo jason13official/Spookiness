@@ -26,7 +26,6 @@ import io.github.jason13official.spookiness.entity.boss.MotherBrood;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import io.github.jason13official.spookiness.entity.boss.WickmanHead;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
-import io.github.jason13official.spookiness.lighting.LanternHeads;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.registry.ModBlockEntities;
@@ -177,7 +176,7 @@ public class Spookiness {
     });
 
     // LivingChangeTargetEvent
-    NeoForge.EVENT_BUS.addListener(Hallowing::onChangeTarget);
+    NeoForge.EVENT_BUS.addListener(Allies::onChangeTarget);
 
     // LivingChangeTargetEvent
     NeoForge.EVENT_BUS.addListener((LivingChangeTargetEvent event) -> {
@@ -213,20 +212,21 @@ public class Spookiness {
     // EntityTickEvent.Post
     NeoForge.EVENT_BUS.addListener((EntityTickEvent.Post event) -> {
 
-      LanternHeads.tick(event.getEntity());
+      LivingLights.tick(event.getEntity());
       if (event.getEntity().level().isClientSide()) {
         Hallowing.clientTick(event.getEntity());
       } else {
         Kindling.tick(event.getEntity());
+        PlayerFollowers.track(event.getEntity());
       }
     });
 
     // EntityLeaveLevelEvent
     NeoForge.EVENT_BUS.addListener((EntityLeaveLevelEvent event) -> {
 
-      LanternHeads.leave(event.getEntity());
+      LivingLights.remove(event.getEntity());
 
-      if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
+      if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob) {
         PlayerFollowers.untrack(mob);
       }
     });
@@ -316,7 +316,6 @@ public class Spookiness {
       }
       if (event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
         Hallowing.applyGoals(mob);
-        PlayerFollowers.track(mob);
       }
       if (event.getEntity() instanceof Mob mob && MotherBrood.isBrood(mob)) {
         MotherBrood.applyGoals(mob);

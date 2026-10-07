@@ -1,57 +1,42 @@
 package io.github.jason13official.spookiness.entity;
 
-import net.minecraft.util.Mth;
-import io.github.jason13official.spookiness.companion.PlayerFollower;
-import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.lighting.LivingLights;
-import java.util.EnumSet;
-import java.util.Optional;
-import java.util.UUID;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
+import io.github.jason13official.spookiness.companion.Allies;
+import io.github.jason13official.spookiness.companion.DefendOwnerGoal;
+import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.goal.target.TargetGoal;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
 
-public class SpectralJackOMimic extends FloatingPathfinderMob implements OwnableEntity, PlayerFollower {
+public class SpectralJackOMimic extends FloatingCompanion implements LightEmitter {
 
   private static final double CROWD_DISTANCE = 1.5;
   private static final double SLOT_RADIUS = 2.5;
   private static final double SLOT_HEIGHT = 1.2;
   private static final double SLOT_TOLERANCE = 0.75;
   private static final double GOLDEN_ANGLE = 2.399963;
-  private static final EntityDataAccessor<Optional<EntityReference<LivingEntity>>> DATA_OWNER = SynchedEntityData.defineId(SpectralJackOMimic.class,
-      EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE);
 
   private static final int LIGHT_EMISSION = 10;
   private static final byte ATTACK_EVENT = 4;
@@ -75,62 +60,36 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
     int goalPriority = 1;
 
     this.goalSelector.addGoal(goalPriority++, new MeleeAttackGoal(this, 1.4, true));
-    this.goalSelector.addGoal(goalPriority++, new FollowOwnerGoal());
+    this.goalSelector.addGoal(goalPriority++, new FollowGoal());
     this.goalSelector.addGoal(goalPriority++, new WaterAvoidingRandomFlyingGoal(this, 0.6));
     this.goalSelector.addGoal(goalPriority++, new LookAtPlayerGoal(this, Player.class, 8.0F));
     this.goalSelector.addGoal(goalPriority++, new RandomLookAroundGoal(this));
 
     int targetPriority = 1;
 
-    this.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(true));
-    this.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(false));
+    this.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(this, true, this::wantsToAttack));
+    this.targetSelector.addGoal(targetPriority++, new DefendOwnerGoal(this, false, this::wantsToAttack));
     this.targetSelector.addGoal(targetPriority++, new HurtByTargetGoal(this));
     this.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(this, Mob.class, true,
         (target, level) -> target instanceof Enemy && this.wantsToAttack(target)));
   }
 
   @Override
-  protected void defineSynchedData(SynchedEntityData.Builder entityData) {
-    super.defineSynchedData(entityData);
-    entityData.define(DATA_OWNER, Optional.empty());
-  }
-
-  @Override
-  public @Nullable EntityReference<LivingEntity> getOwnerReference() {
-    return this.entityData.get(DATA_OWNER).orElse(null);
-  }
-
-  @Override
-  public @Nullable UUID getOwnerUUID() {
-    EntityReference<LivingEntity> owner = this.getOwnerReference();
-    return owner == null ? null : owner.getUUID();
-  }
-
-  private void setOwnerReference(@Nullable EntityReference<LivingEntity> owner) {
-    this.entityData.set(DATA_OWNER, Optional.ofNullable(owner));
-    PlayerFollowers.track(this);
-  }
-
-  public void setOwner(LivingEntity owner) {
-    this.setOwnerReference(EntityReference.of(owner));
-    this.setPersistenceRequired();
-  }
-
-  private boolean isOwner(Entity entity) {
-    EntityReference<LivingEntity> owner = this.getOwnerReference();
-    return owner != null && owner.getUUID().equals(entity.getUUID());
+  public boolean befriend(ServerLevel level, Player player) {
+    this.setOwner(player);
+    return true;
   }
 
   @Override
   public void push(Entity entity) {
-    if (!this.isOwner(entity)) {
+    if (!this.isOwnedBy(entity)) {
       super.push(entity);
     }
   }
 
   @Override
   protected void doPush(Entity entity) {
-    if (!this.isOwner(entity)) {
+    if (!this.isOwnedBy(entity)) {
       super.doPush(entity);
     }
   }
@@ -144,28 +103,7 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
 
   @Override
   protected boolean considersEntityAsAlly(Entity other) {
-    UUID ownerId = this.getOwnerUUID();
-    if (ownerId != null) {
-      if (ownerId.equals(other.getUUID())) {
-        return true;
-      }
-      if (other instanceof SpectralJackOMimic companion && ownerId.equals(companion.getOwnerUUID())) {
-        return true;
-      }
-    }
-    return super.considersEntityAsAlly(other);
-  }
-
-  @Override
-  protected void addAdditionalSaveData(ValueOutput output) {
-    super.addAdditionalSaveData(output);
-    EntityReference.store(this.getOwnerReference(), output, "owner");
-  }
-
-  @Override
-  protected void readAdditionalSaveData(ValueInput input) {
-    super.readAdditionalSaveData(input);
-    this.setOwnerReference(EntityReference.read(input, "owner"));
+    return Allies.isAlly(this, other) || super.considersEntityAsAlly(other);
   }
 
   @Override
@@ -189,11 +127,6 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
   }
 
   @Override
-  public boolean canBeLeashed() {
-    return false;
-  }
-
-  @Override
   public boolean shouldShowName() {
     return this.hasCustomName() && super.shouldShowName();
   }
@@ -204,23 +137,8 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
   }
 
   @Override
-  public void onAddedToLevel() {
-    super.onAddedToLevel();
-    LivingLights.add(this, LIGHT_EMISSION);
-    PlayerFollowers.track(this);
-  }
-
-  @Override
-  public void onRemovedFromLevel() {
-    super.onRemovedFromLevel();
-    LivingLights.remove(this);
-    PlayerFollowers.untrack(this);
-  }
-
-  @Override
-  public void tick() {
-    super.tick();
-    LivingLights.move(this);
+  public int getLightEmission() {
+    return LIGHT_EMISSION;
   }
 
   @Override
@@ -243,104 +161,32 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
     return 0.6F;
   }
 
-  private class FollowOwnerGoal extends Goal {
+  private class FollowGoal extends FollowOwnerGoal {
 
-    private @Nullable LivingEntity followed;
-
-    FollowOwnerGoal() {
-      this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+    FollowGoal() {
+      super(SpectralJackOMimic.this, TELEPORT_DISTANCE);
     }
 
     @Override
-    public boolean canUse() {
-      SpectralJackOMimic mimic = SpectralJackOMimic.this;
-      LivingEntity owner = mimic.getOwner();
-      if (owner == null || owner.isSpectator()) {
-        return false;
-      }
-      double distance = mimic.distanceTo(owner);
-      if (distance < FOLLOW_START_DISTANCE && distance > CROWD_DISTANCE) {
-        return false;
-      }
-      this.followed = owner;
-      return true;
+    protected boolean canStart(Player owner) {
+      double distance = this.mob.distanceTo(owner);
+      return distance >= FOLLOW_START_DISTANCE || distance <= CROWD_DISTANCE;
     }
 
     @Override
-    public boolean canContinueToUse() {
-      return this.followed != null && this.followed.isAlive() && !this.followed.isSpectator()
-          && SpectralJackOMimic.this.position().distanceTo(this.slot(this.followed)) > SLOT_TOLERANCE;
-    }
-
-    private Vec3 slot(LivingEntity owner) {
-      double angle = SpectralJackOMimic.this.getId() * GOLDEN_ANGLE;
-      return owner.position().add(Math.cos(angle) * SLOT_RADIUS, SLOT_HEIGHT, Math.sin(angle) * SLOT_RADIUS);
+    protected boolean canKeepFollowing(Player owner) {
+      return this.mob.position().distanceTo(this.anchor(owner)) > SLOT_TOLERANCE;
     }
 
     @Override
-    public void stop() {
-      this.followed = null;
+    protected Vec3 anchor(Entity leader) {
+      double angle = this.mob.getId() * GOLDEN_ANGLE;
+      return leader.position().add(Math.cos(angle) * SLOT_RADIUS, SLOT_HEIGHT, Math.sin(angle) * SLOT_RADIUS);
     }
 
     @Override
-    public boolean requiresUpdateEveryTick() {
-      return true;
-    }
-
-    @Override
-    public void tick() {
-      if (this.followed == null) {
-        return;
-      }
-
-      SpectralJackOMimic mimic = SpectralJackOMimic.this;
-      Vec3 anchor = this.slot(this.followed);
-      mimic.getLookControl().setLookAt(this.followed, 10.0F, mimic.getMaxHeadXRot());
-
-      if (mimic.distanceTo(this.followed) > TELEPORT_DISTANCE) {
-        mimic.teleportTo(anchor.x, anchor.y, anchor.z);
-        mimic.setDeltaMovement(Vec3.ZERO);
-        mimic.getNavigation().stop();
-        return;
-      }
-
-      double speed = Mth.clamp(mimic.position().distanceTo(anchor) * 0.5, 0.6, 2.0);
-      mimic.getMoveControl().setWantedPosition(anchor.x, anchor.y, anchor.z, speed);
-    }
-  }
-
-  private class DefendOwnerGoal extends TargetGoal {
-
-    private final boolean retaliate;
-    private @Nullable LivingEntity candidate;
-    private int timestamp;
-
-    DefendOwnerGoal(boolean retaliate) {
-      super(SpectralJackOMimic.this, false);
-      this.retaliate = retaliate;
-      this.setFlags(EnumSet.of(Goal.Flag.TARGET));
-    }
-
-    @Override
-    public boolean canUse() {
-      LivingEntity owner = SpectralJackOMimic.this.getOwner();
-      if (owner == null) {
-        return false;
-      }
-      this.candidate = this.retaliate ? owner.getLastHurtByMob() : owner.getLastHurtMob();
-      int ts = this.retaliate ? owner.getLastHurtByMobTimestamp() : owner.getLastHurtMobTimestamp();
-      return ts != this.timestamp && this.candidate != null && this.canAttack(this.candidate, TargetingConditions.DEFAULT)
-          && SpectralJackOMimic.this.wantsToAttack(this.candidate);
-    }
-
-    @Override
-    public void start() {
-      this.mob.setTarget(this.candidate);
-      LivingEntity owner = SpectralJackOMimic.this.getOwner();
-      if (owner != null) {
-        this.timestamp = this.retaliate ? owner.getLastHurtByMobTimestamp() : owner.getLastHurtMobTimestamp();
-      }
-      super.start();
+    protected void approach(Entity leader, Vec3 anchor, double distance) {
+      this.mob.getMoveControl().setWantedPosition(anchor.x, anchor.y, anchor.z, Mth.clamp(distance * 0.5, 0.6, 2.0));
     }
   }
 }

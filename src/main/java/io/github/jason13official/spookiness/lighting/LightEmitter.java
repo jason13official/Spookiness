@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.lighting;
 
-public record Source(long pos, int emission) {
+public interface LightEmitter {
 
+  int getLightEmission();
 }

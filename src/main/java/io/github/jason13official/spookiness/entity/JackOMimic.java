@@ -2,7 +2,7 @@ package io.github.jason13official.spookiness.entity;
 
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.effect.SoulBurst;
-import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -29,7 +29,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.jspecify.annotations.Nullable;
 
-public class JackOMimic extends JumpingPathfinderMob {
+public class JackOMimic extends JumpingPathfinderMob implements LightEmitter {
 
   private static final int LIGHT_EMISSION = 15;
   private static final int SOUL_BURST_PARTICLES = 64;
@@ -119,21 +119,8 @@ public class JackOMimic extends JumpingPathfinderMob {
   }
 
   @Override
-  public void onAddedToLevel() {
-    super.onAddedToLevel();
-    LivingLights.add(this, LIGHT_EMISSION);
-  }
-
-  @Override
-  public void onRemovedFromLevel() {
-    super.onRemovedFromLevel();
-    LivingLights.remove(this);
-  }
-
-  @Override
-  public void tick() {
-    super.tick();
-    LivingLights.move(this);
+  public int getLightEmission() {
+    return LIGHT_EMISSION;
   }
 
   private void setupAnimationStates() {

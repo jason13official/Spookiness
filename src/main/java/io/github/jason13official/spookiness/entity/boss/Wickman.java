@@ -6,6 +6,8 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
+import io.github.jason13official.spookiness.lighting.LanternHeads;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -58,7 +60,7 @@ import org.jspecify.annotations.Nullable;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
-public class Wickman extends Monster {
+public class Wickman extends Monster implements LightEmitter {
 
   private static final int VIGIL_SEARCH_UP = 3;
   private static final int VIGIL_SEARCH_DOWN = 4;
@@ -171,6 +173,11 @@ public class Wickman extends Monster {
       default -> {
       }
     }
+  }
+
+  @Override
+  public int getLightEmission() {
+    return this.getVariant() == Variant.WICK && this.getPhase() != Phase.HEADLESS ? LanternHeads.EMISSION : 0;
   }
 
   private void applyModifier(Holder<Attribute> attribute, Identifier id, double amount) {

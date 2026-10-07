@@ -1,6 +1,8 @@
 package io.github.jason13official.spookiness.entity.boss;
 
 import io.github.jason13official.spookiness.entity.FloatingPathfinderMob;
+import io.github.jason13official.spookiness.lighting.LanternHeads;
+import io.github.jason13official.spookiness.lighting.LightEmitter;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -35,7 +37,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class WickmanHead extends FloatingPathfinderMob implements Enemy {
+public class WickmanHead extends FloatingPathfinderMob implements Enemy, LightEmitter {
 
   private static final EntityDataAccessor<Boolean> DATA_FROST = SynchedEntityData.defineId(WickmanHead.class, EntityDataSerializers.BOOLEAN);
 
@@ -93,6 +95,11 @@ public class WickmanHead extends FloatingPathfinderMob implements Enemy {
 
   public boolean isFrost() {
     return this.entityData.get(DATA_FROST);
+  }
+
+  @Override
+  public int getLightEmission() {
+    return this.isFrost() ? 0 : LanternHeads.EMISSION;
   }
 
   @Override

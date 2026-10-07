@@ -207,15 +207,8 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   private void updateSegmentLights() {
     for (GourdwyrmPart segment : this.segments) {
-      boolean shouldLight = this.isAlive() && this.isSegmentAlive(segment.index) && this.isSegmentLit(segment.index);
-      boolean lit = LivingLights.has(segment);
-      if (shouldLight && !lit) {
-        LivingLights.add(segment, SEGMENT_LIGHT);
-      } else if (!shouldLight && lit) {
-        LivingLights.remove(segment);
-      } else if (lit) {
-        LivingLights.move(segment);
-      }
+      boolean lit = this.isAlive() && this.isSegmentAlive(segment.index) && this.isSegmentLit(segment.index);
+      LivingLights.update(segment, lit ? SEGMENT_LIGHT : 0);
     }
   }
 
