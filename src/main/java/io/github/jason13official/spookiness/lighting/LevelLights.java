@@ -67,4 +67,8 @@ public final class LevelLights {
       this.emissions.remove(pos);
     }
   }
+
+  public record Source(long pos, int emission) {
+
+  }
 }

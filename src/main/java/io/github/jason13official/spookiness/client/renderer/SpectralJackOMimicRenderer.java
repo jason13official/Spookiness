@@ -1,6 +1,5 @@
 package io.github.jason13official.spookiness.client.renderer;
 
-import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
 import io.github.jason13official.spookiness.client.renderer.state.JackOMimicRenderState;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
@@ -16,7 +15,6 @@ import org.jspecify.annotations.Nullable;
 
 public class SpectralJackOMimicRenderer extends MobRenderer<SpectralJackOMimic, JackOMimicRenderState, JackOMimicModel<JackOMimicRenderState>> {
 
-  private static final Identifier JACK_O_MIMIC_LOCATION = Spookiness.id("textures/entity/jack_o_mimic/jack_o_mimic.png");
   private static final int SPECTRAL_TINT = 0xA0B8D8FF;
 
   public SpectralJackOMimicRenderer(Context context) {
@@ -26,7 +24,7 @@ public class SpectralJackOMimicRenderer extends MobRenderer<SpectralJackOMimic, 
   @Override
   public Identifier getTextureLocation(JackOMimicRenderState state) {
 
-    return JACK_O_MIMIC_LOCATION;
+    return JackOMimicModel.TEXTURE;
   }
 
   @Override

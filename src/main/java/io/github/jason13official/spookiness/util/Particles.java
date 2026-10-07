@@ -1,6 +1,5 @@
-package io.github.jason13official.spookiness.effect;
+package io.github.jason13official.spookiness.util;
 
-import io.github.jason13official.spookiness.util.SpookyMath;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;

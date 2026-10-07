@@ -2,11 +2,8 @@ package io.github.jason13official.spookiness.companion;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModAttachments;
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,8 +32,6 @@ public final class Hallowing {
   private static final double BLESSING_BONUS = 0.2;
   private static final Identifier BLESSING_ID = Spookiness.id("harvest_blessed");
 
-  private static final Set<Mob> GOALS_APPLIED = Collections.newSetFromMap(new WeakHashMap<>());
-
   public static @Nullable UUID ownerOf(Entity entity) {
 
     Optional<UUID> owner = entity.getExistingDataOrNull(ModAttachments.HALLOWED_OWNER);
@@ -64,7 +59,6 @@ public final class Hallowing {
   public static void unhallow(Mob mob) {
 
     mob.removeData(ModAttachments.HALLOWED_OWNER);
-    GOALS_APPLIED.remove(mob);
     PlayerFollowers.untrack(mob);
     mob.setTarget(null);
     mob.goalSelector.removeAllGoals(goal -> goal instanceof FollowGoal);
@@ -87,7 +81,8 @@ public final class Hallowing {
 
   public static void applyGoals(Mob mob) {
 
-    if (!isHallowed(mob) || !(mob instanceof PathfinderMob pathfinder) || !GOALS_APPLIED.add(mob)) {
+    if (!isHallowed(mob) || !(mob instanceof PathfinderMob pathfinder)
+        || mob.goalSelector.getAvailableGoals().stream().anyMatch(goal -> goal.getGoal() instanceof FollowGoal)) {
       return;
     }
 

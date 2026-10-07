@@ -2,7 +2,7 @@ package io.github.jason13official.spookiness.companion;
 
 import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.util.SpookyMath;
-import io.github.jason13official.spookiness.effect.Particles;
+import io.github.jason13official.spookiness.util.Particles;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.network.chat.Component;

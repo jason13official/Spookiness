@@ -6,6 +6,7 @@ import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import net.minecraft.data.PackOutput;
+import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 
 public class SpookinessLanguageProvider extends LanguageProvider {
@@ -24,38 +25,24 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModItems.PIECE_OF_LAMENT_ONE, "Piece of Lament, One");
     this.add(ModItems.PIECE_OF_LAMENT_TWO, "Piece of Lament, Two");
 
-    this.add(ModItems.JACK_O_MIMIC_SPAWN_EGG, "Jack o'Mimic Spawn Egg");
-    this.add(ModItems.FLOATING_CANDLES_SPAWN_EGG, "Floating Candles Spawn Egg");
-    this.add(ModItems.FLOATING_BOOK_SPAWN_EGG, "Floating Book Spawn Egg");
-    this.add(ModItems.FLOATING_SWORD_SPAWN_EGG, "Floating Sword Spawn Egg");
-    this.add(ModItems.FLOATING_SHEARS_SPAWN_EGG, "Floating Shears Spawn Egg");
-    this.add(ModItems.FLOATING_HOE_SPAWN_EGG, "Floating Hoe Spawn Egg");
-    this.add(ModItems.FLOATING_LANTERN_SPAWN_EGG, "Floating Lantern Spawn Egg");
-    this.add(ModItems.FLOATING_SKULL_SPAWN_EGG, "Floating Skull Spawn Egg");
-    this.add(ModItems.HAUNTED_ARMOR_STAND_SPAWN_EGG, "Haunted Armor Stand Spawn Egg");
-    this.add(ModItems.SPECTRAL_JACK_O_MIMIC_SPAWN_EGG, "Spectral Jack o'Mimic Spawn Egg");
-    this.add(ModItems.WICKMAN_SPAWN_EGG, "Wickman Spawn Egg");
-    this.add(ModItems.HALLOWED_MOTHER_SPAWN_EGG, "Hallowed Mother Spawn Egg");
-    this.add(ModItems.GOURDWYRM_SPAWN_EGG, "Gourdwyrm Spawn Egg");
-
-    this.add(ModEntities.JACK_O_MIMIC, "Jack o'Lantern");
-    this.add(ModEntities.FLOATING_CANDLES, "Floating Candles");
-    this.add(ModEntities.FLOATING_BOOK, "Floating Book");
-    this.add(ModEntities.FLOATING_SWORD, "Floating Sword");
-    this.add(ModEntities.FLOATING_SHEARS, "Floating Shears");
-    this.add(ModEntities.FLOATING_HOE, "Floating Hoe");
-    this.add(ModEntities.FLOATING_LANTERN, "Floating Lantern");
-    this.add(ModEntities.FLOATING_SKULL, "Floating Skull");
-    this.add(ModEntities.HAUNTED_ARMOR_STAND, "Haunted Armor Stand");
-    this.add(ModEntities.SPECTRAL_JACK_O_MIMIC, "Spectral Jack o'Mimic");
-    this.add(ModEntities.WICKMAN, "The Wickman");
+    this.addEntity(ModEntities.JACK_O_MIMIC, "Jack o'Lantern", "Jack o'Mimic");
+    this.addEntity(ModEntities.FLOATING_CANDLES, "Floating Candles");
+    this.addEntity(ModEntities.FLOATING_BOOK, "Floating Book");
+    this.addEntity(ModEntities.FLOATING_SWORD, "Floating Sword");
+    this.addEntity(ModEntities.FLOATING_SHEARS, "Floating Shears");
+    this.addEntity(ModEntities.FLOATING_HOE, "Floating Hoe");
+    this.addEntity(ModEntities.FLOATING_LANTERN, "Floating Lantern");
+    this.addEntity(ModEntities.FLOATING_SKULL, "Floating Skull");
+    this.addEntity(ModEntities.HAUNTED_ARMOR_STAND, "Haunted Armor Stand");
+    this.addEntity(ModEntities.SPECTRAL_JACK_O_MIMIC, "Spectral Jack o'Mimic");
+    this.addEntity(ModEntities.WICKMAN, "The Wickman", "Wickman");
     this.add("entity.spookiness.frostwick", "The Frostwick");
-    this.add(ModEntities.WICKMAN_HEAD, "Wickman's Head");
-    this.add(ModEntities.VIGIL_CANDLE, "Vigil Candle");
-    this.add(ModEntities.HALLOWED_MOTHER, "Hallowed Mother");
-    this.add(ModEntities.GOURDWYRM, "Gourdwyrm");
-    this.add(ModEntities.PUMPKIN_BOMB, "Pumpkin Bomb");
-    this.add(ModEntities.FROST_VOLLEY, "Frost Volley");
+    this.addEntity(ModEntities.WICKMAN_HEAD, "Wickman's Head");
+    this.addEntity(ModEntities.VIGIL_CANDLE, "Vigil Candle");
+    this.addEntity(ModEntities.HALLOWED_MOTHER, "Hallowed Mother");
+    this.addEntity(ModEntities.GOURDWYRM, "Gourdwyrm");
+    this.addEntity(ModEntities.PUMPKIN_BOMB, "Pumpkin Bomb");
+    this.addEntity(ModEntities.FROST_VOLLEY, "Frost Volley");
 
     this.add("item.spookiness.pumpkin_mace.pumpkin_kills", "Pumpkin Kills: %s/%s");
     this.add("item.spookiness.pumpkin_mace.harvest", "Harvest: %s/%s");
@@ -90,5 +77,16 @@ public class SpookinessLanguageProvider extends LanguageProvider {
       this.add(SpookinessAdvancementProvider.key(name, "description"), text[1]);
     });
     this.add("death.attack.spookiness.hallowing.player", "%1$s gave too much of themselves to the harvest");
+  }
+
+  private void addEntity(EntityType<?> type, String name) {
+
+    this.addEntity(type, name, name);
+  }
+
+  private void addEntity(EntityType<?> type, String name, String eggName) {
+
+    this.add(type, name);
+    ModItems.SPAWN_EGGS.stream().filter(egg -> egg.type() == type).forEach(egg -> this.add(egg.item(), eggName + " Spawn Egg"));
   }
 }

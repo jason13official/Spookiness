@@ -2,11 +2,8 @@ package io.github.jason13official.spookiness.entity.boss.mother;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.entity.JackOMimic;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.Set;
-import java.util.WeakHashMap;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -40,8 +37,6 @@ public final class MotherBrood {
   private static final double HERD_RANGE = 12.0;
   private static final int HERD_PRIORITY = 1;
 
-  private static final Set<Mob> HERDING = Collections.newSetFromMap(new WeakHashMap<>());
-
   public static boolean isBrood(Entity entity) {
     return entity instanceof Mob && entity.entityTags().contains(TAG);
   }
@@ -62,7 +57,8 @@ public final class MotherBrood {
 
   public static void applyGoals(Mob mob) {
 
-    if (mob instanceof PathfinderMob pathfinder && isBrood(mob) && HERDING.add(mob)) {
+    if (mob instanceof PathfinderMob pathfinder && isBrood(mob)
+        && mob.goalSelector.getAvailableGoals().stream().noneMatch(goal -> goal.getGoal() instanceof HerdGoal)) {
       mob.goalSelector.addGoal(HERD_PRIORITY, new HerdGoal(pathfinder));
     }
   }

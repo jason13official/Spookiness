@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.ritual;
 
-import io.github.jason13official.spookiness.effect.Particles;
+import io.github.jason13official.spookiness.util.Particles;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;

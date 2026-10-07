@@ -1,7 +1,6 @@
 package io.github.jason13official.spookiness.client.renderer.boss;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.HallowedMotherModel;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
 import io.github.jason13official.spookiness.client.renderer.state.HallowedMotherRenderState;
@@ -16,7 +15,6 @@ import net.minecraft.world.entity.Entity;
 
 public class HallowedMotherRenderer extends MobRenderer<HallowedMother, HallowedMotherRenderState, HallowedMotherModel> {
 
-  private static final Identifier TEXTURE = Spookiness.id("textures/entity/jack_o_mimic/jack_o_mimic.png");
   private static final float SCALE = HallowedMother.SCALE;
   private static final int FULL_LIGHT = 15;
 
@@ -31,7 +29,7 @@ public class HallowedMotherRenderer extends MobRenderer<HallowedMother, Hallowed
 
   @Override
   public Identifier getTextureLocation(HallowedMotherRenderState state) {
-    return TEXTURE;
+    return JackOMimicModel.TEXTURE;
   }
 
   @Override

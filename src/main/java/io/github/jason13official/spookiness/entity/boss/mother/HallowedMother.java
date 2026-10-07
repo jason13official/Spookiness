@@ -6,12 +6,12 @@ import io.github.jason13official.spookiness.world.SpookyTime;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
-import io.github.jason13official.spookiness.lighting.LanternHeads;
+import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.effect.Particles;
+import io.github.jason13official.spookiness.util.Particles;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
@@ -135,7 +135,7 @@ public class HallowedMother extends SpookyBoss implements LightEmitter {
 
   @Override
   public int getLightEmission() {
-    return LanternHeads.EMISSION;
+    return LivingLights.LANTERN_EMISSION;
   }
 
   public @Nullable Entity getTethered() {

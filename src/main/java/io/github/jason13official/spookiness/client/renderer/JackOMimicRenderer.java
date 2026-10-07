@@ -1,7 +1,6 @@
 package io.github.jason13official.spookiness.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
 import io.github.jason13official.spookiness.client.renderer.state.JackOMimicRenderState;
 import io.github.jason13official.spookiness.entity.JackOMimic;
@@ -13,7 +12,6 @@ import net.minecraft.resources.Identifier;
 
 public class JackOMimicRenderer extends LivingEntityRenderer<JackOMimic, JackOMimicRenderState, JackOMimicModel<JackOMimicRenderState>> {
 
-  private static final Identifier JACK_O_MIMIC_LOCATION = Spookiness.id("textures/entity/jack_o_mimic/jack_o_mimic.png");
 
   public JackOMimicRenderer(Context context) {
     // super(context, new JackOMimicModel<>(context.bakeLayer(JackOMimicModel.LAYER_LOCATION)), 1.0f);
@@ -23,7 +21,7 @@ public class JackOMimicRenderer extends LivingEntityRenderer<JackOMimic, JackOMi
   @Override
   public Identifier getTextureLocation(JackOMimicRenderState livingEntityRenderState) {
 
-    return JACK_O_MIMIC_LOCATION;
+    return JackOMimicModel.TEXTURE;
   }
 
   @Override

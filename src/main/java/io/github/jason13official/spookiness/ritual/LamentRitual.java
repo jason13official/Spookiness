@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.ritual;
 
-import io.github.jason13official.spookiness.effect.Particles;
+import io.github.jason13official.spookiness.util.Particles;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModAttachments;

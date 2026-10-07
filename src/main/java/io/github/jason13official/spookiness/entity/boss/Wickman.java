@@ -10,7 +10,7 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
-import io.github.jason13official.spookiness.lighting.LanternHeads;
+import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
@@ -169,7 +169,7 @@ public class Wickman extends SpookyBoss implements LightEmitter {
 
   @Override
   public int getLightEmission() {
-    return this.getVariant() == Variant.WICK && this.getPhase() != Phase.HEADLESS ? LanternHeads.EMISSION : 0;
+    return this.getVariant() == Variant.WICK && this.getPhase() != Phase.HEADLESS ? LivingLights.LANTERN_EMISSION : 0;
   }
 
   private void applyModifier(Holder<Attribute> attribute, Identifier id, double amount) {

@@ -41,21 +41,7 @@ public class ModItems {
 
   public static Item GOURDWYRM_TROPHY;
 
-  public static Item JACK_O_MIMIC_SPAWN_EGG;
-  public static Item FLOATING_CANDLES_SPAWN_EGG;
-  public static Item FLOATING_BOOK_SPAWN_EGG;
-  public static Item FLOATING_SWORD_SPAWN_EGG;
-  public static Item FLOATING_SHEARS_SPAWN_EGG;
-  public static Item FLOATING_HOE_SPAWN_EGG;
-  public static Item FLOATING_LANTERN_SPAWN_EGG;
-  public static Item FLOATING_SKULL_SPAWN_EGG;
-  public static Item HAUNTED_ARMOR_STAND_SPAWN_EGG;
-  public static Item SPECTRAL_JACK_O_MIMIC_SPAWN_EGG;
-  public static Item WICKMAN_SPAWN_EGG;
-  public static Item HALLOWED_MOTHER_SPAWN_EGG;
-  public static Item GOURDWYRM_SPAWN_EGG;
-
-  public static List<Item> SPAWN_EGGS = new ArrayList<>();
+  public static List<SpawnEgg> SPAWN_EGGS = new ArrayList<>();
 
   public static List<Item> CREATIVE_TAB_ITEMS = new ArrayList<>();
 
@@ -81,19 +67,19 @@ public class ModItems {
         .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setAsset(EquipmentAssets.GOLD).setEquipSound(SoundEvents.ARMOR_EQUIP_GOLD).build()), consumer);
 
     SPAWN_EGGS.clear();
-    JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.JACK_O_MIMIC, consumer);
-    FLOATING_CANDLES_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_CANDLES, consumer);
-    FLOATING_BOOK_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_BOOK, consumer);
-    FLOATING_SWORD_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SWORD, consumer);
-    FLOATING_SHEARS_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SHEARS, consumer);
-    FLOATING_HOE_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_HOE, consumer);
-    FLOATING_LANTERN_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_LANTERN, consumer);
-    FLOATING_SKULL_SPAWN_EGG = registerSpawnEgg(ModEntities.FLOATING_SKULL, consumer);
-    HAUNTED_ARMOR_STAND_SPAWN_EGG = registerSpawnEgg(ModEntities.HAUNTED_ARMOR_STAND, consumer);
-    SPECTRAL_JACK_O_MIMIC_SPAWN_EGG = registerSpawnEgg(ModEntities.SPECTRAL_JACK_O_MIMIC, consumer);
-    WICKMAN_SPAWN_EGG = registerSpawnEgg(ModEntities.WICKMAN, consumer);
-    HALLOWED_MOTHER_SPAWN_EGG = registerSpawnEgg(ModEntities.HALLOWED_MOTHER, consumer);
-    GOURDWYRM_SPAWN_EGG = registerSpawnEgg(ModEntities.GOURDWYRM, consumer);
+    registerSpawnEgg(ModEntities.JACK_O_MIMIC, 0xE38A1D, 0x3B2508, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_CANDLES, 0xEFE3C2, 0xF5A623, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_BOOK, 0x6E4325, 0xE5D9AE, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_SWORD, 0xB8BEC8, 0x5E3FAE, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_SHEARS, 0xD8D8D8, 0x8E4A2E, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_HOE, 0x7A5A35, 0x6B9A3A, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_LANTERN, 0x3B3F4A, 0x5FE3E0, consumer);
+    registerSpawnEgg(ModEntities.FLOATING_SKULL, 0xC1C1C1, 0x5FE3E0, consumer);
+    registerSpawnEgg(ModEntities.HAUNTED_ARMOR_STAND, 0x9C7B4E, 0x4A3A2A, consumer);
+    registerSpawnEgg(ModEntities.SPECTRAL_JACK_O_MIMIC, 0x5FE3E0, 0x1A4E7A, consumer);
+    registerSpawnEgg(ModEntities.WICKMAN, 0xC9A65A, 0xFF7A1A, consumer);
+    registerSpawnEgg(ModEntities.HALLOWED_MOTHER, 0x8A5A2B, 0x4E7A2E, consumer);
+    registerSpawnEgg(ModEntities.GOURDWYRM, 0xD9731E, 0x3B5A1E, consumer);
   }
 
   // region vanilla registration methods
@@ -108,11 +94,10 @@ public class ModItems {
     return ResourceKey.create(Registries.ITEM, blockName.identifier());
   }
 
-  private static Item registerSpawnEgg(EntityType<?> type, BiConsumer<Item, Identifier> consumer) {
+  private static void registerSpawnEgg(EntityType<?> type, int baseColor, int spotColor, BiConsumer<Item, Identifier> consumer) {
 
     Item egg = registerItem(ResourceKey.create(Registries.ITEM, EntityType.getKey(type).withSuffix("_spawn_egg")), AlliedSpawnEggItem::new, (new Item.Properties()).spawnEgg(type), consumer);
-    SPAWN_EGGS.add(egg);
-    return egg;
+    SPAWN_EGGS.add(new SpawnEgg(egg, type, baseColor, spotColor));
   }
 
   private static Item registerBlock(Block block, BiConsumer<Item, Identifier> consumer) {
@@ -153,4 +138,8 @@ public class ModItems {
   }
 
   // endregion vanilla registration methods
+
+  public record SpawnEgg(Item item, EntityType<?> type, int baseColor, int spotColor) {
+
+  }
 }

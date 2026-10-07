@@ -20,7 +20,7 @@ import org.jspecify.annotations.Nullable;
 
 public class FloatingToolRenderer extends MobRenderer<FloatingTool, FloatingToolRenderState, FloatingToolModel> {
 
-  private static final Identifier FLOATING_SWORD_LOCATION = Spookiness.id("textures/entity/floating_sword/floating_sword.png");
+  private static final Identifier TEXTURE = Spookiness.id("textures/entity/floating_tool/floating_tool.png");
   private static final float HIDDEN_ALPHA = 0.12F;
 
   public FloatingToolRenderer(Context context) {
@@ -31,7 +31,7 @@ public class FloatingToolRenderer extends MobRenderer<FloatingTool, FloatingTool
   @Override
   public Identifier getTextureLocation(FloatingToolRenderState state) {
 
-    return FLOATING_SWORD_LOCATION;
+    return TEXTURE;
   }
 
   @Override

@@ -70,19 +70,9 @@ public class SpookinessModelProvider extends ModelProvider {
 
     Identifier spawnEgg = ModelTemplates.TWO_LAYERED_ITEM.create(Spookiness.id("item/spawn_egg"),
         TextureMapping.layered(new Material(Spookiness.id("item/spawn_egg")), new Material(Spookiness.id("item/spawn_egg_overlay"))), itemModels.modelOutput);
-    spawnEgg(itemModels, ModItems.JACK_O_MIMIC_SPAWN_EGG, spawnEgg, 0xE38A1D, 0x3B2508);
-    spawnEgg(itemModels, ModItems.FLOATING_CANDLES_SPAWN_EGG, spawnEgg, 0xEFE3C2, 0xF5A623);
-    spawnEgg(itemModels, ModItems.FLOATING_BOOK_SPAWN_EGG, spawnEgg, 0x6E4325, 0xE5D9AE);
-    spawnEgg(itemModels, ModItems.FLOATING_SWORD_SPAWN_EGG, spawnEgg, 0xB8BEC8, 0x5E3FAE);
-    spawnEgg(itemModels, ModItems.FLOATING_SHEARS_SPAWN_EGG, spawnEgg, 0xD8D8D8, 0x8E4A2E);
-    spawnEgg(itemModels, ModItems.FLOATING_HOE_SPAWN_EGG, spawnEgg, 0x7A5A35, 0x6B9A3A);
-    spawnEgg(itemModels, ModItems.FLOATING_LANTERN_SPAWN_EGG, spawnEgg, 0x3B3F4A, 0x5FE3E0);
-    spawnEgg(itemModels, ModItems.FLOATING_SKULL_SPAWN_EGG, spawnEgg, 0xC1C1C1, 0x5FE3E0);
-    spawnEgg(itemModels, ModItems.HAUNTED_ARMOR_STAND_SPAWN_EGG, spawnEgg, 0x9C7B4E, 0x4A3A2A);
-    spawnEgg(itemModels, ModItems.SPECTRAL_JACK_O_MIMIC_SPAWN_EGG, spawnEgg, 0x5FE3E0, 0x1A4E7A);
-    spawnEgg(itemModels, ModItems.WICKMAN_SPAWN_EGG, spawnEgg, 0xC9A65A, 0xFF7A1A);
-    spawnEgg(itemModels, ModItems.HALLOWED_MOTHER_SPAWN_EGG, spawnEgg, 0x8A5A2B, 0x4E7A2E);
-    spawnEgg(itemModels, ModItems.GOURDWYRM_SPAWN_EGG, spawnEgg, 0xD9731E, 0x3B5A1E);
+    for (ModItems.SpawnEgg egg : ModItems.SPAWN_EGGS) {
+      spawnEgg(itemModels, egg.item(), spawnEgg, egg.baseColor(), egg.spotColor());
+    }
 
     blockModels.createParticleOnlyBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, Blocks.CARVED_PUMPKIN);
     Identifier trophy = ModelLocationUtils.getModelLocation(ModBlocks.GOURDWYRM_TROPHY);

@@ -13,10 +13,12 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.Identifier;
 
 public class JackOMimicModel<T extends JackOMimicRenderState> extends EntityModel<T> {
 
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Spookiness.id("jack_o_mimic"), "main");
+  public static final Identifier TEXTURE = Spookiness.id("textures/entity/jack_o_mimic/jack_o_mimic.png");
 
   private final ModelPart head;
   private final ModelPart cranium;

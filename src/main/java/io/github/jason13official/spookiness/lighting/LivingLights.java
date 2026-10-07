@@ -1,5 +1,8 @@
 package io.github.jason13official.spookiness.lighting;
 
+import io.github.jason13official.spookiness.entity.PumpkinHeads;
+import io.github.jason13official.spookiness.item.PumpkinMaceItem;
+import io.github.jason13official.spookiness.lighting.LevelLights.Source;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -9,6 +12,8 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
 public final class LivingLights {
+
+  public static final int LANTERN_EMISSION = 15;
 
   private static final Map<BlockGetter, LevelLights> LEVELS = new ConcurrentHashMap<>();
 
@@ -23,7 +28,7 @@ public final class LivingLights {
     if (entity instanceof LightEmitter emitter) {
       update(entity, emitter.getLightEmission());
     } else if (entity instanceof LivingEntity living) {
-      update(entity, LanternHeads.getEmission(living));
+      update(entity, getEmission(living));
     }
   }
 
@@ -64,6 +69,12 @@ public final class LivingLights {
   public static void unload(BlockGetter level) {
 
     LEVELS.remove(level);
+  }
+
+  private static int getEmission(LivingEntity entity) {
+
+    int fromHead = PumpkinHeads.isLit(entity) ? LANTERN_EMISSION : 0;
+    return Math.max(fromHead, Math.max(PumpkinMaceItem.getLight(entity.getMainHandItem()), PumpkinMaceItem.getLight(entity.getOffhandItem())));
   }
 
   private static void checkBlock(Level level, long pos) {

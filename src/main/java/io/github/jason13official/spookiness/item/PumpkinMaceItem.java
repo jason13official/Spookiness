@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.entity.PumpkinHeads;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
-import io.github.jason13official.spookiness.effect.Particles;
+import io.github.jason13official.spookiness.util.Particles;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.List;

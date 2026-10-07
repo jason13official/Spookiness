@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.effect.Particles;
+import io.github.jason13official.spookiness.util.Particles;
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import java.util.Comparator;
 import java.util.EnumSet;
