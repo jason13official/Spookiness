@@ -9,13 +9,8 @@ import io.github.jason13official.spookiness.world.NetherrealmArena;
 import java.util.UUID;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -25,6 +20,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import net.minecraft.util.ByIdMap;
 import net.minecraft.world.BossEvent;
@@ -57,31 +55,12 @@ public class Gourdwyrm extends Mob implements Enemy {
   private static final float UNLIT_MULTIPLIER = 0.25F;
   private static final int LIT_INTERVAL = 200;
   private static final int LIT_COUNT = 3;
-  private static final double CIRCLE_RADIUS = 28.0;
-  private static final double CIRCLE_HEIGHT = 14.0;
-  private static final double CIRCLE_BOB = 4.0;
-  private static final double CIRCLE_SPEED = 0.012;
-  private static final double FLY_SPEED = 0.6;
-  private static final double SHED_SPEED_MULTIPLIER = 1.35;
+  static final double CIRCLE_HEIGHT = 14.0;
+  static final double FLY_SPEED = 0.6;
+  static final double SHED_SPEED_MULTIPLIER = 1.35;
   private static final int SHED_LENGTH = 16;
   private static final float SHED_HEALTH = 0.3F;
   private static final double ARENA_RANGE = 64.0;
-  private static final int CIRCLE_TICKS = 240;
-  private static final int SHED_CIRCLE_TICKS = 160;
-  private static final int EMBER_INTERVAL = 50;
-  private static final double BURROW_DEPTH = 10.0;
-  private static final double DIVE_SPEED = 1.0;
-  private static final int DIVE_TICKS = 80;
-  private static final int RIPPLE_TICKS = 40;
-  private static final double GEYSER_SPEED = 1.6;
-  private static final double GEYSER_RADIUS = 3.0;
-  private static final float GEYSER_DAMAGE = 10.0F;
-  private static final int STUN_TICKS = 120;
-  private static final double STUN_HEIGHT = 4.0;
-  private static final int WINDUP_TICKS = 20;
-  private static final int CHARGE_TICKS = 50;
-  private static final double CHARGE_SPEED = 1.4;
-  private static final double CHARGE_OVERSHOOT = 12.0;
   private static final float CONTACT_DAMAGE = 10.0F;
   private static final double HEAD_REACH = 1.5;
   private static final double SEGMENT_REACH = 0.4;
@@ -93,11 +72,7 @@ public class Gourdwyrm extends Mob implements Enemy {
       BossEvent.BossBarOverlay.NOTCHED_12);
 
   private @Nullable BlockPos anchor;
-  private double circleAngle;
-  private int phaseTicks;
-  private int stage;
-  private @Nullable Vec3 strikePoint;
-  private boolean burrowNext = true;
+  private final Map<Phase, GourdwyrmPhase> phases = new EnumMap<>(Phase.class);
 
   public Gourdwyrm(EntityType<? extends Gourdwyrm> type, Level level) {
     super(type, level);
@@ -217,35 +192,31 @@ public class Gourdwyrm extends Mob implements Enemy {
       this.shed(level);
     }
 
-    this.phaseTicks++;
-    switch (this.getPhase()) {
-      case BURROW -> this.tickBurrow(level);
-      case LANTERN_RINGS -> this.tickStunned(level);
-      case FINAL -> this.tickCharge(level);
-      default -> this.tickCircling(level);
-    }
+    this.phase(this.getPhase()).serverTick(level);
 
     if (this.getPhase() != Phase.LANTERN_RINGS && this.tickCount % LIT_INTERVAL == 0) {
       this.relightLanterns();
     }
   }
 
-  private boolean isShed() {
+  boolean isShed() {
     return this.getLength() <= SHED_LENGTH;
   }
 
-  private double speed() {
+  double speed() {
     return this.isShed() ? FLY_SPEED * SHED_SPEED_MULTIPLIER : FLY_SPEED;
   }
 
-  private void setPhase(Phase phase) {
-    this.entityData.set(DATA_PHASE, phase.getId());
-    this.phaseTicks = 0;
-    this.stage = 0;
-    this.strikePoint = null;
+  private GourdwyrmPhase phase(Phase phase) {
+    return this.phases.computeIfAbsent(phase, key -> key.factory.apply(this));
   }
 
-  private @Nullable Player pickTarget(ServerLevel level) {
+  void setPhase(Phase phase) {
+    this.entityData.set(DATA_PHASE, phase.getId());
+    this.phase(phase).begin();
+  }
+
+  @Nullable Player pickTarget(ServerLevel level) {
     if (this.anchor == null) {
       return null;
     }
@@ -255,155 +226,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     return players.isEmpty() ? null : players.get(this.random.nextInt(players.size()));
   }
 
-  private void tickCircling(ServerLevel level) {
-
-    this.circleAngle += CIRCLE_SPEED * (this.isShed() ? SHED_SPEED_MULTIPLIER : 1.0);
-    Vec3 center = Vec3.atBottomCenterOf(this.anchor);
-    Vec3 wanted = center.add(Math.cos(this.circleAngle) * CIRCLE_RADIUS, CIRCLE_HEIGHT + Math.sin(this.circleAngle * 3.0) * CIRCLE_BOB,
-        Math.sin(this.circleAngle) * CIRCLE_RADIUS);
-    this.flyToward(wanted, this.speed());
-
-    if (this.phaseTicks % EMBER_INTERVAL == 0) {
-      Player target = this.pickTarget(level);
-      if (target != null) {
-        this.spitEmber(level, target);
-      }
-    }
-
-    if (this.phaseTicks >= (this.isShed() ? SHED_CIRCLE_TICKS : CIRCLE_TICKS) && this.pickTarget(level) != null) {
-      boolean burrow = !this.isShed() || this.burrowNext;
-      this.burrowNext = !this.burrowNext;
-      this.setPhase(burrow ? Phase.BURROW : Phase.FINAL);
-    }
-  }
-
-  private void spitEmber(ServerLevel level, Player target) {
-    Vec3 mouth = this.getEyePosition();
-    Vec3 aim = target.getEyePosition().subtract(mouth).normalize();
-    SmallFireball ember = new SmallFireball(level, this, aim);
-    ember.setPos(mouth.x, mouth.y, mouth.z);
-    level.addFreshEntity(ember);
-    this.playSound(SoundEvents.BLAZE_SHOOT, 3.0F, 0.5F);
-  }
-
-  private void tickBurrow(ServerLevel level) {
-
-    if (this.stage == 0) {
-      if (this.strikePoint == null) {
-        Player target = this.pickTarget(level);
-        if (target == null) {
-          this.setPhase(Phase.CIRCLING);
-          return;
-        }
-        this.strikePoint = new Vec3(target.getX(), Math.floor(target.getY()), target.getZ());
-        this.playSound(SoundEvents.ENDER_DRAGON_GROWL, 4.0F, 0.8F);
-      }
-      Vec3 below = this.strikePoint.subtract(0.0, BURROW_DEPTH, 0.0);
-      this.flyToward(below, DIVE_SPEED);
-      this.contactDamage(level);
-      if (this.position().distanceToSqr(below) < 4.0 || this.phaseTicks >= DIVE_TICKS) {
-        this.stage = 1;
-        this.phaseTicks = 0;
-        Player target = this.pickTarget(level);
-        if (target != null && target.position().distanceToSqr(this.strikePoint) < 24.0 * 24.0) {
-          this.strikePoint = new Vec3(target.getX(), Math.floor(target.getY()), target.getZ());
-        }
-      }
-      return;
-    }
-
-    Vec3 point = this.strikePoint;
-    if (this.stage == 1) {
-      this.setDeltaMovement(Vec3.ZERO);
-      double radius = GEYSER_RADIUS * this.phaseTicks / RIPPLE_TICKS;
-      BlockState ground = level.getBlockState(BlockPos.containing(point).below());
-      for (int i = 0; i < 12; i++) {
-        Vec3 ripple = SpookyMath.onRing(point, SpookyMath.ringAngle(this.phaseTicks * 0.2, i, 12), radius);
-        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, ground), ripple.x, ripple.y + 0.1, ripple.z, 1, 0.05, 0.0, 0.05, 0.0);
-      }
-      if (this.phaseTicks % 10 == 0) {
-        level.playSound(null, point.x, point.y, point.z, SoundEvents.WARDEN_DIG, SoundSource.HOSTILE, 2.0F, 0.6F + this.phaseTicks / (float) RIPPLE_TICKS * 0.4F);
-      }
-      if (this.phaseTicks >= RIPPLE_TICKS) {
-        this.stage = 2;
-        this.phaseTicks = 0;
-        this.snapTo(point.x, point.y - BURROW_DEPTH * 0.5, point.z, this.getYRot(), this.getXRot());
-        this.erupt(level, point);
-      }
-      return;
-    }
-
-    this.setDeltaMovement(0.0, GEYSER_SPEED, 0.0);
-    this.contactDamage(level);
-    if (this.getY() >= this.anchor.getY() + CIRCLE_HEIGHT) {
-      this.setPhase(Phase.CIRCLING);
-    }
-  }
-
-  private void erupt(ServerLevel level, Vec3 point) {
-
-    level.playSound(null, point.x, point.y, point.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 3.0F, 0.7F);
-    level.sendParticles(ParticleTypes.LAVA, point.x, point.y + 0.5, point.z, 40, GEYSER_RADIUS * 0.5, 0.5, GEYSER_RADIUS * 0.5, 0.2);
-    level.sendParticles(ParticleTypes.FLAME, point.x, point.y + 1.0, point.z, 80, GEYSER_RADIUS * 0.5, 2.0, GEYSER_RADIUS * 0.5, 0.1);
-    level.sendParticles(ParticleTypes.EXPLOSION, point.x, point.y + 1.0, point.z, 3, 1.0, 0.5, 1.0, 0.0);
-
-    AABB area = new AABB(point, point).inflate(GEYSER_RADIUS, 2.0, GEYSER_RADIUS).expandTowards(0.0, 4.0, 0.0);
-    for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area, entity -> entity != this && entity.isAlive())) {
-      victim.hurtServer(level, this.damageSources().mobAttack(this), GEYSER_DAMAGE);
-      victim.setDeltaMovement(victim.getDeltaMovement().add(0.0, 1.2, 0.0));
-      victim.hurtMarked = true;
-    }
-  }
-
-  private void tickStunned(ServerLevel level) {
-
-    Vec3 rest = Vec3.atBottomCenterOf(this.anchor).add(0.0, STUN_HEIGHT, 0.0);
-    this.flyToward(rest, FLY_SPEED * 0.4);
-    if (this.phaseTicks % 5 == 0) {
-      level.sendParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY() + this.getBbHeight(), this.getZ(), 4, 0.6, 0.3, 0.6, 0.02);
-    }
-    if (this.phaseTicks >= STUN_TICKS) {
-      this.relightLanterns();
-      this.playSound(SoundEvents.ENDER_DRAGON_GROWL, 4.0F, 0.7F);
-      this.setPhase(Phase.CIRCLING);
-    }
-  }
-
-  private void stun() {
-    this.setPhase(Phase.LANTERN_RINGS);
-    this.playSound(SoundEvents.ENDER_DRAGON_HURT, 4.0F, 0.5F);
-    this.playSound(SoundEvents.FIRE_EXTINGUISH, 4.0F, 0.5F);
-  }
-
-  private void tickCharge(ServerLevel level) {
-
-    if (this.stage == 0) {
-      Player target = this.pickTarget(level);
-      if (target == null) {
-        this.setPhase(Phase.CIRCLING);
-        return;
-      }
-      this.setDeltaMovement(this.getDeltaMovement().scale(0.8));
-      this.faceToward(target.position().subtract(this.position()));
-      if (this.phaseTicks >= WINDUP_TICKS) {
-        Vec3 aim = target.getEyePosition().subtract(this.position()).normalize();
-        this.strikePoint = target.getEyePosition().add(aim.scale(CHARGE_OVERSHOOT));
-        this.stage = 1;
-        this.phaseTicks = 0;
-        this.playSound(SoundEvents.ENDER_DRAGON_GROWL, 4.0F, 1.2F);
-        level.sendParticles(ParticleTypes.FLAME, this.getX(), this.getY() + 1.0, this.getZ(), 60, 2.5, 2.5, 2.5, 0.2);
-      }
-      return;
-    }
-
-    this.flyToward(this.strikePoint, CHARGE_SPEED);
-    this.contactDamage(level);
-    if (this.phaseTicks >= CHARGE_TICKS || this.position().distanceToSqr(this.strikePoint) < 4.0) {
-      this.setPhase(Phase.CIRCLING);
-    }
-  }
-
-  private void contactDamage(ServerLevel level) {
+  void contactDamage(ServerLevel level) {
     this.ram(level, this.getBoundingBox().inflate(HEAD_REACH));
     for (GourdwyrmPart segment : this.body.segments()) {
       if (this.isSegmentAlive(segment.index)) {
@@ -435,7 +258,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     this.playSound(SoundEvents.WOOD_BREAK, 4.0F, 0.5F);
   }
 
-  private void faceToward(Vec3 direction) {
+  void faceToward(Vec3 direction) {
     if (direction.horizontalDistanceSqr() > 1.0E-4) {
       float yRot = SpookyMath.yawToward(direction);
       this.setYRot(yRot);
@@ -444,7 +267,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     }
   }
 
-  private void flyToward(Vec3 wanted, double speed) {
+  void flyToward(Vec3 wanted, double speed) {
 
     Vec3 delta = wanted.subtract(this.position());
     Vec3 velocity = delta.lengthSqr() > speed * speed ? delta.normalize().scale(speed) : delta;
@@ -462,7 +285,7 @@ public class Gourdwyrm extends Mob implements Enemy {
     this.move(MoverType.SELF, this.getDeltaMovement());
   }
 
-  private void relightLanterns() {
+  void relightLanterns() {
 
     int lit = 0;
     int length = this.getLength();
@@ -483,7 +306,7 @@ public class Gourdwyrm extends Mob implements Enemy {
       this.entityData.set(DATA_LIT, remaining);
       this.playSound(SoundEvents.CANDLE_EXTINGUISH, 3.0F, 0.6F);
       if (remaining == 0 && this.getPhase() != Phase.LANTERN_RINGS) {
-        this.stun();
+        this.setPhase(Phase.LANTERN_RINGS);
       }
     }
     boolean exposed = lit || this.getPhase() == Phase.LANTERN_RINGS;
@@ -597,17 +420,19 @@ public class Gourdwyrm extends Mob implements Enemy {
   }
 
   public enum Phase {
-    CIRCLING(0),
-    BURROW(1),
-    LANTERN_RINGS(2),
-    FINAL(3);
+    CIRCLING(0, CirclingPhase::new),
+    BURROW(1, BurrowPhase::new),
+    LANTERN_RINGS(2, StunnedPhase::new),
+    FINAL(3, ChargePhase::new);
 
     private static final IntFunction<Phase> BY_ID = ByIdMap.continuous(Phase::getId, values(), ByIdMap.OutOfBoundsStrategy.ZERO);
 
     private final int id;
+    private final Function<Gourdwyrm, GourdwyrmPhase> factory;
 
-    Phase(int id) {
+    Phase(int id, Function<Gourdwyrm, GourdwyrmPhase> factory) {
       this.id = id;
+      this.factory = factory;
     }
 
     public static Phase byId(int id) {
