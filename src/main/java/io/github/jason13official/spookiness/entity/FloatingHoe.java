@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity;
 
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -9,12 +10,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,17 +35,8 @@ public class FloatingHoe extends FloatingTool {
   }
 
   @Override
-  protected void registerGoals() {
-
-    int goalPriority = 1;
-
-    this.goalSelector.addGoal(goalPriority++, new MeleeAttackGoal(this, 1.2, false));
-    this.goalSelector.addGoal(goalPriority++, new TillGoal());
-    this.goalSelector.addGoal(goalPriority++, new WaterAvoidingRandomFlyingGoal(this, 0.8));
-    this.goalSelector.addGoal(goalPriority++, new LookAtPlayerGoal(this, Player.class, 8.0F));
-    this.goalSelector.addGoal(goalPriority++, new RandomLookAroundGoal(this));
-
-    this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+  protected Goal createWorkGoal() {
+    return new TillGoal();
   }
 
   @Override

@@ -1,8 +1,8 @@
 package io.github.jason13official.spookiness.item;
 
+import io.github.jason13official.spookiness.entity.PumpkinHeads;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.companion.SpectralCompanions;
-import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
@@ -19,7 +19,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
@@ -31,7 +30,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -73,8 +71,7 @@ public class PumpkinMaceItem extends Item {
       return golem.hasPumpkin();
     }
 
-    ItemStack head = entity.getItemBySlot(EquipmentSlot.HEAD);
-    return entity instanceof JackOMimic || head.is(Items.JACK_O_LANTERN) || head.is(Items.CARVED_PUMPKIN);
+    return PumpkinHeads.isPumpkinHeaded(entity);
   }
 
   public static MaceStage getStage(ItemStack stack) {

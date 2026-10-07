@@ -1,19 +1,17 @@
 package io.github.jason13official.spookiness.ritual;
 
+import io.github.jason13official.spookiness.entity.PumpkinHeads;
 import io.github.jason13official.spookiness.companion.Hallowing;
-import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.registry.ModItems;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.golem.SnowGolem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.jspecify.annotations.Nullable;
 
@@ -58,14 +56,10 @@ public final class MaceRituals {
     if (mob instanceof SnowGolem) {
       return Ritual.FROSTWICK;
     }
-    ItemStack head = mob.getItemBySlot(EquipmentSlot.HEAD);
-    if (mob instanceof JackOMimic || head.is(Items.JACK_O_LANTERN)) {
+    if (PumpkinHeads.isLanternHeaded(mob)) {
       return Ritual.KINDLE;
     }
-    if (head.is(Items.CARVED_PUMPKIN)) {
-      return Ritual.HALLOW;
-    }
-    return null;
+    return PumpkinHeads.isCarvedHeaded(mob) ? Ritual.HALLOW : null;
   }
 
   private enum Ritual {

@@ -28,5 +28,6 @@ public class BlockPartsRenderState extends EntityRenderState {
     public float yRot;
     public float xRot;
     public float zRot;
+    public float pivotY;
   }
 }

@@ -15,6 +15,8 @@ import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
@@ -34,6 +36,28 @@ public abstract class FloatingTool extends FloatingPathfinderMob {
 
   public static AttributeSupplier.Builder createAttributes() {
     return createFloatingAttributes().add(Attributes.MAX_HEALTH, 14.0F).add(Attributes.ATTACK_DAMAGE, 3.0F).add(Attributes.FOLLOW_RANGE, 24.0F).add(Attributes.FLYING_SPEED, 0.3F);
+  }
+
+  @Override
+  protected void registerGoals() {
+
+    int goalPriority = 1;
+
+    this.goalSelector.addGoal(goalPriority++, new MeleeAttackGoal(this, 1.2, false));
+    Goal work = this.createWorkGoal();
+    if (work != null) {
+      this.goalSelector.addGoal(goalPriority++, work);
+    }
+    this.registerHoverGoals(goalPriority);
+    this.registerTargetGoals();
+  }
+
+  protected @Nullable Goal createWorkGoal() {
+    return null;
+  }
+
+  protected void registerTargetGoals() {
+    this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
   }
 
   @Override

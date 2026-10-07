@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.event;
 
+import io.github.jason13official.spookiness.entity.PumpkinHeads;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.entity.JackOMimic;
@@ -15,7 +16,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -53,9 +53,8 @@ public final class LivingEvents {
     if (!(event.getNewAboutToBeSetTarget() instanceof Player player) || MotherBrood.isBrood(entity)) {
       return;
     }
-    boolean mimic = entity instanceof JackOMimic;
-    boolean lanternHeaded = mimic || entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN);
-    if (lanternHeaded && player.getMainHandItem().is(ModItems.PUMPKIN_MACE) || mimic && player.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.HARVEST_CROWN)) {
+    if (PumpkinHeads.isLanternHeaded(entity) && player.getMainHandItem().is(ModItems.PUMPKIN_MACE)
+        || entity instanceof JackOMimic && player.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.HARVEST_CROWN)) {
       event.setCanceled(true);
     }
   }

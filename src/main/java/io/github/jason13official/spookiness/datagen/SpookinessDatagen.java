@@ -27,6 +27,7 @@ public class SpookinessDatagen {
     event.createProvider(SpookinessBiomeTagsProvider::new);
     event.createProvider(SpookinessDamageTypeTagsProvider::new);
     event.createProvider(SpookinessTimelineTagsProvider::new);
+    event.createProvider(SpookinessItemTagsProvider::new);
     event.createProvider(SpookinessRecipeProvider.Runner::new);
     event.createProvider(SpookinessModelProvider::new);
     event.createProvider(SpookinessLanguageProvider::new);
