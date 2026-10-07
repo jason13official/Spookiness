@@ -41,6 +41,10 @@ public class ModItems {
 
   public static Item GOURDWYRM_TROPHY;
 
+  public static Item LURKING_CARVED_PUMPKIN;
+
+  public static Item LURKING_JACK_O_LANTERN;
+
   public static List<SpawnEgg> SPAWN_EGGS = new ArrayList<>();
 
   public static List<Item> CREATIVE_TAB_ITEMS = new ArrayList<>();
@@ -60,6 +64,10 @@ public class ModItems {
     LAMENT_CONFIGURATION = registerItem("lament_configuration", LamentConfigurationItem::new, new Item.Properties().stacksTo(1), consumer);
 
     SOULLESS_JACK_O_MIMIC = registerBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, consumer);
+
+    LURKING_CARVED_PUMPKIN = registerBlock(ModBlocks.LURKING_CARVED_PUMPKIN, consumer);
+
+    LURKING_JACK_O_LANTERN = registerBlock(ModBlocks.LURKING_JACK_O_LANTERN, consumer);
 
     GOURDWYRM_TROPHY = registerBlock(ModBlocks.GOURDWYRM_TROPHY, new Item.Properties().rarity(Rarity.EPIC).fireResistant(), consumer);
 

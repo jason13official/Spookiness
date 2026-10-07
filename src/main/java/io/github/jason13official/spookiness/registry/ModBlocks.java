@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.registry;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.block.GourdwyrmTrophyBlock;
+import io.github.jason13official.spookiness.block.LurkingPumpkinBlock;
 import io.github.jason13official.spookiness.block.SoullessJackOMimicBlock;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -18,6 +19,8 @@ public class ModBlocks {
 
   public static Block SOULLESS_JACK_O_MIMIC;
   public static Block GOURDWYRM_TROPHY;
+  public static Block LURKING_CARVED_PUMPKIN;
+  public static Block LURKING_JACK_O_LANTERN;
 
   public static void register(BiConsumer<Block, Identifier> consumer) {
 
@@ -26,6 +29,12 @@ public class ModBlocks {
 
     GOURDWYRM_TROPHY = register(consumer, "gourdwyrm_trophy", GourdwyrmTrophyBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.GOLD).strength(3.0F, 6.0F)
         .sound(SoundType.METAL).lightLevel(state -> 10).noOcclusion());
+
+    LURKING_CARVED_PUMPKIN = register(consumer, "lurking_carved_pumpkin", LurkingPumpkinBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_ORANGE)
+        .strength(1.0F).sound(SoundType.WOOD).pushReaction(PushReaction.BLOCK));
+
+    LURKING_JACK_O_LANTERN = register(consumer, "lurking_jack_o_lantern", LurkingPumpkinBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_ORANGE)
+        .strength(1.0F).sound(SoundType.WOOD).lightLevel(state -> 15).pushReaction(PushReaction.BLOCK));
   }
 
   private static Block register(BiConsumer<Block, Identifier> consumer, String name, Function<BlockBehaviour.Properties, Block> factory,

@@ -31,6 +31,7 @@ import java.util.Optional;
 import net.minecraft.client.renderer.item.SelectItemModel;
 import net.minecraft.client.renderer.item.properties.select.ComponentContents;
 import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.client.model.generators.template.ExtendedModelTemplate;
 import net.neoforged.neoforge.client.model.generators.template.ExtendedModelTemplateBuilder;
@@ -78,6 +79,8 @@ public class SpookinessModelProvider extends ModelProvider {
     Identifier trophy = ModelLocationUtils.getModelLocation(ModBlocks.GOURDWYRM_TROPHY);
     blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(ModBlocks.GOURDWYRM_TROPHY, BlockModelGenerators.plainVariant(trophy))
         .with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
+    lurkingPumpkin(blockModels, itemModels, ModBlocks.LURKING_CARVED_PUMPKIN, ModItems.LURKING_CARVED_PUMPKIN, Blocks.CARVED_PUMPKIN);
+    lurkingPumpkin(blockModels, itemModels, ModBlocks.LURKING_JACK_O_LANTERN, ModItems.LURKING_JACK_O_LANTERN, Blocks.JACK_O_LANTERN);
     itemModels.itemModelOutput.accept(ModItems.GOURDWYRM_TROPHY, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.GOURDWYRM_TROPHY)));
     itemModels.itemModelOutput.accept(ModItems.SOULLESS_JACK_O_MIMIC, ItemModelUtils.specialModel(ModelLocationUtils.getModelLocation(ModItems.SOULLESS_JACK_O_MIMIC),
         SOULLESS_TRANSFORMATION, new SoullessJackOMimicSpecialRenderer.Unbaked()));
@@ -108,6 +111,13 @@ public class SpookinessModelProvider extends ModelProvider {
   private static void spawnEgg(ItemModelGenerators itemModels, Item egg, Identifier model, int baseColor, int spotColor) {
 
     itemModels.itemModelOutput.accept(egg, ItemModelUtils.tintedModel(model, ItemModelUtils.constantTint(baseColor), ItemModelUtils.constantTint(spotColor)));
+  }
+
+  private static void lurkingPumpkin(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block block, Item item, Block disguise) {
+
+    Identifier model = ModelLocationUtils.getModelLocation(disguise);
+    blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(block, BlockModelGenerators.plainVariant(model)).with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
+    itemModels.itemModelOutput.accept(item, ItemModelUtils.plainModel(model));
   }
 
   private static void lament(ItemModelGenerators itemModels, Item item, Identifier base, LamentConfigurationModel.Part part) {

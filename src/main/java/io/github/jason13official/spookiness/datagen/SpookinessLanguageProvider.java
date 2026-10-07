@@ -22,6 +22,8 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModItems.LAMENT_CONFIGURATION, "Lament Configuration");
     this.add("item.spookiness.lament_configuration.return_home", "Ready to return home?");
     this.add(ModBlocks.SOULLESS_JACK_O_MIMIC, "Soulless Jack o'Mimic");
+    this.add(ModBlocks.LURKING_CARVED_PUMPKIN, "Carved Pumpkin");
+    this.add(ModBlocks.LURKING_JACK_O_LANTERN, "Jack o'Lantern");
     this.add(ModItems.PIECE_OF_LAMENT_ONE, "Piece of Lament, One");
     this.add(ModItems.PIECE_OF_LAMENT_TWO, "Piece of Lament, Two");
 

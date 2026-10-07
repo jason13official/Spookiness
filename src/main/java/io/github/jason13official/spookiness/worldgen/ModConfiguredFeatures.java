@@ -1,6 +1,7 @@
 package io.github.jason13official.spookiness.worldgen;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.worldgen.feature.PumpkinPatchConfiguration;
 import net.minecraft.core.Direction;
@@ -11,7 +12,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CarvedPumpkinBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.stateproviders.WeightedStateProvider;
@@ -22,9 +23,11 @@ public class ModConfiguredFeatures {
 
   public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
 
-    WeightedList.Builder<BlockState> pumpkins = WeightedList.<BlockState>builder().add(Blocks.PUMPKIN.defaultBlockState(), 12);
-    addHorizontalFacings(pumpkins, Blocks.CARVED_PUMPKIN, 1);
-    addHorizontalFacings(pumpkins, Blocks.JACK_O_LANTERN, 1);
+    WeightedList.Builder<BlockState> pumpkins = WeightedList.<BlockState>builder().add(Blocks.PUMPKIN.defaultBlockState(), 48);
+    addHorizontalFacings(pumpkins, Blocks.CARVED_PUMPKIN, 4);
+    addHorizontalFacings(pumpkins, Blocks.JACK_O_LANTERN, 4);
+    addHorizontalFacings(pumpkins, ModBlocks.LURKING_CARVED_PUMPKIN, 1);
+    addHorizontalFacings(pumpkins, ModBlocks.LURKING_JACK_O_LANTERN, 1);
 
     WeightedList.Builder<BlockState> grass = WeightedList.<BlockState>builder()
         .add(Blocks.SHORT_GRASS.defaultBlockState(), 6)
@@ -47,7 +50,7 @@ public class ModConfiguredFeatures {
   private static void addHorizontalFacings(WeightedList.Builder<BlockState> builder, Block block, int weight) {
 
     for (Direction direction : Direction.Plane.HORIZONTAL) {
-      builder.add(block.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, direction), weight);
+      builder.add(block.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction), weight);
     }
   }
 

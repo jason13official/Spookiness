@@ -57,11 +57,13 @@ public class SpookinessLootTableProvider {
     protected void generate() {
       this.dropSelf(ModBlocks.SOULLESS_JACK_O_MIMIC);
       this.dropSelf(ModBlocks.GOURDWYRM_TROPHY);
+      this.dropOther(ModBlocks.LURKING_CARVED_PUMPKIN, Items.CARVED_PUMPKIN);
+      this.dropOther(ModBlocks.LURKING_JACK_O_LANTERN, Items.JACK_O_LANTERN);
     }
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-      return List.of(ModBlocks.SOULLESS_JACK_O_MIMIC, ModBlocks.GOURDWYRM_TROPHY);
+      return List.of(ModBlocks.SOULLESS_JACK_O_MIMIC, ModBlocks.GOURDWYRM_TROPHY, ModBlocks.LURKING_CARVED_PUMPKIN, ModBlocks.LURKING_JACK_O_LANTERN);
     }
   }
 
