@@ -21,7 +21,8 @@ public class ModBlocks {
   public static void register(BiConsumer<Block, Identifier> consumer) {
 
     SOULLESS_JACK_O_MIMIC = new SoullessJackOMimicBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_ORANGE).strength(1.5F).sound(SoundType.WOOD)
-        .noOcclusion().pushReaction(PushReaction.BLOCK).setId(key("soulless_jack_o_mimic")));
+        .lightLevel(state -> state.getValue(SoullessJackOMimicBlock.LIT) ? 15 : 0).noOcclusion().pushReaction(PushReaction.BLOCK)
+        .setId(key("soulless_jack_o_mimic")));
     consumer.accept(SOULLESS_JACK_O_MIMIC, Spookiness.id("soulless_jack_o_mimic"));
 
     GOURDWYRM_TROPHY = new GourdwyrmTrophyBlock(BlockBehaviour.Properties.of().mapColor(MapColor.GOLD).strength(3.0F, 6.0F).sound(SoundType.METAL)

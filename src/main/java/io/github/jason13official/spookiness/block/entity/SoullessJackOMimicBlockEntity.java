@@ -9,12 +9,14 @@ import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -33,6 +35,11 @@ public class SoullessJackOMimicBlockEntity extends BlockEntity {
   private static final double OPEN_RANGE = 4.0;
   private static final float OPEN_SPEED = 0.1F;
   private static final double FIGHT_RANGE = 96.0;
+  private static final int FIGHT_CHECK_INTERVAL = 10;
+  private static final double FLAME_SPREAD = 0.3;
+  private static final double FLAME_HEIGHT = 0.6;
+  private static final double ENCHANT_REACH = 3.0;
+  private static final int ENCHANT_PER_TICK = 2;
 
   private ItemStack item = ItemStack.EMPTY;
   private float openness;
@@ -42,10 +49,25 @@ public class SoullessJackOMimicBlockEntity extends BlockEntity {
     super(ModBlockEntities.SOULLESS_JACK_O_MIMIC, pos, state);
   }
 
+  public static void serverTick(Level level, BlockPos pos, BlockState state, SoullessJackOMimicBlockEntity mimic) {
+
+    if (level.getGameTime() % FIGHT_CHECK_INTERVAL != 0) {
+      return;
+    }
+    boolean fighting = mimic.item.is(ModItems.LAMENT_CONFIGURATION) && !level.getEntitiesOfClass(Gourdwyrm.class, new AABB(pos).inflate(FIGHT_RANGE)).isEmpty();
+    if (state.getValue(SoullessJackOMimicBlock.LIT) != fighting) {
+      level.setBlock(pos, state.setValue(SoullessJackOMimicBlock.LIT, fighting), Block.UPDATE_ALL);
+    }
+  }
+
   public static void clientTick(Level level, BlockPos pos, BlockState state, SoullessJackOMimicBlockEntity mimic) {
 
-    boolean near = level.getNearestPlayer(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, OPEN_RANGE, false) != null
-        || mimic.item.is(ModItems.LAMENT_CONFIGURATION) && !level.getEntitiesOfClass(Gourdwyrm.class, new AABB(pos).inflate(FIGHT_RANGE)).isEmpty();
+    boolean fighting = state.getValue(SoullessJackOMimicBlock.LIT);
+    if (fighting) {
+      emitFightParticles(level, pos, level.getRandom());
+    }
+
+    boolean near = fighting || level.getNearestPlayer(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, OPEN_RANGE, false) != null;
     mimic.oOpenness = mimic.openness;
     mimic.openness = Mth.approach(mimic.openness, near ? 1.0F : 0.0F, OPEN_SPEED);
     if (mimic.oOpenness == 0.0F && mimic.openness > 0.0F) {
@@ -53,6 +75,30 @@ public class SoullessJackOMimicBlockEntity extends BlockEntity {
     } else if (mimic.oOpenness > 0.0F && mimic.openness == 0.0F) {
       level.playLocalSound(pos, SoundEvents.CHEST_CLOSE, SoundSource.BLOCKS, 0.5F, 0.6F, false);
     }
+  }
+
+  private static void emitFightParticles(Level level, BlockPos pos, RandomSource random) {
+
+    double x = pos.getX() + 0.5;
+    double y = pos.getY() + FLAME_HEIGHT;
+    double z = pos.getZ() + 0.5;
+    if (random.nextInt(2) == 0) {
+      level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, x + spread(random), y + random.nextDouble() * 0.4, z + spread(random), 0.0, 0.03, 0.0);
+    }
+    if (random.nextInt(2) == 0) {
+      level.addParticle(ParticleTypes.FLAME, x + spread(random), y + random.nextDouble() * 0.4, z + spread(random), 0.0, 0.02, 0.0);
+    }
+    if (random.nextInt(3) == 0) {
+      level.addParticle(ParticleTypes.SMOKE, x + spread(random), pos.getY() + 1.1, z + spread(random), 0.0, 0.04, 0.0);
+    }
+    for (int i = 0; i < ENCHANT_PER_TICK; i++) {
+      level.addParticle(ParticleTypes.ENCHANT, x, y, z, (random.nextFloat() - 0.5F) * ENCHANT_REACH, random.nextFloat() * ENCHANT_REACH * 0.5,
+          (random.nextFloat() - 0.5F) * ENCHANT_REACH);
+    }
+  }
+
+  private static double spread(RandomSource random) {
+    return (random.nextDouble() - 0.5) * 2.0 * FLAME_SPREAD;
   }
 
   public float getOpenness(float partialTicks) {

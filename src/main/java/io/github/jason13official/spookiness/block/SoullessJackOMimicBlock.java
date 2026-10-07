@@ -23,6 +23,8 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jspecify.annotations.Nullable;
@@ -31,12 +33,13 @@ public class SoullessJackOMimicBlock extends BaseEntityBlock {
 
   public static final MapCodec<SoullessJackOMimicBlock> CODEC = simpleCodec(SoullessJackOMimicBlock::new);
   public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
+  public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
   private static final float SEALED_RESISTANCE = 3600000.0F;
 
   public SoullessJackOMimicBlock(Properties properties) {
     super(properties);
-    this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+    this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(LIT, false));
   }
 
   @Override
@@ -46,7 +49,7 @@ public class SoullessJackOMimicBlock extends BaseEntityBlock {
 
   @Override
   protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
-    builder.add(FACING);
+    builder.add(FACING, LIT);
   }
 
   @Override
@@ -66,7 +69,8 @@ public class SoullessJackOMimicBlock extends BaseEntityBlock {
 
   @Override
   public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-    return level.isClientSide() ? createTickerHelper(type, ModBlockEntities.SOULLESS_JACK_O_MIMIC, SoullessJackOMimicBlockEntity::clientTick) : null;
+    return createTickerHelper(type, ModBlockEntities.SOULLESS_JACK_O_MIMIC,
+        level.isClientSide() ? SoullessJackOMimicBlockEntity::clientTick : SoullessJackOMimicBlockEntity::serverTick);
   }
 
   private static boolean isHolding(BlockGetter level, BlockPos pos) {

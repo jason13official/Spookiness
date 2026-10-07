@@ -85,13 +85,13 @@ public class ModItems {
         .attributes(PumpkinMaceItem.createAttributes()).enchantable(15) // format
         .component(DataComponents.WEAPON, new Weapon(1)), consumer); // format
 
-    LAMENT_CONFIGURATION = registerItem("lament_configuration", LamentConfigurationItem::new, new Item.Properties().stacksTo(1), consumer);
-
-    SOULLESS_JACK_O_MIMIC = registerBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, consumer);
-
     PIECE_OF_LAMENT_ONE = registerItem("piece_of_lament_one", new Item.Properties().stacksTo(1), consumer);
 
     PIECE_OF_LAMENT_TWO = registerItem("piece_of_lament_two", new Item.Properties().stacksTo(1), consumer);
+
+    LAMENT_CONFIGURATION = registerItem("lament_configuration", LamentConfigurationItem::new, new Item.Properties().stacksTo(1), consumer);
+
+    SOULLESS_JACK_O_MIMIC = registerBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, consumer);
 
     GOURDWYRM_TROPHY = registerBlock(ModBlocks.GOURDWYRM_TROPHY, new Item.Properties().rarity(Rarity.EPIC).fireResistant(), consumer);
 

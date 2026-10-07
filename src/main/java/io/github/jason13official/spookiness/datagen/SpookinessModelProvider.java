@@ -13,6 +13,7 @@ import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.ModelProvider;
 import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
+import net.minecraft.client.data.models.model.ModelTemplate;
 import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TextureSlot;
@@ -25,6 +26,7 @@ import io.github.jason13official.spookiness.item.MaceStage;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.client.renderer.item.SelectItemModel;
 import net.minecraft.client.renderer.item.properties.select.ComponentContents;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -37,7 +39,7 @@ public class SpookinessModelProvider extends ModelProvider {
 
   private static final Transformation LAMENT_TRANSFORMATION = new Transformation(new Vector3f(0.5F, 1.875F, 0.5F), null, new Vector3f(1.0F, -1.0F, -1.0F), null);
 
-  private static final Transformation SOULLESS_TRANSFORMATION = new Transformation(new Vector3f(0.5F, 1.5F, 0.5F), null, new Vector3f(1.0F, -1.0F, -1.0F), null);
+  private static final Transformation SOULLESS_TRANSFORMATION = new Transformation(new Vector3f(0.5F, 1.5F, 0.5F), null, new Vector3f(-1.0F, -1.0F, 1.0F), null);
 
   private static final ExtendedModelTemplate LAMENT_BASE = ExtendedModelTemplateBuilder.builder()
       .requiredTextureSlot(TextureSlot.PARTICLE)
@@ -49,6 +51,8 @@ public class SpookinessModelProvider extends ModelProvider {
       .transform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND, transform -> transform.rotation(0.0F, 45.0F, 0.0F).scale(0.8F))
       .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND, transform -> transform.rotation(0.0F, 225.0F, 0.0F).scale(0.8F))
       .build();
+
+  private static final ModelTemplate SOULLESS_BASE = new ModelTemplate(Optional.of(Identifier.withDefaultNamespace("block/block")), Optional.empty(), TextureSlot.PARTICLE);
 
   public SpookinessModelProvider(PackOutput output) {
     super(output, Spookiness.MOD_ID);
@@ -80,7 +84,7 @@ public class SpookinessModelProvider extends ModelProvider {
     itemModels.itemModelOutput.accept(ModItems.GOURDWYRM_TROPHY, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.GOURDWYRM_TROPHY)));
     itemModels.itemModelOutput.accept(ModItems.SOULLESS_JACK_O_MIMIC, ItemModelUtils.specialModel(ModelLocationUtils.getModelLocation(ModItems.SOULLESS_JACK_O_MIMIC),
         SOULLESS_TRANSFORMATION, new SoullessJackOMimicSpecialRenderer.Unbaked()));
-    LAMENT_BASE.create(ModItems.SOULLESS_JACK_O_MIMIC, TextureMapping.particle(Blocks.CARVED_PUMPKIN), itemModels.modelOutput);
+    SOULLESS_BASE.create(ModItems.SOULLESS_JACK_O_MIMIC, TextureMapping.particle(Blocks.CARVED_PUMPKIN), itemModels.modelOutput);
 
     Identifier mace = ModelLocationUtils.getModelLocation(ModItems.PUMPKIN_MACE);
     List<SelectItemModel.SwitchCase<MaceStage>> maceStages = new ArrayList<>();
