@@ -1,32 +1,10 @@
 package io.github.jason13official.spookiness;
 
-import io.github.jason13official.spookiness.world.HauntedHarvest;
-import io.github.jason13official.spookiness.effect.TemporaryBlocks;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import io.github.jason13official.spookiness.registry.ModSounds;
-import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
-import io.github.jason13official.spookiness.boss.Kindling;
-import io.github.jason13official.spookiness.boss.MaceRituals;
-import io.github.jason13official.spookiness.companion.Allies;
-import io.github.jason13official.spookiness.companion.Hallowing;
-import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
-import io.github.jason13official.spookiness.effect.LamentRitual;
-import io.github.jason13official.spookiness.entity.FloatingBook;
-import io.github.jason13official.spookiness.entity.FloatingCandles;
-import io.github.jason13official.spookiness.entity.FloatingLantern;
-import io.github.jason13official.spookiness.entity.FloatingSkull;
-import io.github.jason13official.spookiness.entity.FloatingTool;
-import io.github.jason13official.spookiness.entity.FloatingSword;
-import io.github.jason13official.spookiness.entity.JackOMimic;
-import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
-import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
-import io.github.jason13official.spookiness.entity.boss.HallowedMother;
-import io.github.jason13official.spookiness.entity.boss.MotherBrood;
-import io.github.jason13official.spookiness.entity.boss.Wickman;
-import io.github.jason13official.spookiness.entity.boss.WickmanHead;
-import io.github.jason13official.spookiness.item.PumpkinMaceItem;
-import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.spookiness.event.EntityEvents;
+import io.github.jason13official.spookiness.event.LivingEvents;
+import io.github.jason13official.spookiness.event.PlayerEvents;
+import io.github.jason13official.spookiness.event.SetupEvents;
+import io.github.jason13official.spookiness.event.WorldEvents;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.registry.ModBlockEntities;
 import io.github.jason13official.spookiness.registry.ModBlocks;
@@ -34,9 +12,9 @@ import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModFeatures;
 import io.github.jason13official.spookiness.registry.ModItems;
+import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModTabs;
 import io.github.jason13official.spookiness.registry.ModTriggers;
-import io.github.jason13official.spookiness.world.SpookySpawns;
 import io.github.jason13official.spookiness.world.netherrealm.ModStructures;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -44,46 +22,11 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.sheep.Sheep;
-import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.inventory.EnchantmentMenu;
-import net.minecraft.world.entity.SpawnPlacementTypes;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
-import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
-import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
-import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
-import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEnchantItemEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
-import net.neoforged.neoforge.event.level.block.CropGrowEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.slf4j.Logger;
@@ -123,242 +66,11 @@ public class Spookiness {
     bind(Registries.SOUND_EVENT, ModSounds::register);
     // game rule
 
-    // RegisterCommandsEvent
-    NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> HallowedMotherTrigger.registerCommands(event.getDispatcher()));
-
-    // GatherDataEvent.Client
-    EVENT_BUS.addListener(SpookinessDatagen::init);
-
-    // EntityAttributeCreationEvent
-    EVENT_BUS.addListener((EntityAttributeCreationEvent event) -> {
-
-      event.put(ModEntities.JACK_O_MIMIC, JackOMimic.createAttributes().build());
-      event.put(ModEntities.FLOATING_CANDLES, FloatingCandles.createAttributes().build());
-      event.put(ModEntities.FLOATING_BOOK, FloatingBook.createAttributes().build());
-      event.put(ModEntities.FLOATING_SWORD, FloatingSword.createAttributes().build());
-      event.put(ModEntities.FLOATING_SHEARS, FloatingTool.createAttributes().build());
-      event.put(ModEntities.FLOATING_HOE, FloatingTool.createAttributes().build());
-      event.put(ModEntities.FLOATING_LANTERN, FloatingLantern.createAttributes().build());
-      event.put(ModEntities.FLOATING_SKULL, FloatingSkull.createAttributes().build());
-      event.put(ModEntities.HAUNTED_ARMOR_STAND, ArmorStand.createAttributes().build());
-      event.put(ModEntities.SPECTRAL_JACK_O_MIMIC, SpectralJackOMimic.createAttributes().build());
-      event.put(ModEntities.WICKMAN, Wickman.createAttributes().build());
-      event.put(ModEntities.WICKMAN_HEAD, WickmanHead.createAttributes().build());
-      event.put(ModEntities.HALLOWED_MOTHER, HallowedMother.createAttributes().build());
-      event.put(ModEntities.GOURDWYRM, Gourdwyrm.createAttributes().build());
-    });
-
-    // RegisterSpawnPlacementsEvent
-    EVENT_BUS.addListener((RegisterSpawnPlacementsEvent event) -> {
-
-      event.register(ModEntities.JACK_O_MIMIC, SpawnPlacementTypes.ON_GROUND,
-          Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, JackOMimic::checkJackOMimicSpawnRules, RegisterSpawnPlacementsEvent.Operation.REPLACE);
-    });
-
-    // FinalizeSpawnEvent
-    NeoForge.EVENT_BUS.addListener((FinalizeSpawnEvent event) -> {
-
-      Mob mob = event.getEntity();
-      SpookySpawns.equipPumpkinHead(mob, mob.getRandom());
-    });
-
-    // LivingChangeTargetEvent
-    NeoForge.EVENT_BUS.addListener((LivingChangeTargetEvent event) -> {
-
-      LivingEntity entity = event.getEntity();
-      if (!entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.JACK_O_LANTERN) && !entity.is(ModEntities.JACK_O_MIMIC) || MotherBrood.isBrood(entity)) {
-        return;
-      }
-
-      if (event.getNewAboutToBeSetTarget() instanceof Player player && player.getMainHandItem().is(ModItems.PUMPKIN_MACE)) {
-        event.setCanceled(true);
-      }
-    });
-
-    // LivingChangeTargetEvent
-    NeoForge.EVENT_BUS.addListener(Allies::onChangeTarget);
-
-    // LivingChangeTargetEvent
-    NeoForge.EVENT_BUS.addListener((LivingChangeTargetEvent event) -> {
-
-      if (event.getEntity() instanceof JackOMimic && !MotherBrood.isBrood((Mob) event.getEntity())
-          && event.getNewAboutToBeSetTarget() instanceof Player player && player.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.HARVEST_CROWN)) {
-        event.setCanceled(true);
-      }
-    });
-
-    // LivingIncomingDamageEvent
-    NeoForge.EVENT_BUS.addListener((LivingIncomingDamageEvent event) -> {
-
-      Hallowing.onIncomingDamage(event);
-      Wickman.onIncomingDamage(event);
-    });
-
-    // LivingKnockBackEvent
-    NeoForge.EVENT_BUS.addListener(MotherBrood::onKnockBack);
-
-    // LivingFallEvent
-    NeoForge.EVENT_BUS.addListener(MotherBrood::onFall);
-
-    // LivingChangeTargetEvent
-    NeoForge.EVENT_BUS.addListener(MotherBrood::onChangeTarget);
-
-    // MobEffectEvent.Applicable
-    NeoForge.EVENT_BUS.addListener(MotherBrood::onEffectApplicable);
-
-    // PlayerInteractEvent.EntityInteract
-    NeoForge.EVENT_BUS.addListener(MaceRituals::onEntityInteract);
-
-    // EntityTickEvent.Post
-    NeoForge.EVENT_BUS.addListener((EntityTickEvent.Post event) -> {
-
-      LivingLights.tick(event.getEntity());
-      if (event.getEntity().level().isClientSide()) {
-        Hallowing.clientTick(event.getEntity());
-      } else {
-        Kindling.tick(event.getEntity());
-        PlayerFollowers.track(event.getEntity());
-      }
-    });
-
-    // EntityLeaveLevelEvent
-    NeoForge.EVENT_BUS.addListener((EntityLeaveLevelEvent event) -> {
-
-      LivingLights.remove(event.getEntity());
-
-      if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob) {
-        PlayerFollowers.untrack(mob);
-      }
-    });
-
-    // LevelEvent.Unload
-    NeoForge.EVENT_BUS.addListener((LevelEvent.Unload event) -> {
-
-      LivingLights.unload(event.getLevel());
-    });
-
-    // LivingDeathEvent
-    NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> SpookySpawns.onSkeletonDeath(event.getEntity()));
-
-    // CropGrowEvent.Post
-    NeoForge.EVENT_BUS.addListener((CropGrowEvent.Post event) -> {
-
-      if (event.getLevel() instanceof ServerLevel level) {
-        SpookySpawns.onPlantGrown(level, event.getPos(), event.getOriginalState(), event.getState());
-      }
-    });
-
-    // PlayerInteractEvent.EntityInteract
-    NeoForge.EVENT_BUS.addListener((PlayerInteractEvent.EntityInteract event) -> {
-
-      if (event.getLevel() instanceof ServerLevel level && event.getTarget() instanceof Sheep sheep) {
-        SpookySpawns.onSheepSheared(level, sheep, event.getItemStack());
-      }
-    });
-
-    // BlockEvent.BlockToolModificationEvent
-    NeoForge.EVENT_BUS.addListener((BlockEvent.BlockToolModificationEvent event) -> {
-
-      if (!event.isSimulated() && event.getItemAbility() == ItemAbilities.HOE_TILL && event.getPlayer() != null && event.getContext().getLevel() instanceof ServerLevel level) {
-        SpookySpawns.onHoeTill(level, event.getPos(), event.getState(), event.getHeldItemStack());
-      }
-    });
-
-    // LivingDeathEvent
-    NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> {
-
-      LivingEntity entity = event.getEntity();
-      if (!(entity instanceof JackOMimic mimic)) {
-        return; // not a death we care about
-      }
-
-      DamageSource source = event.getSource();
-      if (!source.is(DamageTypes.MACE_SMASH) || !(mimic.level() instanceof ServerLevel level)) {
-        return;
-      }
-
-      ItemStack weapon = source.getWeaponItem();
-      if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
-        mimic.spawnSoulBurst(level);
-      }
-    });
-
-    // PlayerEnchantItemEvent
-    NeoForge.EVENT_BUS.addListener((PlayerEnchantItemEvent event) -> {
-
-      if (event.getEntity() instanceof ServerPlayer player && player.containerMenu instanceof EnchantmentMenu menu) {
-        menu.access.execute((level, pos) -> SpookySpawns.awakenEnchantingTableBook((ServerLevel) level, pos, player));
-      }
-    });
-
-    // PlayerTickEvent.Post
-    NeoForge.EVENT_BUS.addListener((PlayerTickEvent.Post event) -> {
-
-      if (event.getEntity() instanceof ServerPlayer player) {
-        SpookySpawns.tickCandleAwakening(player);
-        SpookySpawns.tickBookshelfAwakening(player);
-        SpookySpawns.tickNightAwakenings(player);
-        SpookySpawns.tickHarvestTools(player);
-        HauntedHarvest.tick(player);
-        LamentRitual.tick(player);
-        HallowedMotherTrigger.tick(player);
-      }
-    });
-
-    // EntityJoinLevelEvent
-    NeoForge.EVENT_BUS.addListener((EntityJoinLevelEvent event) -> {
-
-      if (event.getLevel().isClientSide()) {
-        return;
-      }
-      if (!event.loadedFromDisk()) {
-        Allies.onEntityJoin(event.getEntity());
-      }
-      if (event.getEntity() instanceof Mob mob && Hallowing.isHallowed(mob)) {
-        Hallowing.applyGoals(mob);
-      }
-      if (event.getEntity() instanceof Mob mob && MotherBrood.isBrood(mob)) {
-        MotherBrood.applyGoals(mob);
-      }
-    });
-
-    // ServerTickEvent.Post
-    NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> {
-
-      PlayerFollowers.tick(event.getServer());
-      TemporaryBlocks.tick(event.getServer());
-    });
-
-    // PlayerEvent.PlayerLoggedOutEvent
-    NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> {
-
-      if (event.getEntity() instanceof ServerPlayer player) {
-        PlayerFollowers.stash(player);
-      }
-    });
-
-    // PlayerEvent.PlayerLoggedInEvent
-    NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
-
-      if (event.getEntity() instanceof ServerPlayer player) {
-        PlayerFollowers.restore(player);
-      }
-    });
-
-    // LivingDeathEvent
-    NeoForge.EVENT_BUS.addListener((LivingDeathEvent event) -> {
-
-      LivingEntity entity = event.getEntity();
-      DamageSource source = event.getSource();
-      if (!(entity.level() instanceof ServerLevel level) || !(source.getEntity() instanceof Player player) || !PumpkinMaceItem.isPumpkinEntity(entity)) {
-        return;
-      }
-
-      ItemStack weapon = source.getWeaponItem();
-      if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
-        PumpkinMaceItem.addPumpkinKill(level, player, weapon);
-      }
-    });
+    SetupEvents.register(EVENT_BUS, NeoForge.EVENT_BUS);
+    EntityEvents.register(NeoForge.EVENT_BUS);
+    LivingEvents.register(NeoForge.EVENT_BUS);
+    PlayerEvents.register(NeoForge.EVENT_BUS);
+    WorldEvents.register(NeoForge.EVENT_BUS);
 
     if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
       new SpookinessClient(EVENT_BUS);
