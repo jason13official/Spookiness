@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.effect;
+package io.github.jason13official.spookiness.ritual;
 
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
@@ -7,7 +7,7 @@ import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModItems;
 import net.minecraft.core.GlobalPos;
 import org.jspecify.annotations.Nullable;
-import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
+import io.github.jason13official.spookiness.world.NetherrealmArena;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

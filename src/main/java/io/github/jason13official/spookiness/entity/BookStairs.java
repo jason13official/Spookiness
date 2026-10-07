@@ -56,6 +56,16 @@ public final class BookStairs {
     GUIDES.values().removeIf(guide -> guide.book() == book);
   }
 
+  public static void forget(Player player) {
+
+    GUIDES.remove(player.getUUID());
+  }
+
+  public static void clear() {
+
+    GUIDES.clear();
+  }
+
   private static @Nullable FloatingBook findCandidate(Player player, FloatingBook platform) {
 
     return player.level().getEntitiesOfClass(FloatingBook.class, player.getBoundingBox().inflate(SEARCH_RADIUS), book -> book != platform && book.canGuide())

@@ -5,7 +5,7 @@ import io.github.jason13official.spookiness.registry.ModItems;
 import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.block.SoullessJackOMimicBlock;
 import io.github.jason13official.spookiness.registry.ModBlockEntities;
-import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
+import io.github.jason13official.spookiness.world.NetherrealmArena;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;

@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.event;
 
-import io.github.jason13official.spookiness.boss.Kindling;
+import io.github.jason13official.spookiness.ritual.Kindling;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;

@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.event;
 
-import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
+import io.github.jason13official.spookiness.ritual.HallowedMotherTrigger;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;

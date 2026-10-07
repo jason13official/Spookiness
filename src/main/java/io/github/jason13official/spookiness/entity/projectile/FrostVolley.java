@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.entity.projectile;
 
-import io.github.jason13official.spookiness.effect.TemporaryBlocks;
+import io.github.jason13official.spookiness.world.TemporaryBlocks;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

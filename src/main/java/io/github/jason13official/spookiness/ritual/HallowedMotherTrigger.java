@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.boss;
+package io.github.jason13official.spookiness.ritual;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -79,6 +79,16 @@ public final class HallowedMotherTrigger {
         .withClickEvent(new ClickEvent.RunCommand(DENY_COMMAND)).withHoverEvent(new HoverEvent.ShowText(Component.translatable("message.spookiness.mother_deny_hover"))));
     return Component.translatable("message.spookiness.mother_warning").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC)
         .append(" ").append(accept).append(" ").append(deny);
+  }
+
+  public static void forget(ServerPlayer player) {
+
+    PENDING.remove(player.getUUID());
+  }
+
+  public static void clear() {
+
+    PENDING.clear();
   }
 
   private static boolean takePending(ServerPlayer player) {

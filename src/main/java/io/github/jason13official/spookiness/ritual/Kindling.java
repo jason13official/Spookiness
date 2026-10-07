@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.boss;
+package io.github.jason13official.spookiness.ritual;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

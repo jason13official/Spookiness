@@ -57,6 +57,10 @@ public final class PlayerFollowers {
     LOADED.remove(follower);
   }
 
+  public static void clear() {
+    LOADED.clear();
+  }
+
   public static Vec3 ringPosition(Vec3 center, double startAngle, int index, int count) {
 
     double angle = startAngle + Math.PI * 2.0 * index / count;

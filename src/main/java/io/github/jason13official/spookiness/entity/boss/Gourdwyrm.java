@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModEntities;
-import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
+import io.github.jason13official.spookiness.world.NetherrealmArena;
 import java.util.UUID;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import java.util.List;

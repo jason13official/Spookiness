@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.item;
 
-import io.github.jason13official.spookiness.effect.LamentRitual;
+import io.github.jason13official.spookiness.ritual.LamentRitual;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;

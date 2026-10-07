@@ -32,6 +32,11 @@ public final class HauntedHarvest {
     return isActive(level) ? chance * WAKE_MULTIPLIER : chance;
   }
 
+  public static void clear() {
+
+    ANNOUNCED.clear();
+  }
+
   public static void tick(ServerPlayer player) {
 
     if (player.tickCount % 20 != 0 || !isActive(player.level())) {

@@ -1,5 +1,7 @@
-package io.github.jason13official.spookiness.world.netherrealm;
+package io.github.jason13official.spookiness.worldgen.structure;
 
+import io.github.jason13official.spookiness.registry.ModStructures;
+import io.github.jason13official.spookiness.world.NetherrealmArena;
 import com.mojang.serialization.MapCodec;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;

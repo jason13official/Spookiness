@@ -1,5 +1,6 @@
-package io.github.jason13official.spookiness.world.netherrealm;
+package io.github.jason13official.spookiness.world;
 
+import io.github.jason13official.spookiness.registry.ModStructures;
 import com.mojang.datafixers.util.Pair;
 import io.github.jason13official.spookiness.block.entity.SoullessJackOMimicBlockEntity;
 import io.github.jason13official.spookiness.effect.SoulBurst;

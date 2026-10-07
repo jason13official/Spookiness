@@ -15,7 +15,7 @@ import io.github.jason13official.spookiness.registry.ModItems;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModTabs;
 import io.github.jason13official.spookiness.registry.ModTriggers;
-import io.github.jason13official.spookiness.world.netherrealm.ModStructures;
+import io.github.jason13official.spookiness.registry.ModStructures;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.minecraft.core.Registry;

@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
 import io.github.jason13official.spookiness.client.renderer.state.LamentConfigurationRenderState;
-import io.github.jason13official.spookiness.effect.LamentRitual;
+import io.github.jason13official.spookiness.ritual.LamentRitual;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.LightCoordsUtil;

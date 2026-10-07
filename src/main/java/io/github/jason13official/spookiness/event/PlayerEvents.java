@@ -1,9 +1,10 @@
 package io.github.jason13official.spookiness.event;
 
-import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
-import io.github.jason13official.spookiness.boss.MaceRituals;
+import io.github.jason13official.spookiness.ritual.HallowedMotherTrigger;
+import io.github.jason13official.spookiness.ritual.MaceRituals;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.effect.LamentRitual;
+import io.github.jason13official.spookiness.entity.BookStairs;
+import io.github.jason13official.spookiness.ritual.LamentRitual;
 import io.github.jason13official.spookiness.world.HauntedHarvest;
 import io.github.jason13official.spookiness.world.SpookySpawns;
 import net.minecraft.server.level.ServerLevel;
@@ -40,6 +41,8 @@ public final class PlayerEvents {
     gameBus.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> {
       if (event.getEntity() instanceof ServerPlayer player) {
         PlayerFollowers.stash(player);
+        BookStairs.forget(player);
+        HallowedMotherTrigger.forget(player);
       }
     });
   }

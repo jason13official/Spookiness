@@ -1,23 +1,15 @@
 package io.github.jason13official.spookiness.companion;
 
-import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.Spookiness;
-import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.registry.ModAttachments;
-import io.github.jason13official.spookiness.registry.ModDamageTypes;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -29,16 +21,11 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import org.jspecify.annotations.Nullable;
 
 public final class Hallowing {
-
-  public static final int MAX_ALLIES = 5;
-  public static final int DURABILITY_COST = 15;
-  public static final float HEALTH_COST = 2.0F;
 
   private static final int FOLLOW_PRIORITY = 3;
   private static final double FOLLOW_START_DISTANCE = 6.0;
@@ -66,31 +53,12 @@ public final class Hallowing {
     return PlayerFollowers.count(owner, Hallowing::isHallowed);
   }
 
-  public static boolean hallow(ServerLevel level, ServerPlayer player, Mob mob, ItemStack mace, InteractionHand hand) {
+  public static void hallow(Mob mob, Player owner) {
 
-    if (player.getHealth() <= HEALTH_COST) {
-      refuse(level, player, "message.spookiness.hallow_too_weak");
-      return false;
-    }
-    if (count(player) >= MAX_ALLIES) {
-      refuse(level, player, "message.spookiness.hallow_too_many");
-      return false;
-    }
-
-    mace.hurtAndBreak(DURABILITY_COST, player, hand);
-    player.hurtServer(level, level.damageSources().source(ModDamageTypes.HALLOWING), HEALTH_COST);
-    SoulBurst.spawn(level, player.getBoundingBox().getCenter(), 16, 0.3, 0.05);
-
-    mob.setData(ModAttachments.HALLOWED_OWNER, Optional.of(player.getUUID()));
+    mob.setData(ModAttachments.HALLOWED_OWNER, Optional.of(owner.getUUID()));
     mob.setTarget(null);
     mob.setPersistenceRequired();
     applyGoals(mob);
-
-    SoulBurst.spawn(level, mob.getBoundingBox().getCenter(), 32, 0.4, 0.08);
-    level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.5F, 1.2F);
-    player.sendOverlayMessage(Component.translatable("message.spookiness.hallowed", mob.getDisplayName()));
-    SpookyTrigger.award(player, SpookyTrigger.HALLOW);
-    return true;
   }
 
   public static void unhallow(Mob mob) {
@@ -152,12 +120,6 @@ public final class Hallowing {
     entity.level().addParticle(ParticleTypes.SOUL, center.x + (entity.getRandom().nextDouble() - 0.5) * spread * 2.0,
         center.y + (entity.getRandom().nextDouble() - 0.5) * entity.getBbHeight(), center.z + (entity.getRandom().nextDouble() - 0.5) * spread * 2.0,
         0.0, 0.02, 0.0);
-  }
-
-  private static void refuse(ServerLevel level, ServerPlayer player, String message) {
-
-    player.sendOverlayMessage(Component.translatable(message));
-    level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 0.6F, 0.5F);
   }
 
   private static final class FollowGoal extends FollowOwnerGoal {

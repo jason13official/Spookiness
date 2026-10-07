@@ -1,7 +1,7 @@
 package io.github.jason13official.spookiness.registry;
 
 import io.github.jason13official.spookiness.Spookiness;
-import io.github.jason13official.spookiness.boss.Kindling;
+import io.github.jason13official.spookiness.ritual.Kindling;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import net.minecraft.util.Util;
 import com.mojang.serialization.Codec;

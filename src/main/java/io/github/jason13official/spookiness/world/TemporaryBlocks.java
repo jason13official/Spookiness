@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.effect;
+package io.github.jason13official.spookiness.world;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

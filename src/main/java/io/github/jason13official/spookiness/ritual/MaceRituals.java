@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.boss;
+package io.github.jason13official.spookiness.ritual;
 
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.entity.JackOMimic;
@@ -41,7 +41,7 @@ public final class MaceRituals {
     }
 
     boolean performed = switch (ritual) {
-      case HALLOW -> Hallowing.hallow(level, serverPlayer, mob, mace, event.getHand());
+      case HALLOW -> HallowRitual.perform(level, serverPlayer, mob, mace, event.getHand());
       case KINDLE -> Kindling.start(level, serverPlayer, mob, Wickman.Variant.WICK);
       case FROSTWICK -> Kindling.start(level, serverPlayer, mob, Wickman.Variant.FROST);
     };

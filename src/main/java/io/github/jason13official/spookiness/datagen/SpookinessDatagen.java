@@ -1,7 +1,7 @@
 package io.github.jason13official.spookiness.datagen;
 
 import io.github.jason13official.spookiness.registry.ModDamageTypes;
-import io.github.jason13official.spookiness.world.netherrealm.ModStructures;
+import io.github.jason13official.spookiness.registry.ModStructures;
 import io.github.jason13official.spookiness.worldgen.ModBiomeModifiers;
 import io.github.jason13official.spookiness.worldgen.ModConfiguredFeatures;
 import io.github.jason13official.spookiness.worldgen.ModPlacedFeatures;

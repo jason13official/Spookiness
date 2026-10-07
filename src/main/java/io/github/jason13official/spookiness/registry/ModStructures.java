@@ -1,5 +1,7 @@
-package io.github.jason13official.spookiness.world.netherrealm;
+package io.github.jason13official.spookiness.registry;
 
+import io.github.jason13official.spookiness.worldgen.structure.NetherrealmStructure;
+import io.github.jason13official.spookiness.worldgen.structure.NetherrealmPiece;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
 import net.minecraft.world.level.levelgen.structure.BuiltinStructureSets;
 import java.util.Optional;
