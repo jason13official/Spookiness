@@ -1,11 +1,13 @@
 package io.github.jason13official.spookiness.registry;
 
-import io.github.jason13official.spookiness.block.entity.GourdwyrmTrophyBlockEntity;
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.block.entity.GourdwyrmTrophyBlockEntity;
 import io.github.jason13official.spookiness.block.entity.SoullessJackOMimicBlockEntity;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public class ModBlockEntities {
@@ -15,10 +17,15 @@ public class ModBlockEntities {
 
   public static void register(BiConsumer<BlockEntityType<?>, Identifier> consumer) {
 
-    SOULLESS_JACK_O_MIMIC = new BlockEntityType<>(SoullessJackOMimicBlockEntity::new, Set.of(ModBlocks.SOULLESS_JACK_O_MIMIC));
-    consumer.accept(SOULLESS_JACK_O_MIMIC, Spookiness.id("soulless_jack_o_mimic"));
+    SOULLESS_JACK_O_MIMIC = register(consumer, "soulless_jack_o_mimic", SoullessJackOMimicBlockEntity::new, ModBlocks.SOULLESS_JACK_O_MIMIC);
+    GOURDWYRM_TROPHY = register(consumer, "gourdwyrm_trophy", GourdwyrmTrophyBlockEntity::new, ModBlocks.GOURDWYRM_TROPHY);
+  }
 
-    GOURDWYRM_TROPHY = new BlockEntityType<>(GourdwyrmTrophyBlockEntity::new, Set.of(ModBlocks.GOURDWYRM_TROPHY));
-    consumer.accept(GOURDWYRM_TROPHY, Spookiness.id("gourdwyrm_trophy"));
+  private static <T extends BlockEntity> BlockEntityType<T> register(BiConsumer<BlockEntityType<?>, Identifier> consumer, String name,
+      BlockEntityType.BlockEntitySupplier<? extends T> factory, Block... validBlocks) {
+
+    BlockEntityType<T> type = new BlockEntityType<>(factory, Set.of(validBlocks));
+    consumer.accept(type, Spookiness.id(name));
+    return type;
   }
 }

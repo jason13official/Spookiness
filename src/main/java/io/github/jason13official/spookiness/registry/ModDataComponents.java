@@ -3,6 +3,7 @@ package io.github.jason13official.spookiness.registry;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.item.MaceStage;
 import java.util.function.BiConsumer;
+import java.util.function.UnaryOperator;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -18,16 +19,17 @@ public class ModDataComponents {
 
   public static void register(BiConsumer<DataComponentType<?>, Identifier> consumer) {
 
-    PUMPKIN_KILLS = DataComponentType.<Integer>builder().persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT).build();
-    consumer.accept(PUMPKIN_KILLS, Spookiness.id("pumpkin_kills"));
+    PUMPKIN_KILLS = register(consumer, "pumpkin_kills", builder -> builder.persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT));
+    LAMENT_ORIGIN = register(consumer, "lament_origin", builder -> builder.persistent(GlobalPos.CODEC).networkSynchronized(GlobalPos.STREAM_CODEC));
+    MACE_HARVEST = register(consumer, "mace_harvest", builder -> builder.persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT));
+    MACE_STAGE = register(consumer, "mace_stage", builder -> builder.persistent(MaceStage.CODEC).networkSynchronized(MaceStage.STREAM_CODEC));
+  }
 
-    LAMENT_ORIGIN = DataComponentType.<GlobalPos>builder().persistent(GlobalPos.CODEC).networkSynchronized(GlobalPos.STREAM_CODEC).build();
-    consumer.accept(LAMENT_ORIGIN, Spookiness.id("lament_origin"));
+  private static <T> DataComponentType<T> register(BiConsumer<DataComponentType<?>, Identifier> consumer, String name,
+      UnaryOperator<DataComponentType.Builder<T>> builder) {
 
-    MACE_HARVEST = DataComponentType.<Integer>builder().persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT).build();
-    consumer.accept(MACE_HARVEST, Spookiness.id("mace_harvest"));
-
-    MACE_STAGE = DataComponentType.<MaceStage>builder().persistent(MaceStage.CODEC).networkSynchronized(MaceStage.STREAM_CODEC).build();
-    consumer.accept(MACE_STAGE, Spookiness.id("mace_stage"));
+    DataComponentType<T> type = builder.apply(DataComponentType.builder()).build();
+    consumer.accept(type, Spookiness.id(name));
+    return type;
   }
 }

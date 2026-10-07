@@ -26,37 +26,32 @@ public class ModAttachments {
 
   public static void register(BiConsumer<AttachmentType<?>, Identifier> consumer) {
 
-    STASHED_COMPANIONS = AttachmentType.<List<CompoundTag>>builder(() -> List.of())
-        .serialize(CompoundTag.CODEC.listOf().fieldOf("companions"), companions -> !companions.isEmpty())
-        .build();
-    consumer.accept(STASHED_COMPANIONS, Spookiness.id("stashed_companions"));
+    STASHED_COMPANIONS = register(consumer, "stashed_companions", AttachmentType.<List<CompoundTag>>builder(() -> List.of())
+        .serialize(CompoundTag.CODEC.listOf().fieldOf("companions"), companions -> !companions.isEmpty()));
 
-    BOOK_AWAKENED = AttachmentType.builder(() -> false)
+    BOOK_AWAKENED = register(consumer, "book_awakened", AttachmentType.builder(() -> false)
         .serialize(Codec.BOOL.fieldOf("book_awakened"), awakened -> awakened)
-        .sync(ByteBufCodecs.BOOL)
-        .build();
-    consumer.accept(BOOK_AWAKENED, Spookiness.id("book_awakened"));
+        .sync(ByteBufCodecs.BOOL));
 
-    LAMENT_RITUAL = AttachmentType.builder(() -> 0)
-        .sync(ByteBufCodecs.VAR_INT)
-        .build();
-    consumer.accept(LAMENT_RITUAL, Spookiness.id("lament_ritual"));
+    LAMENT_RITUAL = register(consumer, "lament_ritual", AttachmentType.builder(() -> 0)
+        .sync(ByteBufCodecs.VAR_INT));
 
-    HALLOWED_OWNER = AttachmentType.<Optional<UUID>>builder(Optional::empty)
+    HALLOWED_OWNER = register(consumer, "hallowed_owner", AttachmentType.<Optional<UUID>>builder(Optional::empty)
         .serialize(UUIDUtil.CODEC.optionalFieldOf("owner"), Optional::isPresent)
-        .sync(ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC))
-        .build();
-    consumer.accept(HALLOWED_OWNER, Spookiness.id("hallowed_owner"));
+        .sync(ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC)));
 
-    MOTHER_NIGHT = AttachmentType.builder(() -> -1L)
+    MOTHER_NIGHT = register(consumer, "mother_night", AttachmentType.builder(() -> -1L)
         .serialize(Codec.LONG.fieldOf("mother_night"), night -> night >= 0L)
-        .copyOnDeath()
-        .build();
-    consumer.accept(MOTHER_NIGHT, Spookiness.id("mother_night"));
+        .copyOnDeath());
 
-    KINDLE = AttachmentType.builder(() -> new Kindling.Kindle(Util.NIL_UUID, Wickman.Variant.WICK, 0))
-        .serialize(Kindling.Kindle.CODEC.fieldOf("kindle"))
-        .build();
-    consumer.accept(KINDLE, Spookiness.id("kindle"));
+    KINDLE = register(consumer, "kindle", AttachmentType.builder(() -> new Kindling.Kindle(Util.NIL_UUID, Wickman.Variant.WICK, 0))
+        .serialize(Kindling.Kindle.CODEC.fieldOf("kindle")));
+  }
+
+  private static <T> AttachmentType<T> register(BiConsumer<AttachmentType<?>, Identifier> consumer, String name, AttachmentType.Builder<T> builder) {
+
+    AttachmentType<T> type = builder.build();
+    consumer.accept(type, Spookiness.id(name));
+    return type;
   }
 }
