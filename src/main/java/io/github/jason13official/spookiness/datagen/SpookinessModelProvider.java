@@ -26,6 +26,7 @@ import io.github.jason13official.spookiness.item.MaceStage;
 import io.github.jason13official.spookiness.registry.ModDataComponents;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.client.renderer.item.SelectItemModel;
 import net.minecraft.client.renderer.item.properties.select.ComponentContents;
@@ -53,6 +54,12 @@ public class SpookinessModelProvider extends ModelProvider {
       .build();
 
   private static final ModelTemplate SOULLESS_BASE = new ModelTemplate(Optional.of(Identifier.withDefaultNamespace("block/block")), Optional.empty(), TextureSlot.PARTICLE);
+
+  private static final TextureSlot MACE_TEXTURE = TextureSlot.create("0");
+
+  private static final ModelTemplate MACE_RETEXTURE = new ModelTemplate(Optional.of(Spookiness.id("item/pumpkin_mace")), Optional.empty(), MACE_TEXTURE, TextureSlot.PARTICLE);
+
+  private static final Map<MaceStage, String> MACE_RETEXTURES = Map.of(MaceStage.CARVED, "carved", MaceStage.LANTERN, "lantern", MaceStage.BLAZING, "lantern");
 
   public SpookinessModelProvider(PackOutput output) {
     super(output, Spookiness.MOD_ID);
@@ -90,7 +97,13 @@ public class SpookinessModelProvider extends ModelProvider {
     List<SelectItemModel.SwitchCase<MaceStage>> maceStages = new ArrayList<>();
     for (MaceStage stage : MaceStage.values()) {
       if (stage != MaceStage.PUMPKIN) {
-        maceStages.add(ItemModelUtils.when(stage, ItemModelUtils.plainModel(mace.withSuffix("_" + stage.getSerializedName()))));
+        Identifier stageModel = mace.withSuffix("_" + stage.getSerializedName());
+        String texture = MACE_RETEXTURES.get(stage);
+        if (texture != null) {
+          Material material = new Material(Spookiness.id("item/pumpkin_mace_" + texture));
+          MACE_RETEXTURE.create(stageModel, new TextureMapping().put(MACE_TEXTURE, material).put(TextureSlot.PARTICLE, material), itemModels.modelOutput);
+        }
+        maceStages.add(ItemModelUtils.when(stage, ItemModelUtils.plainModel(stageModel)));
       }
     }
     itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.select(new ComponentContents<>(ModDataComponents.MACE_STAGE), ItemModelUtils.plainModel(mace), maceStages));

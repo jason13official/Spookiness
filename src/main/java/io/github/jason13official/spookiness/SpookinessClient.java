@@ -1,7 +1,6 @@
 package io.github.jason13official.spookiness;
 
 import io.github.jason13official.spookiness.client.renderer.GourdwyrmTrophyRenderer;
-import io.github.jason13official.spookiness.client.fog.KindleFog;
 import io.github.jason13official.spookiness.client.model.FloatingBookModel;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
 import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
@@ -91,15 +90,6 @@ public class SpookinessClient {
 
     // RenderHandEvent
     NeoForge.EVENT_BUS.addListener(LamentConfigurationOverlay::render);
-
-    // ClientTickEvent.Post
-    NeoForge.EVENT_BUS.addListener(KindleFog::tick);
-
-    // ViewportEvent.RenderFog
-    NeoForge.EVENT_BUS.addListener(KindleFog::renderFog);
-
-    // ViewportEvent.ComputeFogColor
-    NeoForge.EVENT_BUS.addListener(KindleFog::fogColor);
 
     // EntityRenderersEvent.AddLayers
     modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {
