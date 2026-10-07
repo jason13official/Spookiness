@@ -8,7 +8,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.Hallowing;
-import io.github.jason13official.spookiness.entity.boss.HallowedMother;
+import io.github.jason13official.spookiness.entity.boss.mother.HallowedMother;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import io.github.jason13official.spookiness.worldgen.ModBiomeModifiers;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.entity.boss;
+package io.github.jason13official.spookiness.entity.boss.mother;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.entity.JackOMimic;

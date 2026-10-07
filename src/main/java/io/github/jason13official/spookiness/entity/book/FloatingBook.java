@@ -1,5 +1,6 @@
-package io.github.jason13official.spookiness.entity;
+package io.github.jason13official.spookiness.entity.book;
 
+import io.github.jason13official.spookiness.entity.FloatingPathfinderMob;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import net.minecraft.world.entity.EntityDimensions;
 import com.mojang.serialization.Codec;
@@ -51,18 +52,7 @@ public class FloatingBook extends FloatingPathfinderMob {
   private static final EntityDataAccessor<Boolean> DATA_PHASING = SynchedEntityData.defineId(FloatingBook.class, EntityDataSerializers.BOOLEAN);
 
   private static final double READING_DISTANCE = 4.0;
-  private static final int MAX_STILL_TIMEOUT = 10;
-  private static final double STEP_DISTANCE = 1.6;
-  private static final double STEP_RISE = 0.6;
-  private static final double STEP_RETARGET_DISTANCE = 0.5;
-  private static final double STEP_SETTLE_DISTANCE = 0.3;
-  private static final double PASS_DISTANCE = 1.5;
-  private static final int STEP_HOLD_TICKS = 40;
-  private static final double PHASE_MARGIN = 0.2;
-  private static final double DETOUR_CLEARANCE = 0.4;
-  private static final double DETOUR_ARC = 2.5;
-  private static final double DETOUR_LEAD = 0.6;
-  private static final double PATHFIND_DISTANCE = 4.0;
+  static final int MAX_STILL_TIMEOUT = 10;
   private static final float PHASE_ALPHA = 0.5F;
   private static final float PHASE_FADE_PER_TICK = 0.1F;
   private static final float LAPIS_BLOCK_CHANCE = 0.25F;
@@ -95,9 +85,6 @@ public class FloatingBook extends FloatingPathfinderMob {
   private boolean supportingPlayer;
   private @Nullable Player guidedPlayer;
   private @Nullable FloatingBook guidePlatform;
-  private @Nullable Vec3 stepTarget;
-  private boolean stepSettled;
-  private int stepHoldTicks;
   private float alpha = 1.0F;
   private float oAlpha = 1.0F;
 
@@ -115,7 +102,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     int goalPriority = 1;
 
     this.goalSelector.addGoal(goalPriority++, new MeleeAttackGoal(this, 1.4, true));
-    this.goalSelector.addGoal(goalPriority++, new StepGoal());
+    this.goalSelector.addGoal(goalPriority++, new BookStepGoal(this));
     this.goalSelector.addGoal(goalPriority++, new ReturnToShelfGoal());
     this.goalSelector.addGoal(goalPriority++, new WaterAvoidingRandomFlyingGoal(this, 1.0) {
 
@@ -159,7 +146,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     return this.staysStill() || this.serverStillTimeout > 0;
   }
 
-  private void setServerStillTimeout(int timeout) {
+  void setServerStillTimeout(int timeout) {
     if (this.serverStillTimeout <= 0 && timeout > 0 && this.level() instanceof ServerLevel level) {
       this.syncPacketPositionCodec(this.getX(), this.getY(), this.getZ());
       level.getChunkSource().chunkMap.sendToTrackingPlayers(this, ClientboundEntityPositionSyncPacket.of(this));
@@ -168,7 +155,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     this.entityData.set(DATA_STAYS_STILL, timeout > 0);
   }
 
-  private boolean isCalmStep() {
+  boolean isCalmStep() {
     return this.isAlive() && this.isNeutral() && !this.isAggressive();
   }
 
@@ -187,6 +174,18 @@ public class FloatingBook extends FloatingPathfinderMob {
     return this.isCalmStep() && this.getTarget() == null && !this.supportingPlayer && this.guidedPlayer == null;
   }
 
+  @Nullable Player guidedPlayer() {
+    return this.guidedPlayer;
+  }
+
+  @Nullable FloatingBook guidePlatform() {
+    return this.guidePlatform;
+  }
+
+  boolean isSupportingPlayer() {
+    return this.supportingPlayer;
+  }
+
   public boolean isGuiding(Player player) {
     return this.guidedPlayer == player;
   }
@@ -194,7 +193,6 @@ public class FloatingBook extends FloatingPathfinderMob {
   public void startGuiding(Player player, FloatingBook platform) {
     this.guidedPlayer = player;
     this.guidePlatform = platform;
-    this.stepTarget = null;
   }
 
   public void setGuidePlatform(FloatingBook platform) {
@@ -204,9 +202,6 @@ public class FloatingBook extends FloatingPathfinderMob {
   public void stopGuiding() {
     this.guidedPlayer = null;
     this.guidePlatform = null;
-    this.stepTarget = null;
-    this.stepSettled = false;
-    this.stepHoldTicks = 0;
     this.setPhasing(false);
   }
 
@@ -214,7 +209,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     return this.entityData.get(DATA_PHASING);
   }
 
-  private void setPhasing(boolean phasing) {
+  void setPhasing(boolean phasing) {
     this.entityData.set(DATA_PHASING, phasing);
   }
 
@@ -222,7 +217,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     return Mth.lerp(partialTicks, this.oAlpha, this.alpha);
   }
 
-  private boolean canPhase() {
+  boolean canPhase() {
     return this.isNeutral() && !this.supportingPlayer && !this.isBelowAnyPlayer();
   }
 
@@ -583,138 +578,6 @@ public class FloatingBook extends FloatingPathfinderMob {
       } else if (this.returnTicks % 10 == 1) {
         book.getNavigation().moveTo(front.x, front.y, front.z, 1.0);
       }
-    }
-  }
-
-  private class StepGoal extends Goal {
-
-    StepGoal() {
-      this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
-    }
-
-    @Override
-    public boolean canUse() {
-      return FloatingBook.this.guidedPlayer != null;
-    }
-
-    @Override
-    public boolean canContinueToUse() {
-      return FloatingBook.this.guidedPlayer != null;
-    }
-
-    @Override
-    public void stop() {
-      FloatingBook.this.stopGuiding();
-      if (!FloatingBook.this.supportingPlayer) {
-        FloatingBook.this.setServerStillTimeout(0);
-      }
-    }
-
-    @Override
-    public boolean requiresUpdateEveryTick() {
-      return true;
-    }
-
-    @Override
-    public void tick() {
-      FloatingBook book = FloatingBook.this;
-      Player player = book.guidedPlayer;
-      FloatingBook platform = book.guidePlatform;
-      if (player == null || platform == null || platform.isRemoved() || !book.isCalmStep() || book.getTarget() != null || !BookStairs.isGuide(player, book)) {
-        book.stopGuiding();
-        return;
-      }
-
-      float yaw = player.getYRot();
-      if (book.stepHoldTicks > 0) {
-        book.stepHoldTicks--;
-      } else {
-        Vec3 candidate = this.findStep(platform.position(), yaw);
-        if (candidate != null && (book.stepTarget == null || candidate.distanceTo(book.stepTarget) > STEP_RETARGET_DISTANCE)) {
-          book.stepTarget = candidate;
-          book.stepSettled = false;
-        }
-      }
-      if (book.stepTarget == null) {
-        return;
-      }
-
-      Vec3 target = book.stepTarget;
-      boolean overlapping = book.getBoundingBox().inflate(PHASE_MARGIN).intersects(player.getBoundingBox());
-
-      if (book.stepSettled || book.position().distanceTo(target) < STEP_SETTLE_DISTANCE) {
-        book.setPhasing(overlapping && book.canPhase());
-        if (!book.stepSettled) {
-          book.stepSettled = true;
-          book.stepHoldTicks = STEP_HOLD_TICKS;
-          book.setPos(target.x, target.y, target.z);
-          book.setYRot(yaw);
-          book.yBodyRot = yaw;
-          book.yHeadRot = yaw;
-        }
-        book.setDeltaMovement(Vec3.ZERO);
-        book.setServerStillTimeout(MAX_STILL_TIMEOUT);
-        return;
-      }
-
-      book.setServerStillTimeout(0);
-      book.getLookControl().setLookAt(player);
-
-      double horizontal = book.position().subtract(player.position()).horizontalDistance();
-      boolean behindPlayer = book.position().subtract(target).horizontalDistance() > player.position().subtract(target).horizontalDistance();
-      boolean mustPass = overlapping || (behindPlayer && horizontal < PASS_DISTANCE);
-
-      Vec3 wanted = target;
-      if (book.isPhasing() || (mustPass && book.canPhase())) {
-        book.setPhasing(true);
-      } else if (mustPass) {
-        wanted = this.detour(player, target);
-      }
-
-      if (!book.isPhasing() && book.position().distanceTo(wanted) > PATHFIND_DISTANCE) {
-        if (book.tickCount % 10 == 0 || book.getNavigation().isDone()) {
-          book.getNavigation().moveTo(wanted.x, wanted.y, wanted.z, 1.0);
-        }
-      } else {
-        book.getNavigation().stop();
-        book.getMoveControl().setWantedPosition(wanted.x, wanted.y, wanted.z, 1.0);
-      }
-    }
-
-    private Vec3 detour(Player player, Vec3 target) {
-      FloatingBook book = FloatingBook.this;
-      Vec3 toTarget = target.subtract(player.position()).multiply(1.0, 0.0, 1.0);
-      Vec3 forward = toTarget.lengthSqr() > 1.0E-4 ? toTarget.normalize() : Vec3.ZERO;
-      Vec3 lead = player.position().add(forward.scale(DETOUR_LEAD));
-
-      Vec3 over = new Vec3(lead.x, player.getY() + player.getBbHeight() + DETOUR_CLEARANCE, lead.z);
-      Vec3 under = new Vec3(lead.x, player.getY() - book.getBbHeight() - DETOUR_CLEARANCE, lead.z);
-      Vec3 side = new Vec3(-forward.z, 0.0, forward.x).scale(DETOUR_ARC);
-      Vec3 left = player.position().add(side).add(0.0, target.y - player.getY(), 0.0);
-      Vec3 right = player.position().subtract(side).add(0.0, target.y - player.getY(), 0.0);
-      Vec3 nearSide = left.distanceToSqr(book.position()) <= right.distanceToSqr(book.position()) ? left : right;
-      Vec3 farSide = nearSide == left ? right : left;
-
-      for (Vec3 waypoint : new Vec3[] {over, under, nearSide, farSide}) {
-        if (book.level().noCollision(book, book.getDimensions(book.getPose()).makeBoundingBox(waypoint))) {
-          return waypoint;
-        }
-      }
-      return target;
-    }
-
-    private @Nullable Vec3 findStep(Vec3 from, float yaw) {
-      FloatingBook book = FloatingBook.this;
-      double radians = yaw * Mth.DEG_TO_RAD;
-      Vec3 forward = new Vec3(-Mth.sin((float) radians), 0.0, Mth.cos((float) radians)).scale(STEP_DISTANCE);
-      for (double rise : new double[] {STEP_RISE, 0.0}) {
-        Vec3 candidate = from.add(forward).add(0.0, rise, 0.0);
-        AABB space = book.getDimensions(book.getPose()).makeBoundingBox(candidate);
-        if (book.level().noCollision(book, space)) {
-          return candidate;
-        }
-      }
-      return null;
     }
   }
 }

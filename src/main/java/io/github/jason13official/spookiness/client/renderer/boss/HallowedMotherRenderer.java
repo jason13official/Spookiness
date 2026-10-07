@@ -5,7 +5,7 @@ import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.HallowedMotherModel;
 import io.github.jason13official.spookiness.client.model.JackOMimicModel;
 import io.github.jason13official.spookiness.client.renderer.state.HallowedMotherRenderState;
-import io.github.jason13official.spookiness.entity.boss.HallowedMother;
+import io.github.jason13official.spookiness.entity.boss.mother.HallowedMother;
 import java.util.ArrayList;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.MobRenderer;

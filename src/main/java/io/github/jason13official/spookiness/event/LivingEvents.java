@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.entity.PumpkinHeads;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.entity.JackOMimic;
-import io.github.jason13official.spookiness.entity.boss.MotherBrood;
+import io.github.jason13official.spookiness.entity.boss.mother.MotherBrood;
 import io.github.jason13official.spookiness.entity.boss.Wickman;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import io.github.jason13official.spookiness.registry.ModItems;

@@ -1,8 +1,7 @@
-package io.github.jason13official.spookiness.entity.boss;
+package io.github.jason13official.spookiness.entity.boss.gourdwyrm;
 
 import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.util.SpookyMath;
-import io.github.jason13official.spookiness.lighting.LivingLights;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -55,9 +54,6 @@ public class Gourdwyrm extends Mob implements Enemy {
   private static final EntityDataAccessor<Integer> DATA_LIT = SynchedEntityData.defineId(Gourdwyrm.class, EntityDataSerializers.INT);
   private static final EntityDataAccessor<Integer> DATA_LENGTH = SynchedEntityData.defineId(Gourdwyrm.class, EntityDataSerializers.INT);
 
-  private static final int SPACING = 3;
-  private static final int HISTORY = SEGMENTS * SPACING + 1;
-  private static final float SEGMENT_SIZE = 2.0F;
   private static final float UNLIT_MULTIPLIER = 0.25F;
   private static final int LIT_INTERVAL = 200;
   private static final int LIT_COUNT = 3;
@@ -89,12 +85,9 @@ public class Gourdwyrm extends Mob implements Enemy {
   private static final float CONTACT_DAMAGE = 10.0F;
   private static final double HEAD_REACH = 1.5;
   private static final double SEGMENT_REACH = 0.4;
-  private static final int SEGMENT_LIGHT = 15;
   private static final double DEATH_HEIGHT = 2.5;
 
-  private final GourdwyrmPart[] segments = new GourdwyrmPart[SEGMENTS];
-  private final Vec3[] path = new Vec3[HISTORY];
-  private int pathHead = -1;
+  private final GourdwyrmBody body = new GourdwyrmBody(this);
 
   private final ServerBossEvent bossEvent = new ServerBossEvent(UUID.randomUUID(), this.getDisplayName(), BossEvent.BossBarColor.RED,
       BossEvent.BossBarOverlay.NOTCHED_12);
@@ -108,9 +101,6 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   public Gourdwyrm(EntityType<? extends Gourdwyrm> type, Level level) {
     super(type, level);
-    for (int i = 0; i < SEGMENTS; i++) {
-      this.segments[i] = new GourdwyrmPart(this, i, SEGMENT_SIZE);
-    }
     this.setId(ENTITY_COUNTER.getAndAdd(SEGMENTS + 1) + 1);
     this.noPhysics = true;
     this.setNoGravity(true);
@@ -139,9 +129,7 @@ public class Gourdwyrm extends Mob implements Enemy {
   @Override
   public void setId(int id) {
     super.setId(id);
-    for (int i = 0; i < SEGMENTS; i++) {
-      this.segments[i].setId(id + i + 1);
-    }
+    this.body.assignIds(id + 1);
   }
 
   @Override
@@ -159,11 +147,11 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   @Override
   public PartEntity<?>[] getParts() {
-    return this.segments;
+    return this.body.segments();
   }
 
   public GourdwyrmPart[] getSegments() {
-    return this.segments;
+    return this.body.segments();
   }
 
   public Phase getPhase() {
@@ -189,34 +177,21 @@ public class Gourdwyrm extends Mob implements Enemy {
   @Override
   public void tick() {
     super.tick();
-    this.recordPath();
-    this.positionSegments();
-    this.updateSegmentLights();
+    this.body.tick();
   }
 
   @Override
   public void onSyncedDataUpdated(EntityDataAccessor<?> accessor) {
     super.onSyncedDataUpdated(accessor);
     if (DATA_LIT.equals(accessor) || DATA_LENGTH.equals(accessor)) {
-      for (GourdwyrmPart segment : this.segments) {
-        segment.refreshDimensions();
-      }
-    }
-  }
-
-  private void updateSegmentLights() {
-    for (GourdwyrmPart segment : this.segments) {
-      boolean lit = this.isAlive() && this.isSegmentAlive(segment.index) && this.isSegmentLit(segment.index);
-      LivingLights.update(segment, lit ? SEGMENT_LIGHT : 0);
+      this.body.refreshDimensions();
     }
   }
 
   @Override
   public void onRemovedFromLevel() {
     super.onRemovedFromLevel();
-    for (GourdwyrmPart segment : this.segments) {
-      LivingLights.remove(segment);
-    }
+    this.body.removeLights();
   }
 
   @Override
@@ -227,40 +202,6 @@ public class Gourdwyrm extends Mob implements Enemy {
       this.setDeltaMovement(Vec3.ZERO);
     }
     super.die(source);
-  }
-
-  private void recordPath() {
-
-    Vec3 pos = this.position();
-    if (this.pathHead < 0) {
-      for (int i = 0; i < HISTORY; i++) {
-        this.path[i] = pos;
-      }
-      this.pathHead = 0;
-      return;
-    }
-    this.pathHead = (this.pathHead + 1) % HISTORY;
-    this.path[this.pathHead] = pos;
-  }
-
-  private Vec3 pathSample(int ticksAgo) {
-    return this.path[Math.floorMod(this.pathHead - ticksAgo, HISTORY)];
-  }
-
-  private void positionSegments() {
-
-    float centerOffset = (this.getBbHeight() - SEGMENT_SIZE) * 0.5F;
-    for (int i = 0; i < SEGMENTS; i++) {
-      GourdwyrmPart segment = this.segments[i];
-      Vec3 sample = this.pathSample((i + 1) * SPACING);
-      segment.xo = segment.getX();
-      segment.yo = segment.getY();
-      segment.zo = segment.getZ();
-      segment.xOld = segment.xo;
-      segment.yOld = segment.yo;
-      segment.zOld = segment.zo;
-      segment.setPos(sample.x, sample.y + centerOffset, sample.z);
-    }
   }
 
   @Override
@@ -464,7 +405,7 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   private void contactDamage(ServerLevel level) {
     this.ram(level, this.getBoundingBox().inflate(HEAD_REACH));
-    for (GourdwyrmPart segment : this.segments) {
+    for (GourdwyrmPart segment : this.body.segments()) {
       if (this.isSegmentAlive(segment.index)) {
         this.ram(level, segment.getBoundingBox().inflate(SEGMENT_REACH));
       }
@@ -484,7 +425,7 @@ public class Gourdwyrm extends Mob implements Enemy {
   private void shed(ServerLevel level) {
 
     for (int i = SHED_LENGTH; i < SEGMENTS; i++) {
-      GourdwyrmPart segment = this.segments[i];
+      GourdwyrmPart segment = this.body.segments()[i];
       level.sendParticles(ParticleTypes.EXPLOSION, segment.getX(), segment.getY() + 1.0, segment.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
       Spawning.spawn(level, ModEntities.JACK_O_MIMIC, EntitySpawnReason.EVENT, segment.position(), SpookyMath.randomYaw(this.random));
     }

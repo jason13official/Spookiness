@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.util.Spawning;
 import net.minecraft.world.level.levelgen.Heightmap;
 import io.github.jason13official.spookiness.effect.Particles;
-import io.github.jason13official.spookiness.entity.FloatingBook;
+import io.github.jason13official.spookiness.entity.book.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
 import io.github.jason13official.spookiness.entity.FloatingLantern;
 import io.github.jason13official.spookiness.entity.FloatingSkull;

@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.entity;
+package io.github.jason13official.spookiness.entity.book;
 
 import java.util.Comparator;
 import java.util.Map;

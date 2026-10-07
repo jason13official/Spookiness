@@ -5,7 +5,7 @@ import io.github.jason13official.spookiness.registry.ModStructures;
 import com.mojang.datafixers.util.Pair;
 import io.github.jason13official.spookiness.block.entity.SoullessJackOMimicBlockEntity;
 import io.github.jason13official.spookiness.effect.Particles;
-import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
+import io.github.jason13official.spookiness.entity.boss.gourdwyrm.Gourdwyrm;
 import io.github.jason13official.spookiness.entity.boss.VigilCandle;
 import java.util.ArrayList;
 import java.util.List;

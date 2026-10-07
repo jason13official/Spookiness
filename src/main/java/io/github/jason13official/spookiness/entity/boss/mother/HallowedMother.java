@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.entity.boss;
+package io.github.jason13official.spookiness.entity.boss.mother;
 
 import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.world.SpookyTime;
@@ -12,7 +12,6 @@ import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.JackOMimic;
-import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.ArrayList;
@@ -50,7 +49,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
@@ -78,7 +76,7 @@ public class HallowedMother extends Monster implements LightEmitter {
   private static final double HOLD_DISTANCE = 4.5;
   private static final double HOLD_TOLERANCE = 0.4;
   private static final float RECLAIM_HEAL = 40.0F;
-  private static final byte SPIT_EVENT = 4;
+  static final byte SPIT_EVENT = 4;
   private static final int VOLLEY_INTERVAL = 140;
   private static final int VOLLEY_SIZE = 3;
   private static final int SPIT_GAP = 12;
@@ -105,27 +103,13 @@ public class HallowedMother extends Monster implements LightEmitter {
   private static final double BLAST_LIFT = 0.75;
   private static final float BLAST_DAMAGE = 6.0F;
   private static final float GAPE_SPEED = 0.15F;
-  private static final int FEAST_COOLDOWN = 400;
-  private static final double FEAST_RANGE = 16.0;
-  private static final float FEAST_MAX_WIDTH = 1.5F;
-  private static final int INHALE_TICKS = 40;
-  private static final double INHALE_PULL = 0.5;
-  private static final double SWALLOW_DISTANCE = 1.5;
-  private static final int DIGEST_TICKS = 120;
-  private static final int DIGEST_INTERVAL = 30;
-  private static final float DIGEST_DAMAGE = 2.0F;
-  private static final int DIGEST_POISON_TICKS = 60;
-  private static final double BELLY_FORWARD = 0.6;
-  private static final double BELLY_HEIGHT = 1.0;
-  private static final double SPIT_OUT_SPEED = 1.4;
-  private static final double SPIT_OUT_LIFT = 0.5;
   private static final int CLOUD_INTERVAL = 160;
   private static final float CLOUD_RADIUS = 3.0F;
   private static final int CLOUD_DURATION = 140;
   private static final double CLOUD_MIN_DISTANCE = 4.0;
   private static final double CLOUD_MAX_DISTANCE = 10.0;
-  private static final int CLOUD_ORANGE = 0xFF8A1E;
-  private static final int CLOUD_GREEN = 0x6BCB3A;
+  static final int CLOUD_ORANGE = 0xFF8A1E;
+  static final int CLOUD_GREEN = 0x6BCB3A;
   private static final float PROJECTILE_MULTIPLIER = 0.4F;
   private static final float MACE_MULTIPLIER = 2.0F;
   private static final int BROOD_PARTICLE_INTERVAL = 4;
@@ -146,11 +130,7 @@ public class HallowedMother extends Monster implements LightEmitter {
   private int burstSpits;
   private int burstCooldown = BURST_COOLDOWN / 5;
   private float gape;
-  private Feast feast = Feast.NONE;
-  private int feastTicks;
-  private int feastCooldown = FEAST_COOLDOWN / 2;
-  private @Nullable UUID meal;
-  private boolean spitMealEarly;
+  private final MotherFeast feast = new MotherFeast(this);
   private float oGape;
 
   public final AnimationState spitAnimationState = new AnimationState();
@@ -209,6 +189,14 @@ public class HallowedMother extends Monster implements LightEmitter {
     return this.getHealth() < this.getMaxHealth() * 0.5F;
   }
 
+  void setGaping(boolean gaping) {
+    this.entityData.set(DATA_GAPING, gaping);
+  }
+
+  void cancelVolley() {
+    this.volleyRemaining = 0;
+  }
+
   public void releaseTether() {
 
     Entity tethered = this.getTethered();
@@ -258,15 +246,15 @@ public class HallowedMother extends Monster implements LightEmitter {
       this.tickBurst(level, target);
       return;
     }
-    if (this.feast != Feast.NONE) {
-      this.tickFeast(level);
+    if (this.feast.isActive()) {
+      this.feast.tick(level);
       return;
     }
     if (--this.burstCooldown <= 0 && this.tickCount % BROOD_INTERVAL == 0 && this.isCrowded(level)) {
       this.startBurst();
       return;
     }
-    if (--this.feastCooldown <= 0 && this.tickCount % BROOD_INTERVAL == 0 && this.startFeast(level)) {
+    if (this.feast.tryStart(level)) {
       return;
     }
 
@@ -302,7 +290,7 @@ public class HallowedMother extends Monster implements LightEmitter {
     return living;
   }
 
-  private boolean isBrood(Entity entity) {
+  boolean isBrood(Entity entity) {
     return this.brood.contains(entity.getUUID());
   }
 
@@ -334,114 +322,6 @@ public class HallowedMother extends Monster implements LightEmitter {
         entity -> entity != this && entity.isAlive() && !(entity instanceof JackOMimic) && !this.isBrood(entity)
             && !(entity instanceof Player player && (player.isSpectator() || player.isCreative())))
         .size() >= CROWD_COUNT;
-  }
-
-  private Vec3 bellyPosition() {
-
-    float radians = this.yBodyRot * Mth.DEG_TO_RAD;
-    return this.position().add(-Mth.sin(radians) * BELLY_FORWARD, BELLY_HEIGHT, Mth.cos(radians) * BELLY_FORWARD);
-  }
-
-  private boolean isEnemy(LivingEntity entity) {
-
-    if (entity == this || !entity.isAlive() || entity instanceof JackOMimic || this.isBrood(entity) || entity.getBbWidth() > FEAST_MAX_WIDTH) {
-      return false;
-    }
-    if (entity instanceof Player player) {
-      return !player.isSpectator() && !player.isCreative();
-    }
-    return Hallowing.isHallowed(entity) || entity instanceof IronGolem || entity instanceof SpectralJackOMimic
-        || entity instanceof Mob mob && mob.getTarget() == this;
-  }
-
-  private boolean startFeast(ServerLevel level) {
-
-    LivingEntity prey = level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(FEAST_RANGE), this::isEnemy).stream()
-        .min(Comparator.comparingDouble((LivingEntity entity) -> -entity.getHealth()).thenComparingDouble(this::distanceToSqr))
-        .orElse(null);
-    if (prey == null) {
-      return false;
-    }
-    this.releaseTether();
-    this.volleyRemaining = 0;
-    this.meal = prey.getUUID();
-    this.feast = Feast.INHALING;
-    this.feastTicks = 0;
-    this.spitMealEarly = false;
-    this.entityData.set(DATA_GAPING, true);
-    this.playSound(SoundEvents.WARDEN_SNIFF, 3.0F, 0.5F);
-    this.playSound(SoundEvents.BREEZE_IDLE_GROUND, 1.5F, 0.6F);
-    return true;
-  }
-
-  private @Nullable LivingEntity getMeal(ServerLevel level) {
-    return this.meal != null && level.getEntity(this.meal) instanceof LivingEntity prey && prey.isAlive() ? prey : null;
-  }
-
-  private void tickFeast(ServerLevel level) {
-
-    this.feastTicks++;
-    LivingEntity prey = this.getMeal(level);
-    if (prey == null || prey instanceof Player player && (player.isSpectator() || player.isCreative())) {
-      this.endFeast();
-      return;
-    }
-
-    Vec3 belly = this.bellyPosition();
-    if (this.feast == Feast.INHALING) {
-      Vec3 toBelly = belly.subtract(prey.position());
-      if (toBelly.length() > FEAST_RANGE + 4.0) {
-        this.endFeast();
-        return;
-      }
-      Vec3 pull = toBelly.normalize().scale(Math.min(INHALE_PULL, toBelly.length()));
-      prey.setDeltaMovement(pull);
-      prey.hurtMarked = true;
-      level.sendParticles(ParticleTypes.CLOUD, prey.getX(), prey.getY() + prey.getBbHeight() * 0.5, prey.getZ(), 3, 0.3, 0.3, 0.3, 0.02);
-      if (toBelly.length() < SWALLOW_DISTANCE || this.feastTicks >= INHALE_TICKS) {
-        this.feast = Feast.DIGESTING;
-        this.feastTicks = 0;
-        this.playSound(SoundEvents.GENERIC_EAT.value(), 3.0F, 0.5F);
-      }
-      return;
-    }
-
-    prey.setDeltaMovement(Vec3.ZERO);
-    prey.teleportTo(belly.x, belly.y, belly.z);
-    prey.fallDistance = 0.0;
-    if (this.feastTicks % DIGEST_INTERVAL == 0) {
-      prey.addEffect(new MobEffectInstance(MobEffects.POISON, DIGEST_POISON_TICKS, 1), this);
-      prey.hurtServer(level, this.damageSources().indirectMagic(this, this), DIGEST_DAMAGE);
-      level.broadcastEntityEvent(this, SPIT_EVENT);
-      level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, CLOUD_GREEN), belly.x, belly.y + 1.0, belly.z, 16, 0.6, 0.4, 0.6, 0.0);
-      this.playSound(SoundEvents.GENERIC_EAT.value(), 2.0F, 0.6F);
-    }
-    if (this.feastTicks >= DIGEST_TICKS || this.spitMealEarly) {
-      this.spitOut(level, prey);
-    }
-  }
-
-  private void spitOut(ServerLevel level, LivingEntity prey) {
-
-    float radians = this.yBodyRot * Mth.DEG_TO_RAD;
-    Vec3 forward = new Vec3(-Mth.sin(radians), 0.0, Mth.cos(radians));
-    Vec3 mouth = this.position().add(this.mouthOffset(this.yBodyRot));
-    prey.teleportTo(mouth.x, mouth.y, mouth.z);
-    prey.setDeltaMovement(forward.x * SPIT_OUT_SPEED, SPIT_OUT_LIFT, forward.z * SPIT_OUT_SPEED);
-    prey.hurtMarked = true;
-    level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, CLOUD_ORANGE), mouth.x, mouth.y, mouth.z, 24, 0.5, 0.5, 0.5, 0.0);
-    this.playSound(SoundEvents.PLAYER_BURP, 3.0F, 0.5F);
-    this.endFeast();
-  }
-
-  private void endFeast() {
-
-    this.feast = Feast.NONE;
-    this.feastTicks = 0;
-    this.meal = null;
-    this.spitMealEarly = false;
-    this.feastCooldown = FEAST_COOLDOWN;
-    this.entityData.set(DATA_GAPING, false);
   }
 
   private void spawnCloud(ServerLevel level) {
@@ -676,9 +556,7 @@ public class HallowedMother extends Monster implements LightEmitter {
     ItemStack weapon = source.getWeaponItem();
     if (weapon != null && weapon.is(ModItems.PUMPKIN_MACE)) {
       damage *= MACE_MULTIPLIER;
-      if (this.feast == Feast.DIGESTING) {
-        this.spitMealEarly = true;
-      }
+      this.feast.spitEarly();
       if (this.getTethered() != null) {
         this.releaseTether();
       }
@@ -771,11 +649,5 @@ public class HallowedMother extends Monster implements LightEmitter {
     NONE,
     SPITTING,
     GATHERING
-  }
-
-  private enum Feast {
-    NONE,
-    INHALING,
-    DIGESTING
   }
 }

@@ -1,7 +1,7 @@
 package io.github.jason13official.spookiness.event;
 
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.entity.BookStairs;
+import io.github.jason13official.spookiness.entity.book.BookStairs;
 import io.github.jason13official.spookiness.ritual.HallowedMotherTrigger;
 import io.github.jason13official.spookiness.world.HauntedHarvest;
 import io.github.jason13official.spookiness.world.TemporaryBlocks;

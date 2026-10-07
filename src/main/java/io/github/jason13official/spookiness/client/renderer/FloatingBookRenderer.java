@@ -2,7 +2,7 @@ package io.github.jason13official.spookiness.client.renderer;
 
 import io.github.jason13official.spookiness.client.model.FloatingBookModel;
 import io.github.jason13official.spookiness.client.renderer.state.FloatingBookRenderState;
-import io.github.jason13official.spookiness.entity.FloatingBook;
+import io.github.jason13official.spookiness.entity.book.FloatingBook;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;

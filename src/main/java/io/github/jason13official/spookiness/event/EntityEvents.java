@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.ritual.Kindling;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
-import io.github.jason13official.spookiness.entity.boss.MotherBrood;
+import io.github.jason13official.spookiness.entity.boss.mother.MotherBrood;
 import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.world.SpookySpawns;
 import net.minecraft.world.entity.Entity;

@@ -2,7 +2,7 @@ package io.github.jason13official.spookiness.block.entity;
 
 import net.minecraft.world.phys.AABB;
 import io.github.jason13official.spookiness.registry.ModItems;
-import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
+import io.github.jason13official.spookiness.entity.boss.gourdwyrm.Gourdwyrm;
 import io.github.jason13official.spookiness.block.SoullessJackOMimicBlock;
 import io.github.jason13official.spookiness.registry.ModBlockEntities;
 import io.github.jason13official.spookiness.world.NetherrealmArena;

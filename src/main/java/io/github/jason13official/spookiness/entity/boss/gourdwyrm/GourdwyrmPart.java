@@ -1,4 +1,4 @@
-package io.github.jason13official.spookiness.entity.boss;
+package io.github.jason13official.spookiness.entity.boss.gourdwyrm;
 
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
