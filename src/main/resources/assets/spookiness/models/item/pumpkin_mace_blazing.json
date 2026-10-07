@@ -1,7 +1,7 @@
 {
   "parent": "spookiness:item/pumpkin_mace",
   "textures": {
-    "0": "spookiness:item/pumpkin_mace",
-    "particle": "spookiness:item/pumpkin_mace"
+    "0": "spookiness:item/pumpkin_mace_lantern",
+    "particle": "spookiness:item/pumpkin_mace_lantern"
   }
 }
