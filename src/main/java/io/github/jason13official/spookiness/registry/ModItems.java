@@ -46,29 +46,17 @@ public class ModItems {
   public static Item GOURDWYRM_TROPHY;
 
   public static Item JACK_O_MIMIC_SPAWN_EGG;
-
   public static Item FLOATING_CANDLES_SPAWN_EGG;
-
   public static Item FLOATING_BOOK_SPAWN_EGG;
-
   public static Item FLOATING_SWORD_SPAWN_EGG;
-
   public static Item FLOATING_SHEARS_SPAWN_EGG;
-
   public static Item FLOATING_HOE_SPAWN_EGG;
-
   public static Item FLOATING_LANTERN_SPAWN_EGG;
-
   public static Item FLOATING_SKULL_SPAWN_EGG;
-
   public static Item HAUNTED_ARMOR_STAND_SPAWN_EGG;
-
   public static Item SPECTRAL_JACK_O_MIMIC_SPAWN_EGG;
-
   public static Item WICKMAN_SPAWN_EGG;
-
   public static Item HALLOWED_MOTHER_SPAWN_EGG;
-
   public static Item GOURDWYRM_SPAWN_EGG;
 
   public static List<Item> SPAWN_EGGS = new ArrayList<>();

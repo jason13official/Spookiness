@@ -8,10 +8,11 @@ import net.minecraft.resources.Identifier;
 
 public class ModTriggers {
 
-  public static final SpookyTrigger SPOOKY = new SpookyTrigger();
+  public static SpookyTrigger SPOOKY;
 
   public static void register(BiConsumer<CriterionTrigger<?>, Identifier> consumer) {
 
+    SPOOKY = new SpookyTrigger();
     consumer.accept(SPOOKY, Spookiness.id("spooky"));
   }
 }
