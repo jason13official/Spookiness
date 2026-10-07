@@ -2,6 +2,8 @@ package io.github.jason13official.spookiness.entity.boss;
 
 import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.entity.projectile.FrostVolley;
+import java.util.function.IntFunction;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
@@ -119,8 +121,8 @@ public class Wickman extends Monster implements LightEmitter {
   @Override
   protected void defineSynchedData(SynchedEntityData.Builder entityData) {
     super.defineSynchedData(entityData);
-    entityData.define(DATA_VARIANT, Variant.WICK.ordinal());
-    entityData.define(DATA_PHASE, Phase.STALKER.ordinal());
+    entityData.define(DATA_VARIANT, Variant.WICK.getId());
+    entityData.define(DATA_PHASE, Phase.STALKER.getId());
   }
 
   public static Wickman kindle(ServerLevel level, LivingEntity vessel, Variant variant, LivingEntity kindler) {
@@ -142,12 +144,12 @@ public class Wickman extends Monster implements LightEmitter {
   }
 
   public Variant getVariant() {
-    return Variant.byOrdinal(this.entityData.get(DATA_VARIANT));
+    return Variant.byId(this.entityData.get(DATA_VARIANT));
   }
 
   public void setVariant(Variant variant) {
 
-    this.entityData.set(DATA_VARIANT, variant.ordinal());
+    this.entityData.set(DATA_VARIANT, variant.getId());
     this.bossEvent.setColor(variant == Variant.FROST ? BossEvent.BossBarColor.BLUE : BossEvent.BossBarColor.YELLOW);
     this.bossEvent.setName(this.getDisplayName());
     if (variant == Variant.FROST) {
@@ -158,12 +160,12 @@ public class Wickman extends Monster implements LightEmitter {
   }
 
   public Phase getPhase() {
-    return Phase.byOrdinal(this.entityData.get(DATA_PHASE));
+    return Phase.byId(this.entityData.get(DATA_PHASE));
   }
 
   private void setPhase(ServerLevel level, Phase phase) {
 
-    this.entityData.set(DATA_PHASE, phase.ordinal());
+    this.entityData.set(DATA_PHASE, phase.getId());
     switch (phase) {
       case CANDLE_CHOIR -> this.plantVigilCandles(level);
       case HEADLESS -> {
@@ -244,7 +246,7 @@ public class Wickman extends Monster implements LightEmitter {
     this.bossEvent.setProgress(ratio);
 
     Phase next = ratio < HEADLESS_THRESHOLD ? Phase.HEADLESS : ratio < CANDLE_CHOIR_THRESHOLD ? Phase.CANDLE_CHOIR : Phase.STALKER;
-    if (next.ordinal() > this.getPhase().ordinal()) {
+    if (next.getId() > this.getPhase().getId()) {
       this.setPhase(level, next);
     }
 
@@ -363,16 +365,16 @@ public class Wickman extends Monster implements LightEmitter {
   @Override
   protected void addAdditionalSaveData(ValueOutput output) {
     super.addAdditionalSaveData(output);
-    output.putInt("variant", this.getVariant().ordinal());
-    output.putInt("phase", this.getPhase().ordinal());
+    output.store("variant", Variant.CODEC, this.getVariant());
+    output.store("phase", Phase.CODEC, this.getPhase());
     output.storeNullable("head", UUIDUtil.CODEC, this.head);
   }
 
   @Override
   protected void readAdditionalSaveData(ValueInput input) {
     super.readAdditionalSaveData(input);
-    this.entityData.set(DATA_VARIANT, input.getIntOr("variant", 0));
-    this.entityData.set(DATA_PHASE, input.getIntOr("phase", 0));
+    this.entityData.set(DATA_VARIANT, input.read("variant", Variant.CODEC).orElse(Variant.WICK).getId());
+    this.entityData.set(DATA_PHASE, input.read("phase", Phase.CODEC).orElse(Phase.STALKER).getId());
     this.head = input.read("head", UUIDUtil.CODEC).orElse(null);
     this.bossEvent.setColor(this.getVariant() == Variant.FROST ? BossEvent.BossBarColor.BLUE : BossEvent.BossBarColor.YELLOW);
     this.bossEvent.setName(this.getDisplayName());
@@ -416,36 +418,61 @@ public class Wickman extends Monster implements LightEmitter {
   }
 
   public enum Variant implements StringRepresentable {
-    WICK("wick"),
-    FROST("frost");
+    WICK(0, "wick"),
+    FROST(1, "frost");
 
     public static final Codec<Variant> CODEC = StringRepresentable.fromEnum(Variant::values);
+    private static final IntFunction<Variant> BY_ID = ByIdMap.continuous(Variant::getId, values(), ByIdMap.OutOfBoundsStrategy.ZERO);
 
+    private final int id;
     private final String name;
 
-    Variant(String name) {
+    Variant(int id, String name) {
+      this.id = id;
       this.name = name;
+    }
+
+    public static Variant byId(int id) {
+      return BY_ID.apply(id);
+    }
+
+    public int getId() {
+      return this.id;
     }
 
     @Override
     public String getSerializedName() {
       return this.name;
     }
-
-    public static Variant byOrdinal(int ordinal) {
-      Variant[] values = values();
-      return values[Mth.clamp(ordinal, 0, values.length - 1)];
-    }
   }
 
-  public enum Phase {
-    STALKER,
-    CANDLE_CHOIR,
-    HEADLESS;
+  public enum Phase implements StringRepresentable {
+    STALKER(0, "stalker"),
+    CANDLE_CHOIR(1, "candle_choir"),
+    HEADLESS(2, "headless");
 
-    public static Phase byOrdinal(int ordinal) {
-      Phase[] values = values();
-      return values[Mth.clamp(ordinal, 0, values.length - 1)];
+    public static final Codec<Phase> CODEC = StringRepresentable.fromEnum(Phase::values);
+    private static final IntFunction<Phase> BY_ID = ByIdMap.continuous(Phase::getId, values(), ByIdMap.OutOfBoundsStrategy.CLAMP);
+
+    private final int id;
+    private final String name;
+
+    Phase(int id, String name) {
+      this.id = id;
+      this.name = name;
+    }
+
+    public static Phase byId(int id) {
+      return BY_ID.apply(id);
+    }
+
+    public int getId() {
+      return this.id;
+    }
+
+    @Override
+    public String getSerializedName() {
+      return this.name;
     }
   }
 }

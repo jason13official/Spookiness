@@ -25,6 +25,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
+import java.util.function.IntFunction;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
@@ -148,7 +150,7 @@ public class Gourdwyrm extends Mob implements Enemy {
   @Override
   protected void defineSynchedData(SynchedEntityData.Builder entityData) {
     super.defineSynchedData(entityData);
-    entityData.define(DATA_PHASE, Phase.CIRCLING.ordinal());
+    entityData.define(DATA_PHASE, Phase.CIRCLING.getId());
     entityData.define(DATA_LIT, 0);
     entityData.define(DATA_LENGTH, SEGMENTS);
   }
@@ -168,7 +170,7 @@ public class Gourdwyrm extends Mob implements Enemy {
   }
 
   public Phase getPhase() {
-    return Phase.values()[Mth.clamp(this.entityData.get(DATA_PHASE), 0, Phase.values().length - 1)];
+    return Phase.byId(this.entityData.get(DATA_PHASE));
   }
 
   public int getLength() {
@@ -299,7 +301,7 @@ public class Gourdwyrm extends Mob implements Enemy {
   }
 
   private void setPhase(Phase phase) {
-    this.entityData.set(DATA_PHASE, phase.ordinal());
+    this.entityData.set(DATA_PHASE, phase.getId());
     this.phaseTicks = 0;
     this.stage = 0;
     this.strikePoint = null;
@@ -662,10 +664,25 @@ public class Gourdwyrm extends Mob implements Enemy {
   }
 
   public enum Phase {
-    CIRCLING,
-    BURROW,
-    LANTERN_RINGS,
-    SHED,
-    FINAL
+    CIRCLING(0),
+    BURROW(1),
+    LANTERN_RINGS(2),
+    FINAL(3);
+
+    private static final IntFunction<Phase> BY_ID = ByIdMap.continuous(Phase::getId, values(), ByIdMap.OutOfBoundsStrategy.ZERO);
+
+    private final int id;
+
+    Phase(int id) {
+      this.id = id;
+    }
+
+    public static Phase byId(int id) {
+      return BY_ID.apply(id);
+    }
+
+    public int getId() {
+      return this.id;
+    }
   }
 }

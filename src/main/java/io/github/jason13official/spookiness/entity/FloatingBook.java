@@ -1,8 +1,8 @@
 package io.github.jason13official.spookiness.entity;
 
+import com.mojang.serialization.Codec;
 import io.github.jason13official.spookiness.registry.ModAttachments;
 import java.util.EnumSet;
-import java.util.Locale;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -309,7 +310,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     if (!this.heldBook.isEmpty()) {
       output.store("held_book", ItemStack.CODEC, this.heldBook);
     }
-    output.putString("home_kind", this.homeKind.name().toLowerCase(Locale.ROOT));
+    output.store("home_kind", Home.CODEC, this.homeKind);
     output.storeNullable("home_pos", BlockPos.CODEC, this.homePos);
     output.putInt("home_slot", this.homeSlot);
     output.putInt("ticks_outside", this.ticksOutside);
@@ -321,7 +322,7 @@ public class FloatingBook extends FloatingPathfinderMob {
     super.readAdditionalSaveData(input);
     this.heldBook = input.read("held_book", ItemStack.CODEC).orElse(ItemStack.EMPTY);
     this.entityData.set(DATA_NEUTRAL, !this.heldBook.isEmpty());
-    this.homeKind = Home.byName(input.getStringOr("home_kind", ""));
+    this.homeKind = input.read("home_kind", Home.CODEC).orElse(Home.NONE);
     this.homePos = input.read("home_pos", BlockPos.CODEC).orElse(null);
     this.homeSlot = input.getIntOr("home_slot", -1);
     this.ticksOutside = input.getIntOr("ticks_outside", 0);
@@ -500,16 +501,22 @@ public class FloatingBook extends FloatingPathfinderMob {
     return SoundEvents.BOOK_PUT;
   }
 
-  private enum Home {
-    NONE, ENCHANTING_TABLE, BOOKSHELF;
+  private enum Home implements StringRepresentable {
+    NONE("none"),
+    ENCHANTING_TABLE("enchanting_table"),
+    BOOKSHELF("bookshelf");
 
-    static Home byName(String name) {
-      for (Home home : values()) {
-        if (home.name().equalsIgnoreCase(name)) {
-          return home;
-        }
-      }
-      return NONE;
+    static final Codec<Home> CODEC = StringRepresentable.fromEnum(Home::values);
+
+    private final String name;
+
+    Home(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String getSerializedName() {
+      return this.name;
     }
   }
 

@@ -2,33 +2,37 @@ package io.github.jason13official.spookiness.item;
 
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
+import java.util.function.IntFunction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.StringRepresentable;
 
 public enum MaceStage implements StringRepresentable {
-  PUMPKIN("pumpkin", 0, 0),
-  CARVED("carved", 5, 0),
-  LANTERN("lantern", 15, 10),
-  BLAZING("blazing", 25, 15),
-  THORNED("thorned", 50, 15);
+  PUMPKIN(0, "pumpkin", 0, 0),
+  CARVED(1, "carved", 5, 0),
+  LANTERN(2, "lantern", 15, 10),
+  BLAZING(3, "blazing", 25, 15),
+  THORNED(4, "thorned", 50, 15);
 
   public static final Codec<MaceStage> CODEC = StringRepresentable.fromEnum(MaceStage::values);
-  public static final StreamCodec<ByteBuf, MaceStage> STREAM_CODEC = ByteBufCodecs.VAR_INT.map(MaceStage::byOrdinal, MaceStage::ordinal);
+  private static final IntFunction<MaceStage> BY_ID = ByIdMap.continuous(MaceStage::getId, values(), ByIdMap.OutOfBoundsStrategy.CLAMP);
+  public static final StreamCodec<ByteBuf, MaceStage> STREAM_CODEC = ByteBufCodecs.idMapper(BY_ID, MaceStage::getId);
 
+  private final int id;
   private final String name;
   private final int kills;
   private final int light;
 
-  MaceStage(String name, int kills, int light) {
+  MaceStage(int id, String name, int kills, int light) {
+    this.id = id;
     this.name = name;
     this.kills = kills;
     this.light = light;
   }
 
-  public static MaceStage byOrdinal(int ordinal) {
-    MaceStage[] values = values();
-    return values[Math.clamp(ordinal, 0, values.length - 1)];
+  public static MaceStage byId(int id) {
+    return BY_ID.apply(id);
   }
 
   public static MaceStage forKills(int kills) {
@@ -41,12 +45,20 @@ public enum MaceStage implements StringRepresentable {
     return stage;
   }
 
+  public int getId() {
+    return this.id;
+  }
+
   public MaceStage next() {
-    return byOrdinal(this.ordinal() + 1);
+    return byId(this.id + 1);
   }
 
   public boolean isFinal() {
     return this == THORNED;
+  }
+
+  public boolean ignites() {
+    return this.id >= BLAZING.id;
   }
 
   public int kills() {

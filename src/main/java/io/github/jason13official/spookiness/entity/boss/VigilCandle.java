@@ -2,7 +2,6 @@ package io.github.jason13official.spookiness.entity.boss;
 
 import io.github.jason13official.spookiness.lighting.LightEmitter;
 import io.github.jason13official.spookiness.registry.ModEntities;
-import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.ParticleTypes;
@@ -39,11 +38,6 @@ public class VigilCandle extends Entity implements LightEmitter {
   public static final float BASE_HEIGHT = 0.4F;
   public static final int CANDLES = 3;
   public static final int GREAT_CANDLES = 4;
-
-  private static final List<Vec3> WICKS = List.of(new Vec3(8.0, 5.0, 10.0).scale(0.0625), new Vec3(6.0, 7.0, 8.0).scale(0.0625),
-      new Vec3(9.0, 8.0, 7.0).scale(0.0625));
-  private static final List<Vec3> GREAT_WICKS = List.of(new Vec3(7.0, 5.0, 9.0).scale(0.0625), new Vec3(10.0, 7.0, 9.0).scale(0.0625),
-      new Vec3(6.0, 7.0, 6.0).scale(0.0625), new Vec3(9.0, 8.0, 6.0).scale(0.0625));
 
   private @Nullable UUID keeper;
 
@@ -105,7 +99,7 @@ public class VigilCandle extends Entity implements LightEmitter {
   private void flicker() {
 
     float scale = this.getRenderScale();
-    for (Vec3 wick : this.isGreat() ? GREAT_WICKS : WICKS) {
+    for (Vec3 wick : CandleBlock.PARTICLE_OFFSETS.get(this.getCandles())) {
       double x = this.getX() + (wick.x - 0.5) * scale;
       double y = this.getY() + BASE_HEIGHT * scale + wick.y * scale;
       double z = this.getZ() + (wick.z - 0.5) * scale;

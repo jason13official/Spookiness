@@ -65,13 +65,6 @@ public class FloatingCandles extends FloatingCompanion implements LightEmitter {
       Blocks.BLUE_CANDLE, Blocks.BROWN_CANDLE, Blocks.GREEN_CANDLE, Blocks.RED_CANDLE, Blocks.BLACK_CANDLE
   };
 
-  private static final List<List<Vec3>> FLAME_OFFSETS = List.of(
-      List.of(new Vec3(8.0, 8.0, 8.0)),
-      List.of(new Vec3(6.0, 7.0, 8.0), new Vec3(10.0, 8.0, 7.0)),
-      List.of(new Vec3(8.0, 5.0, 10.0), new Vec3(6.0, 7.0, 8.0), new Vec3(9.0, 8.0, 7.0)),
-      List.of(new Vec3(7.0, 5.0, 9.0), new Vec3(10.0, 7.0, 9.0), new Vec3(6.0, 7.0, 6.0), new Vec3(9.0, 8.0, 6.0))
-  );
-
   private int lineIndex;
 
   public FloatingCandles(EntityType<? extends FloatingCandles> type, Level level) {
@@ -244,10 +237,10 @@ public class FloatingCandles extends FloatingCompanion implements LightEmitter {
   }
 
   private void spawnFlameParticles() {
-    for (Vec3 offset : FLAME_OFFSETS.get(this.getCandles() - 1)) {
-      double x = this.getX() - 0.5 + offset.x / 16.0;
-      double y = this.getY() + offset.y / 16.0;
-      double z = this.getZ() - 0.5 + offset.z / 16.0;
+    for (Vec3 offset : CandleBlock.PARTICLE_OFFSETS.get(this.getCandles())) {
+      double x = this.getX() - 0.5 + offset.x;
+      double y = this.getY() + offset.y;
+      double z = this.getZ() - 0.5 + offset.z;
       if (this.random.nextInt(4) == 0) {
         this.level().addParticle(ParticleTypes.SMALL_FLAME, x, y, z, 0.0, 0.0, 0.0);
       }

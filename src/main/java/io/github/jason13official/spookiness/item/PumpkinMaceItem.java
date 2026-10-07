@@ -9,7 +9,6 @@ import io.github.jason13official.spookiness.registry.ModDataComponents;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
@@ -24,14 +23,13 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
-import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.golem.SnowGolem;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
@@ -39,8 +37,6 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -48,12 +44,10 @@ public class PumpkinMaceItem extends Item {
 
   /// 1.5F originally
   public static final float SMASH_ATTACK_FALL_THRESHOLD = 0.1F;
-  public static final float SMASH_ATTACK_KNOCKBACK_RADIUS = 3.5F;
   /// -3.4 originally
   private static final float DEFAULT_ATTACK_SPEED = -2.4F;
   private static final int DEFAULT_ATTACK_DAMAGE = 5;
   private static final float SMASH_ATTACK_HEAVY_THRESHOLD = 5.0F;
-  private static final float SMASH_ATTACK_KNOCKBACK_POWER = 0.7F;
   public static final int KILLS_PER_COMPANION = 5;
   private static final float BLAZING_FIRE_SECONDS = 3.0F;
   private static final float THORNED_DAMAGE_BONUS = 5.0F;
@@ -129,7 +123,7 @@ public class PumpkinMaceItem extends Item {
 
     MaceStage stage = getStage(itemStack);
     builder.accept(Component.translatable("item.spookiness.pumpkin_mace.stage." + stage.getSerializedName()).withStyle(ChatFormatting.DARK_GREEN));
-    if (stage.ordinal() >= MaceStage.BLAZING.ordinal()) {
+    if (stage.ignites()) {
       builder.accept(Component.translatable("item.spookiness.pumpkin_mace.ignites").withStyle(ChatFormatting.RED));
     }
     if (stage == MaceStage.THORNED) {
@@ -146,56 +140,15 @@ public class PumpkinMaceItem extends Item {
     return new Tool(List.of(), 1.0F, 2, false);
   }
 
-  private static void knockback(Level level, Entity attacker, Entity entity) {
-
-    // level.levelEvent(2013, entity.getOnPos(), 750);
-    // LevelEventHandler#levelEvent -> ParticleUtils#spawnSmashAttackParticles
-    // '750' here for 'data' is read as "count", gets divided to 250 and 500 for DUST_PILLAR particles
-    level.levelEvent(LevelEvent.PARTICLES_SMASH_ATTACK, entity.getOnPos(), 750);
-
-    for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox().inflate(SMASH_ATTACK_KNOCKBACK_RADIUS), knockbackPredicate(attacker, entity))) {
-      Vec3 direction = nearby.position().subtract(entity.position());
-      double knockbackPower = getKnockbackPower(attacker, nearby, direction);
-      Vec3 knockbackVector = direction.normalize().scale(knockbackPower);
-
-      if (knockbackPower <= (double) 0.0F) {
-        continue;
-      }
-
-      nearby.push(knockbackVector.x, SMASH_ATTACK_KNOCKBACK_POWER, knockbackVector.z);
-      if (nearby instanceof ServerPlayer otherPlayer) {
-        otherPlayer.connection.send(new ClientboundSetEntityMotionPacket(otherPlayer));
-      }
-    }
-  }
-
-  private static Predicate<LivingEntity> knockbackPredicate(Entity attacker, Entity entity) {
-
-    return nearby -> !nearby.isSpectator()
-        && nearby != attacker && nearby != entity && !attacker.isAlliedTo(nearby)
-        && !(nearby instanceof TamableAnimal a && entity instanceof LivingEntity o
-        && a.isTame() && a.isOwnedBy(o)) && !(nearby instanceof ArmorStand s && s.isMarker())
-        && entity.distanceToSqr(nearby) <= Math.pow(SMASH_ATTACK_KNOCKBACK_RADIUS, 2)
-        && !(nearby instanceof Player p && p.isCreative() && p.getAbilities().flying);
-  }
-
-  private static double getKnockbackPower(Entity attacker, LivingEntity nearby, Vec3 direction) {
-
-    double bonusFallKnockback = attacker.fallDistance > (double) SMASH_ATTACK_HEAVY_THRESHOLD ? 2.0D : 1.0D;
-
-    return ((double) SMASH_ATTACK_KNOCKBACK_RADIUS - direction.length())
-        * (double) SMASH_ATTACK_KNOCKBACK_POWER * bonusFallKnockback
-        * ((double) 1.0F - nearby.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
-  }
-
   public static boolean canSmashAttack(LivingEntity attacker) {
     return attacker.fallDistance > (double) SMASH_ATTACK_FALL_THRESHOLD && !attacker.isFallFlying();
   }
 
+  @Override
   public void hurtEnemy(ItemStack itemStack, LivingEntity mob, LivingEntity attacker) {
 
     MaceStage stage = getStage(itemStack);
-    if (stage.ordinal() >= MaceStage.BLAZING.ordinal()) {
+    if (stage.ignites()) {
       mob.igniteForSeconds(BLAZING_FIRE_SECONDS);
     }
     if (stage == MaceStage.THORNED) {
@@ -225,7 +178,7 @@ public class PumpkinMaceItem extends Item {
       level.playSound(null, attacker.getX(), attacker.getY(), attacker.getZ(), SoundEvents.MACE_SMASH_AIR, attacker.getSoundSource(), 1.0F, 1.0F);
     }
 
-    knockback(level, attacker, mob);
+    MaceItem.knockback(level, attacker, mob);
   }
 
   private Vec3 calculateImpactPosition(LivingEntity attacker) {
@@ -237,12 +190,14 @@ public class PumpkinMaceItem extends Item {
     }
   }
 
+  @Override
   public void postHurtEnemy(ItemStack itemStack, LivingEntity mob, LivingEntity attacker) {
     if (canSmashAttack(attacker)) {
       attacker.resetFallDistance();
     }
   }
 
+  @Override
   public float getAttackDamageBonus(Entity victim, float ignoredDamage, DamageSource damageSource) {
 
     if (!(damageSource.getDirectEntity() instanceof LivingEntity attacker)) {
@@ -274,6 +229,7 @@ public class PumpkinMaceItem extends Item {
     }
   }
 
+  @Override
   @SuppressWarnings("deprecation")
   public @Nullable DamageSource getItemDamageSource(LivingEntity attacker) {
 
