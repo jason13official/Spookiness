@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss.mother;
 
+import io.github.jason13official.spookiness.entity.boss.SpookyBoss;
 import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.world.SpookyTime;
 import io.github.jason13official.spookiness.util.SpookyMath;
@@ -23,7 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -56,7 +56,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class HallowedMother extends Monster implements LightEmitter {
+public class HallowedMother extends SpookyBoss implements LightEmitter {
 
   public static final float SCALE = 4.0F;
 
@@ -84,9 +84,6 @@ public class HallowedMother extends Monster implements LightEmitter {
   private static final float MACE_MULTIPLIER = 2.0F;
   private static final int BROOD_PARTICLE_INTERVAL = 4;
 
-  private final ServerBossEvent bossEvent = new ServerBossEvent(UUID.randomUUID(), this.getDisplayName(), BossEvent.BossBarColor.PURPLE,
-      BossEvent.BossBarOverlay.NOTCHED_10);
-
   private @Nullable UUID summoner;
   private final BroodTracker brood = new BroodTracker(this);
   private final MotherTether tether = new MotherTether(this);
@@ -99,10 +96,8 @@ public class HallowedMother extends Monster implements LightEmitter {
   public final AnimationState spitAnimationState = new AnimationState();
 
   public HallowedMother(EntityType<? extends HallowedMother> type, Level level) {
-    super(type, level);
+    super(type, level, BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_10);
     this.xpReward = 120;
-    this.setPersistenceRequired();
-    this.bossEvent.setCreateWorldFog(true);
   }
 
   public static AttributeSupplier.Builder createAttributes() {
@@ -183,7 +178,6 @@ public class HallowedMother extends Monster implements LightEmitter {
   @Override
   protected void customServerAiStep(ServerLevel level) {
     super.customServerAiStep(level);
-    this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
     if (SpookyTime.isAfternoon(SpookyTime.timeOfDay(level))) {
       this.sink(level, "message.spookiness.mother_sinks_dawn");
@@ -368,33 +362,8 @@ public class HallowedMother extends Monster implements LightEmitter {
   }
 
   @Override
-  public boolean isPushable() {
-    return false;
-  }
-
-  @Override
-  public void push(Entity entity) {
-  }
-
-  @Override
-  public void knockback(double power, double xd, double zd) {
-  }
-
-  @Override
-  public boolean removeWhenFarAway(double distSqr) {
-    return false;
-  }
-
-  @Override
-  public void startSeenByPlayer(ServerPlayer player) {
-    super.startSeenByPlayer(player);
-    this.bossEvent.addPlayer(player);
-  }
-
-  @Override
-  public void stopSeenByPlayer(ServerPlayer player) {
-    super.stopSeenByPlayer(player);
-    this.bossEvent.removePlayer(player);
+  protected boolean isAnchored() {
+    return true;
   }
 
   @Override
@@ -409,6 +378,5 @@ public class HallowedMother extends Monster implements LightEmitter {
     super.readAdditionalSaveData(input);
     this.summoner = input.read("summoner", UUIDUtil.CODEC).orElse(null);
     this.brood.load(input);
-    this.bossEvent.setName(this.getDisplayName());
   }
 }

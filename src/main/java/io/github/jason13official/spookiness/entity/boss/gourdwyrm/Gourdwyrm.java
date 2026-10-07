@@ -1,12 +1,12 @@
 package io.github.jason13official.spookiness.entity.boss.gourdwyrm;
 
+import io.github.jason13official.spookiness.entity.boss.SpookyBoss;
 import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.util.SpookyMath;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.world.NetherrealmArena;
-import java.util.UUID;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -15,9 +15,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
 import java.util.EnumMap;
@@ -27,7 +25,6 @@ import java.util.function.IntFunction;
 import net.minecraft.util.ByIdMap;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -35,7 +32,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
@@ -44,7 +40,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.PartEntity;
 import org.jspecify.annotations.Nullable;
 
-public class Gourdwyrm extends Mob implements Enemy {
+public class Gourdwyrm extends SpookyBoss {
 
   public static final int SEGMENTS = 24;
 
@@ -68,20 +64,15 @@ public class Gourdwyrm extends Mob implements Enemy {
 
   private final GourdwyrmBody body = new GourdwyrmBody(this);
 
-  private final ServerBossEvent bossEvent = new ServerBossEvent(UUID.randomUUID(), this.getDisplayName(), BossEvent.BossBarColor.RED,
-      BossEvent.BossBarOverlay.NOTCHED_12);
-
   private @Nullable BlockPos anchor;
   private final Map<Phase, GourdwyrmPhase> phases = new EnumMap<>(Phase.class);
 
   public Gourdwyrm(EntityType<? extends Gourdwyrm> type, Level level) {
-    super(type, level);
+    super(type, level, BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_12);
     this.setId(ENTITY_COUNTER.getAndAdd(SEGMENTS + 1) + 1);
     this.noPhysics = true;
     this.setNoGravity(true);
     this.xpReward = 500;
-    this.setPersistenceRequired();
-    this.bossEvent.setCreateWorldFog(true);
     this.bossEvent.setDarkenScreen(true);
     this.bossEvent.setPlayBossMusic(true);
   }
@@ -182,7 +173,6 @@ public class Gourdwyrm extends Mob implements Enemy {
   @Override
   protected void customServerAiStep(ServerLevel level) {
     super.customServerAiStep(level);
-    this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
     if (this.anchor == null) {
       this.anchor = this.blockPosition().below((int) CIRCLE_HEIGHT);
@@ -370,38 +360,13 @@ public class Gourdwyrm extends Mob implements Enemy {
   }
 
   @Override
-  public boolean isPushable() {
-    return false;
-  }
-
-  @Override
-  public void push(Entity entity) {
-  }
-
-  @Override
-  public void knockback(double power, double xd, double zd) {
-  }
-
-  @Override
-  public boolean removeWhenFarAway(double distSqr) {
-    return false;
+  protected boolean isAnchored() {
+    return true;
   }
 
   @Override
   public boolean causeFallDamage(double fallDistance, float damageModifier, DamageSource damageSource) {
     return false;
-  }
-
-  @Override
-  public void startSeenByPlayer(ServerPlayer player) {
-    super.startSeenByPlayer(player);
-    this.bossEvent.addPlayer(player);
-  }
-
-  @Override
-  public void stopSeenByPlayer(ServerPlayer player) {
-    super.stopSeenByPlayer(player);
-    this.bossEvent.removePlayer(player);
   }
 
   @Override
@@ -416,7 +381,6 @@ public class Gourdwyrm extends Mob implements Enemy {
     super.readAdditionalSaveData(input);
     this.anchor = input.read("anchor", BlockPos.CODEC).orElse(null);
     this.entityData.set(DATA_LENGTH, input.getIntOr("length", SEGMENTS));
-    this.bossEvent.setName(this.getDisplayName());
   }
 
   public enum Phase {
