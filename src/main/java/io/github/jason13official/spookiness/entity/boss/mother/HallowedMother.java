@@ -14,11 +14,6 @@ import io.github.jason13official.spookiness.effect.Particles;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -69,39 +64,14 @@ public class HallowedMother extends Monster implements LightEmitter {
   private static final EntityDataAccessor<Boolean> DATA_GAPING = SynchedEntityData.defineId(HallowedMother.class, EntityDataSerializers.BOOLEAN);
 
   private static final int NO_TETHER = -1;
-  private static final int RECLAIM_INTERVAL = 160;
-  private static final int RECLAIM_TICKS = 80;
-  private static final double RECLAIM_RANGE = 24.0;
-  private static final double TETHER_PULL = 0.15;
-  private static final double HOLD_DISTANCE = 4.5;
-  private static final double HOLD_TOLERANCE = 0.4;
-  private static final float RECLAIM_HEAL = 40.0F;
   static final byte SPIT_EVENT = 4;
-  private static final int VOLLEY_INTERVAL = 140;
-  private static final int VOLLEY_SIZE = 3;
-  private static final int SPIT_GAP = 12;
-  private static final int MAX_GOURDLINGS = 8;
-  private static final double GOURDLING_RANGE = 32.0;
+  static final int MAX_GOURDLINGS = 8;
   private static final double FLING_SPEED = 0.9;
   private static final double FLING_LIFT = 0.55;
-  private static final float FLING_SPREAD = 30.0F;
   private static final double MOUTH_FORWARD = 2.0;
   private static final double MOUTH_HEIGHT = 1.0;
   private static final float TURN_SPEED = 6.0F;
   private static final int BROOD_INTERVAL = 10;
-  private static final int RETALIATE_TICKS = 100;
-  private static final double CROWD_RANGE = 5.0;
-  private static final int CROWD_COUNT = 4;
-  private static final int BURST_COOLDOWN = 500;
-  private static final int BURST_SPIT_GAP = 4;
-  private static final int BURST_MAX_SPITS = MAX_GOURDLINGS;
-  private static final int GATHER_TICKS = 40;
-  private static final double GATHER_PULL = 0.35;
-  private static final double GATHER_STOP = 1.5;
-  private static final double BLAST_RADIUS = 10.0;
-  private static final double BLAST_SPEED = 1.0;
-  private static final double BLAST_LIFT = 0.75;
-  private static final float BLAST_DAMAGE = 6.0F;
   private static final float GAPE_SPEED = 0.15F;
   private static final int CLOUD_INTERVAL = 160;
   private static final float CLOUD_RADIUS = 3.0F;
@@ -118,19 +88,12 @@ public class HallowedMother extends Monster implements LightEmitter {
       BossEvent.BossBarOverlay.NOTCHED_10);
 
   private @Nullable UUID summoner;
-  private int tetherTicks;
-  private int reclaimCooldown = RECLAIM_INTERVAL;
-  private int volleyCooldown = 60;
-  private int volleyRemaining;
-  private int spitTimer;
-
-  private final Set<UUID> brood = new HashSet<>();
-  private Burst burst = Burst.NONE;
-  private int burstTicks;
-  private int burstSpits;
-  private int burstCooldown = BURST_COOLDOWN / 5;
-  private float gape;
+  private final BroodTracker brood = new BroodTracker(this);
+  private final MotherTether tether = new MotherTether(this);
+  private final MotherVolley volley = new MotherVolley(this);
+  private final MotherBurst burst = new MotherBurst(this);
   private final MotherFeast feast = new MotherFeast(this);
+  private float gape;
   private float oGape;
 
   public final AnimationState spitAnimationState = new AnimationState();
@@ -193,18 +156,28 @@ public class HallowedMother extends Monster implements LightEmitter {
     this.entityData.set(DATA_GAPING, gaping);
   }
 
-  void cancelVolley() {
-    this.volleyRemaining = 0;
+  boolean hasTether() {
+    return this.entityData.get(DATA_TETHER) != NO_TETHER;
   }
 
-  public void releaseTether() {
+  void setTethered(@Nullable Entity entity) {
+    this.entityData.set(DATA_TETHER, entity == null ? NO_TETHER : entity.getId());
+  }
 
-    Entity tethered = this.getTethered();
-    if (tethered != null && this.level() instanceof ServerLevel level) {
-      level.sendParticles(ParticleTypes.SOUL, tethered.getX(), tethered.getY() + 1.0, tethered.getZ(), 16, 0.3, 0.3, 0.3, 0.05);
-    }
-    this.entityData.set(DATA_TETHER, NO_TETHER);
-    this.tetherTicks = 0;
+  BroodTracker brood() {
+    return this.brood;
+  }
+
+  boolean isBrood(Entity entity) {
+    return this.brood.contains(entity);
+  }
+
+  void cancelVolley() {
+    this.volley.cancel();
+  }
+
+  void releaseTether() {
+    this.tether.release();
   }
 
   @Override
@@ -224,13 +197,10 @@ public class HallowedMother extends Monster implements LightEmitter {
     }
 
     if (this.tickCount % BROOD_INTERVAL == 0) {
-      this.commandBrood(level);
+      this.brood.command(level);
     }
     if (this.tickCount % BROOD_PARTICLE_INTERVAL == 0) {
-      for (Mob mimic : this.livingBrood(level)) {
-        level.sendParticles(this.random.nextBoolean() ? ParticleTypes.SMALL_FLAME : ParticleTypes.SMOKE, mimic.getX(), mimic.getY() + mimic.getBbHeight(), mimic.getZ(),
-            1, 0.2, 0.1, 0.2, 0.01);
-      }
+      this.brood.emitParticles(level);
     }
 
     LivingEntity target = this.getTarget();
@@ -242,25 +212,21 @@ public class HallowedMother extends Monster implements LightEmitter {
       this.spawnCloud(level);
     }
 
-    if (this.burst != Burst.NONE) {
-      this.tickBurst(level, target);
+    if (this.burst.isActive()) {
+      this.burst.tick(level, target);
       return;
     }
     if (this.feast.isActive()) {
       this.feast.tick(level);
       return;
     }
-    if (--this.burstCooldown <= 0 && this.tickCount % BROOD_INTERVAL == 0 && this.isCrowded(level)) {
-      this.startBurst();
-      return;
-    }
-    if (this.feast.tryStart(level)) {
+    if (this.burst.tryStart(level) || this.feast.tryStart(level)) {
       return;
     }
 
-    this.tickReclaim(level);
+    this.tether.tick(level);
     if (target != null) {
-      this.tickVolley(level, target);
+      this.volley.tick(level, target);
     }
   }
 
@@ -277,52 +243,6 @@ public class HallowedMother extends Monster implements LightEmitter {
     return Mth.lerp(partialTicks, this.oGape, this.gape);
   }
 
-  private List<Mob> livingBrood(ServerLevel level) {
-
-    List<Mob> living = new ArrayList<>();
-    this.brood.removeIf(id -> {
-      if (level.getEntity(id) instanceof Mob mimic && mimic.isAlive()) {
-        living.add(mimic);
-        return false;
-      }
-      return true;
-    });
-    return living;
-  }
-
-  boolean isBrood(Entity entity) {
-    return this.brood.contains(entity.getUUID());
-  }
-
-  private @Nullable LivingEntity broodTarget() {
-
-    LivingEntity attacker = this.getLastHurtByMob();
-    if (attacker != null && attacker.isAlive() && !this.isBrood(attacker) && this.tickCount - this.getLastHurtByMobTimestamp() < RETALIATE_TICKS) {
-      return attacker;
-    }
-    return this.getTarget();
-  }
-
-  private void commandBrood(ServerLevel level) {
-
-    LivingEntity target = this.broodTarget();
-    if (target == null) {
-      return;
-    }
-    for (Mob mimic : this.livingBrood(level)) {
-      if (mimic.getTarget() != target) {
-        mimic.setTarget(target);
-      }
-    }
-  }
-
-  private boolean isCrowded(ServerLevel level) {
-
-    return level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(CROWD_RANGE),
-        entity -> entity != this && entity.isAlive() && !(entity instanceof JackOMimic) && !this.isBrood(entity)
-            && !(entity instanceof Player player && (player.isSpectator() || player.isCreative())))
-        .size() >= CROWD_COUNT;
-  }
 
   private void spawnCloud(ServerLevel level) {
 
@@ -337,82 +257,6 @@ public class HallowedMother extends Monster implements LightEmitter {
     cloud.addEffect(new MobEffectInstance(MobEffects.POISON, 80, 0));
     cloud.setCustomParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, this.random.nextBoolean() ? CLOUD_ORANGE : CLOUD_GREEN));
     level.addFreshEntity(cloud);
-  }
-
-  private void startBurst() {
-
-    this.releaseTether();
-    this.volleyRemaining = 0;
-    this.burst = Burst.SPITTING;
-    this.burstTicks = 0;
-    this.burstSpits = 0;
-    this.playSound(SoundEvents.RAVAGER_ROAR, 3.0F, 0.6F);
-  }
-
-  private void tickBurst(ServerLevel level, @Nullable LivingEntity target) {
-
-    this.burstTicks++;
-    switch (this.burst) {
-      case SPITTING -> {
-        if (this.burstTicks % BURST_SPIT_GAP != 0) {
-          return;
-        }
-        if (this.livingBrood(level).stream().filter(JackOMimic.class::isInstance).count() >= MAX_GOURDLINGS || this.burstSpits >= BURST_MAX_SPITS) {
-          this.burst = Burst.GATHERING;
-          this.burstTicks = 0;
-          this.entityData.set(DATA_GAPING, true);
-          this.playSound(SoundEvents.WARDEN_ROAR, 3.0F, 0.8F);
-          return;
-        }
-        this.spit(level, target, 180.0F);
-        this.burstSpits++;
-      }
-      case GATHERING -> {
-        Vec3 mouth = this.position().add(this.mouthOffset(this.yBodyRot));
-        for (Mob mimic : this.livingBrood(level)) {
-          Vec3 toMouth = mouth.subtract(mimic.position());
-          if (toMouth.lengthSqr() > GATHER_STOP * GATHER_STOP) {
-            Vec3 pull = toMouth.normalize().scale(GATHER_PULL);
-            mimic.setDeltaMovement(pull.x, Math.max(pull.y, mimic.getDeltaMovement().y), pull.z);
-            mimic.hurtMarked = true;
-          }
-          if (this.burstTicks % 4 == 0) {
-            level.sendParticles(ParticleTypes.SOUL, mimic.getX(), mimic.getY() + 0.5, mimic.getZ(), 2, 0.2, 0.2, 0.2, 0.01);
-          }
-        }
-        if (this.burstTicks % 5 == 0) {
-          level.sendParticles(ParticleTypes.FLAME, mouth.x, mouth.y, mouth.z, 10, 0.6, 0.4, 0.6, 0.02);
-        }
-        if (this.burstTicks >= GATHER_TICKS) {
-          this.blast(level);
-          this.entityData.set(DATA_GAPING, false);
-          this.burst = Burst.NONE;
-          this.burstCooldown = BURST_COOLDOWN;
-        }
-      }
-      default -> this.burst = Burst.NONE;
-    }
-  }
-
-  private void blast(ServerLevel level) {
-
-    Vec3 center = this.position();
-    for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(BLAST_RADIUS), entity -> entity != this && entity.isAlive())) {
-      if (entity instanceof Player player && (player.isSpectator() || player.isCreative())) {
-        continue;
-      }
-      if (!this.isBrood(entity)) {
-        entity.hurtServer(level, this.damageSources().mobAttack(this), BLAST_DAMAGE);
-      }
-      Vec3 away = entity.position().subtract(center).multiply(1.0, 0.0, 1.0);
-      Vec3 direction = away.lengthSqr() > 1.0E-4 ? away.normalize() : Vec3.directionFromRotation(0.0F, SpookyMath.randomYaw(this.random));
-      entity.setDeltaMovement(direction.x * BLAST_SPEED, BLAST_LIFT, direction.z * BLAST_SPEED);
-      entity.hurtMarked = true;
-    }
-
-    level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y + 1.5, center.z, 1, 0.0, 0.0, 0.0, 0.0);
-    level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.x, center.y + 1.0, center.z, 120, 3.0, 1.0, 3.0, 0.3);
-    level.playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 3.0F, 0.6F);
   }
 
   public Vec3 mouthOffset(float bodyYRot) {
@@ -430,27 +274,7 @@ public class HallowedMother extends Monster implements LightEmitter {
     this.yHeadRot = yRot;
   }
 
-  private void tickVolley(ServerLevel level, LivingEntity target) {
-
-    if (this.volleyRemaining > 0) {
-      if (--this.spitTimer <= 0) {
-        this.spit(level, target, FLING_SPREAD);
-        this.volleyRemaining--;
-        this.spitTimer = SPIT_GAP;
-      }
-      return;
-    }
-    if (--this.volleyCooldown > 0) {
-      return;
-    }
-    this.volleyCooldown = VOLLEY_INTERVAL;
-    if (level.getEntitiesOfClass(JackOMimic.class, this.getBoundingBox().inflate(GOURDLING_RANGE)).size() < MAX_GOURDLINGS) {
-      this.volleyRemaining = VOLLEY_SIZE;
-      this.spitTimer = 0;
-    }
-  }
-
-  private void spit(ServerLevel level, @Nullable LivingEntity target, float spread) {
+  void spit(ServerLevel level, @Nullable LivingEntity target, float spread) {
 
     level.broadcastEntityEvent(this, SPIT_EVENT);
 
@@ -462,12 +286,12 @@ public class HallowedMother extends Monster implements LightEmitter {
     JackOMimic gourdling = Spawning.spawn(level, ModEntities.JACK_O_MIMIC, EntitySpawnReason.MOB_SUMMONED, mouth, this.yBodyRot, spawned -> {
       spawned.setDeltaMovement(direction.scale(FLING_SPEED).add(0.0, FLING_LIFT, 0.0));
       MotherBrood.adopt(spawned);
-      spawned.setTarget(this.broodTarget());
+      spawned.setTarget(this.brood.target());
     });
     if (gourdling == null) {
       return;
     }
-    this.brood.add(gourdling.getUUID());
+    this.brood.add(gourdling);
 
     level.sendParticles(ParticleTypes.FLAME, mouth.x, mouth.y, mouth.z, 12, 0.3, 0.3, 0.3, 0.05);
     this.playSound(SoundEvents.LLAMA_SPIT, 2.0F, 0.4F);
@@ -480,62 +304,6 @@ public class HallowedMother extends Monster implements LightEmitter {
       this.spitAnimationState.start(this.tickCount);
     } else {
       super.handleEntityEvent(id);
-    }
-  }
-
-  private void tickReclaim(ServerLevel level) {
-
-    Entity tethered = this.getTethered();
-    if (tethered == null) {
-      if (this.entityData.get(DATA_TETHER) != NO_TETHER) {
-        this.releaseTether();
-      }
-      if (--this.reclaimCooldown > 0) {
-        return;
-      }
-      this.reclaimCooldown = RECLAIM_INTERVAL;
-      level.getEntitiesOfClass(Mob.class, this.getBoundingBox().inflate(RECLAIM_RANGE), Hallowing::isHallowed).stream()
-          .min(Comparator.comparingDouble(this::distanceToSqr))
-          .ifPresent(mob -> {
-            this.entityData.set(DATA_TETHER, mob.getId());
-            this.tetherTicks = 0;
-            this.playSound(SoundEvents.VINE_STEP, 3.0F, 0.5F);
-            this.playSound(SoundEvents.EVOKER_PREPARE_ATTACK, 2.0F, 0.6F);
-          });
-      return;
-    }
-
-    if (!(tethered instanceof Mob mob) || !mob.isAlive() || !Hallowing.isHallowed(mob)) {
-      this.releaseTether();
-      return;
-    }
-
-    Vec3 mouth = this.position().add(this.mouthOffset(this.yBodyRot));
-    if (this.tetherTicks % 3 == 0) {
-      Vec3 along = mob.position().add(0.0, mob.getBbHeight() * 0.6, 0.0).subtract(mouth);
-      for (int i = 1; i < 8; i++) {
-        Vec3 point = mouth.add(along.scale(i / 8.0));
-        level.sendParticles(ParticleTypes.COMPOSTER, point.x, point.y, point.z, 1, 0.05, 0.05, 0.05, 0.0);
-      }
-    }
-    float radians = this.yBodyRot * Mth.DEG_TO_RAD;
-    Vec3 hold = new Vec3(this.getX() - Mth.sin(radians) * HOLD_DISTANCE, mob.getY(), this.getZ() + Mth.cos(radians) * HOLD_DISTANCE);
-    Vec3 toHold = hold.subtract(mob.position());
-    Vec3 pull = toHold.lengthSqr() > HOLD_TOLERANCE * HOLD_TOLERANCE ? toHold.normalize().scale(Math.min(TETHER_PULL, toHold.length())) : Vec3.ZERO;
-    mob.setDeltaMovement(pull.x, mob.getDeltaMovement().y, pull.z);
-    mob.getNavigation().stop();
-    mob.hurtMarked = true;
-
-    if (++this.tetherTicks >= RECLAIM_TICKS) {
-      Hallowing.unhallow(mob);
-      MotherBrood.adopt(mob);
-      this.brood.add(mob.getUUID());
-      mob.setTarget(this.broodTarget());
-      this.heal(RECLAIM_HEAL);
-      level.sendParticles(ParticleTypes.SCULK_SOUL, mob.getX(), mob.getY() + 1.0, mob.getZ(), 24, 0.4, 0.4, 0.4, 0.05);
-      this.playSound(SoundEvents.SOUL_ESCAPE.value(), 2.0F, 0.4F);
-      this.entityData.set(DATA_TETHER, NO_TETHER);
-      this.tetherTicks = 0;
     }
   }
 
@@ -633,21 +401,14 @@ public class HallowedMother extends Monster implements LightEmitter {
   protected void addAdditionalSaveData(ValueOutput output) {
     super.addAdditionalSaveData(output);
     output.storeNullable("summoner", UUIDUtil.CODEC, this.summoner);
-    output.store("brood", UUIDUtil.CODEC.listOf(), List.copyOf(this.brood));
+    this.brood.save(output);
   }
 
   @Override
   protected void readAdditionalSaveData(ValueInput input) {
     super.readAdditionalSaveData(input);
     this.summoner = input.read("summoner", UUIDUtil.CODEC).orElse(null);
-    this.brood.clear();
-    this.brood.addAll(input.read("brood", UUIDUtil.CODEC.listOf()).orElse(List.of()));
+    this.brood.load(input);
     this.bossEvent.setName(this.getDisplayName());
-  }
-
-  private enum Burst {
-    NONE,
-    SPITTING,
-    GATHERING
   }
 }
