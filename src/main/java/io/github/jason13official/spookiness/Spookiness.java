@@ -1,5 +1,8 @@
 package io.github.jason13official.spookiness;
 
+import io.github.jason13official.spookiness.world.HauntedHarvest;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import io.github.jason13official.spookiness.effect.TemporaryBlocks;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.boss.HallowedMotherTrigger;
@@ -299,6 +302,8 @@ public class Spookiness {
         SpookySpawns.tickCandleAwakening(player);
         SpookySpawns.tickBookshelfAwakening(player);
         SpookySpawns.tickNightAwakenings(player);
+        SpookySpawns.tickHarvestTools(player);
+        HauntedHarvest.tick(player);
         LamentRitual.tick(player);
         HallowedMotherTrigger.tick(player);
       }
@@ -322,10 +327,14 @@ public class Spookiness {
       }
     });
 
+    // ServerStoppingEvent
+    NeoForge.EVENT_BUS.addListener((ServerStoppingEvent event) -> TemporaryBlocks.revertAll(event.getServer()));
+
     // ServerTickEvent.Post
     NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> {
 
       PlayerFollowers.tick(event.getServer());
+      TemporaryBlocks.tick(event.getServer());
       Kindling.tick(event.getServer());
     });
 

@@ -43,6 +43,8 @@ public class ModItems {
 
   public static Item HARVEST_CROWN;
 
+  public static Item GOURDWYRM_TROPHY;
+
   public static Item JACK_O_MIMIC_SPAWN_EGG;
 
   public static Item FLOATING_CANDLES_SPAWN_EGG;
@@ -90,6 +92,8 @@ public class ModItems {
     PIECE_OF_LAMENT_ONE = registerItem("piece_of_lament_one", new Item.Properties().stacksTo(1), consumer);
 
     PIECE_OF_LAMENT_TWO = registerItem("piece_of_lament_two", new Item.Properties().stacksTo(1), consumer);
+
+    GOURDWYRM_TROPHY = registerBlock(ModBlocks.GOURDWYRM_TROPHY, new Item.Properties().rarity(Rarity.EPIC).fireResistant(), consumer);
 
     HARVEST_CROWN = registerItem("harvest_crown", new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()
         .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setAsset(EquipmentAssets.GOLD).setEquipSound(SoundEvents.ARMOR_EQUIP_GOLD).build()), consumer);

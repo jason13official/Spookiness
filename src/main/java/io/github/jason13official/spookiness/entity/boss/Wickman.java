@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss;
 
+import io.github.jason13official.spookiness.entity.projectile.FrostVolley;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import io.github.jason13official.spookiness.registry.ModSounds;
@@ -43,9 +44,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import io.github.jason13official.spookiness.entity.projectile.PumpkinBomb;
-import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -72,6 +71,8 @@ public class Wickman extends Monster {
   private static final float HEADLESS_THRESHOLD = 0.25F;
   private static final float SPUTTER_MULTIPLIER = 0.8F;
   private static final int THROW_INTERVAL = 60;
+  private static final int VOLLEY_SIZE = 4;
+  private static final float VOLLEY_SPREAD = 12.0F;
   private static final int VIGIL_CANDLES = 4;
   private static final double VIGIL_RADIUS = 6.0;
   private static final int PUMPKIN_KILL_REWARD = 5;
@@ -280,10 +281,12 @@ public class Wickman extends Monster {
     Vec3 eye = this.getEyePosition();
     Vec3 delta = target.getEyePosition().subtract(eye);
     if (this.getVariant() == Variant.FROST) {
-      Snowball snowball = new Snowball(level, this, new ItemStack(Items.SNOWBALL));
-      snowball.shoot(delta.x, delta.y + delta.horizontalDistance() * 0.2, delta.z, 1.6F, 6.0F);
-      level.addFreshEntity(snowball);
-      this.playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.0F, 0.6F);
+      for (int i = 0; i < VOLLEY_SIZE; i++) {
+        FrostVolley snowball = new FrostVolley(level, this);
+        snowball.shoot(delta.x, delta.y + delta.horizontalDistance() * 0.2, delta.z, 1.4F, VOLLEY_SPREAD);
+        level.addFreshEntity(snowball);
+      }
+      this.playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.5F, 0.5F);
       return;
     }
     PumpkinBomb bomb = new PumpkinBomb(level, this);

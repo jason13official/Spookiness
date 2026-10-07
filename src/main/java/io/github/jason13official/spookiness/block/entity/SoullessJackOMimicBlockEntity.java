@@ -1,5 +1,8 @@
 package io.github.jason13official.spookiness.block.entity;
 
+import net.minecraft.world.phys.AABB;
+import io.github.jason13official.spookiness.registry.ModItems;
+import io.github.jason13official.spookiness.entity.boss.Gourdwyrm;
 import io.github.jason13official.spookiness.block.SoullessJackOMimicBlock;
 import io.github.jason13official.spookiness.registry.ModBlockEntities;
 import io.github.jason13official.spookiness.world.netherrealm.NetherrealmArena;
@@ -29,6 +32,7 @@ public class SoullessJackOMimicBlockEntity extends BlockEntity {
 
   private static final double OPEN_RANGE = 4.0;
   private static final float OPEN_SPEED = 0.1F;
+  private static final double FIGHT_RANGE = 96.0;
 
   private ItemStack item = ItemStack.EMPTY;
   private float openness;
@@ -40,7 +44,8 @@ public class SoullessJackOMimicBlockEntity extends BlockEntity {
 
   public static void clientTick(Level level, BlockPos pos, BlockState state, SoullessJackOMimicBlockEntity mimic) {
 
-    boolean near = level.getNearestPlayer(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, OPEN_RANGE, false) != null;
+    boolean near = level.getNearestPlayer(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, OPEN_RANGE, false) != null
+        || mimic.item.is(ModItems.LAMENT_CONFIGURATION) && !level.getEntitiesOfClass(Gourdwyrm.class, new AABB(pos).inflate(FIGHT_RANGE)).isEmpty();
     mimic.oOpenness = mimic.openness;
     mimic.openness = Mth.approach(mimic.openness, near ? 1.0F : 0.0F, OPEN_SPEED);
     if (mimic.oOpenness == 0.0F && mimic.openness > 0.0F) {

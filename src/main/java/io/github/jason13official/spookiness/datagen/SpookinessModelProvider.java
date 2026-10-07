@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.datagen;
 
+import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
 import com.mojang.math.Transformation;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
@@ -73,6 +74,10 @@ public class SpookinessModelProvider extends ModelProvider {
     spawnEgg(itemModels, ModItems.GOURDWYRM_SPAWN_EGG, spawnEgg, 0xD9731E, 0x3B5A1E);
 
     blockModels.createParticleOnlyBlock(ModBlocks.SOULLESS_JACK_O_MIMIC, Blocks.CARVED_PUMPKIN);
+    Identifier trophy = ModelLocationUtils.getModelLocation(ModBlocks.GOURDWYRM_TROPHY);
+    blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(ModBlocks.GOURDWYRM_TROPHY, BlockModelGenerators.plainVariant(trophy))
+        .with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
+    itemModels.itemModelOutput.accept(ModItems.GOURDWYRM_TROPHY, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.GOURDWYRM_TROPHY)));
     itemModels.itemModelOutput.accept(ModItems.SOULLESS_JACK_O_MIMIC, ItemModelUtils.specialModel(ModelLocationUtils.getModelLocation(ModItems.SOULLESS_JACK_O_MIMIC),
         SOULLESS_TRANSFORMATION, new SoullessJackOMimicSpecialRenderer.Unbaked()));
     LAMENT_BASE.create(ModItems.SOULLESS_JACK_O_MIMIC, TextureMapping.particle(Blocks.CARVED_PUMPKIN), itemModels.modelOutput);

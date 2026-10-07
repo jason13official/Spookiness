@@ -55,6 +55,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModEntities.HALLOWED_MOTHER, "Hallowed Mother");
     this.add(ModEntities.GOURDWYRM, "Gourdwyrm");
     this.add(ModEntities.PUMPKIN_BOMB, "Pumpkin Bomb");
+    this.add(ModEntities.FROST_VOLLEY, "Frost Volley");
 
     this.add("item.spookiness.pumpkin_mace.pumpkin_kills", "Pumpkin Kills: %s/%s");
     this.add("item.spookiness.pumpkin_mace.harvest", "Harvest: %s/%s");
@@ -66,6 +67,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add("item.spookiness.pumpkin_mace.stage.blazing", "Blazing");
     this.add("item.spookiness.pumpkin_mace.stage.thorned", "Thorned");
     this.add(ModItems.HARVEST_CROWN, "Harvest Crown");
+    this.add(ModBlocks.GOURDWYRM_TROPHY, "Gourdwyrm Trophy");
     this.add("message.spookiness.companion_summoned", "A spectral Jack o'Mimic joins you!");
     this.add("message.spookiness.companions_summoned", "%s spectral Jack o'Mimics join you!");
     this.add("message.spookiness.hallowed", "%s is hallowed and joins you");
@@ -73,6 +75,7 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add("message.spookiness.hallow_too_many", "Your lantern cannot guide any more souls");
     this.add("message.spookiness.mother_warning", "The Hallowed Mother stirs beneath the field and wants to meet your family...");
     this.add("message.spookiness.mother_accept", "[Accept]");
+    this.add("message.spookiness.haunted_harvest", "The Haunted Harvest has begun. Everything in the field is waking up...");
     this.add("message.spookiness.mother_accept_hover", "Let her rise and fight for your Hallowed allies");
     this.add("message.spookiness.mother_deny", "[Deny]");
     this.add("message.spookiness.mother_deny_hover", "Let her sleep until tomorrow night");

@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.world;
 
+import net.minecraft.world.level.levelgen.Heightmap;
 import io.github.jason13official.spookiness.effect.SoulBurst;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
@@ -91,11 +92,13 @@ public final class SpookySpawns {
   private static final float SKELETON_SKULL_CHANCE = 0.05F;
   private static final double ARMOR_STAND_RADIUS = 16.0;
   private static final float ARMOR_STAND_HAUNT_CHANCE = 0.002F;
+  private static final float HARVEST_TOOL_CHANCE = 0.01F;
+  private static final int HARVEST_TOOL_RADIUS = 8;
 
   public static void equipPumpkinHead(Mob mob, RandomSource random) {
 
     Float chance = PUMPKIN_HEAD_CHANCES.get(mob.getType());
-    if (chance == null || mob.isBaby() || !mob.getItemBySlot(EquipmentSlot.HEAD).isEmpty() || random.nextFloat() >= chance) {
+    if (chance == null || mob.isBaby() || !mob.getItemBySlot(EquipmentSlot.HEAD).isEmpty() || random.nextFloat() >= HauntedHarvest.scale(mob.level(), chance)) {
       return;
     }
 
@@ -128,7 +131,7 @@ public final class SpookySpawns {
 
   public static void tickCandleAwakening(ServerPlayer player) {
 
-    if (player.tickCount % CANDLE_CHECK_INTERVAL != 0 || player.isSpectator() || !player.isHolding(ModItems.PUMPKIN_MACE)) {
+    if (player.tickCount % CANDLE_CHECK_INTERVAL != 0 || player.isSpectator() || !player.isHolding(ModItems.PUMPKIN_MACE) && !HauntedHarvest.isActive(player.level())) {
       return;
     }
 
@@ -138,7 +141,7 @@ public final class SpookySpawns {
     for (BlockPos pos : BlockPos.betweenClosed(origin.offset(-1, -1, -1), origin.offset(1, 1, 1))) {
       BlockState state = level.getBlockState(pos);
       boolean candles = state.getBlock() instanceof CandleBlock || state.getBlock() instanceof CandleCakeBlock;
-      if (candles && random.nextFloat() < CANDLE_AWAKEN_CHANCE) {
+      if (candles && random.nextFloat() < HauntedHarvest.scale(level, CANDLE_AWAKEN_CHANCE)) {
         awakenCandles(level, pos.immutable(), state);
       }
     }
@@ -177,7 +180,7 @@ public final class SpookySpawns {
     ServerLevel level = player.level();
     RandomSource random = player.getRandom();
     forBlockEntitiesNear(player, BOOKSHELF_RADIUS, ChiseledBookShelfBlockEntity.class, shelf -> {
-      if (random.nextFloat() < BOOKSHELF_AWAKEN_CHANCE) {
+      if (random.nextFloat() < HauntedHarvest.scale(level, BOOKSHELF_AWAKEN_CHANCE)) {
         awakenShelfBook(level, shelf, random);
       }
     });
@@ -217,14 +220,14 @@ public final class SpookySpawns {
 
     for (BlockPos pos : BlockPos.betweenClosed(origin.offset(-LANTERN_RADIUS, 0, -LANTERN_RADIUS), origin.offset(LANTERN_RADIUS, LANTERN_HEIGHT, LANTERN_RADIUS))) {
       BlockState state = level.getBlockState(pos);
-      if (state.is(Blocks.SOUL_LANTERN) && state.getValue(LanternBlock.HANGING) && random.nextFloat() < LANTERN_AWAKEN_CHANCE) {
+      if (state.is(Blocks.SOUL_LANTERN) && state.getValue(LanternBlock.HANGING) && random.nextFloat() < HauntedHarvest.scale(level, LANTERN_AWAKEN_CHANCE)) {
         awakenLantern(level, pos.immutable());
       }
     }
 
     forBlockEntitiesNear(player, SKULL_RADIUS, SkullBlockEntity.class, skull -> {
       BlockState state = skull.getBlockState();
-      if ((state.is(Blocks.SKELETON_SKULL) || state.is(Blocks.SKELETON_WALL_SKULL)) && random.nextFloat() < SKULL_AWAKEN_CHANCE) {
+      if ((state.is(Blocks.SKELETON_SKULL) || state.is(Blocks.SKELETON_WALL_SKULL)) && random.nextFloat() < HauntedHarvest.scale(level, SKULL_AWAKEN_CHANCE)) {
         awakenSkull(level, skull.getBlockPos());
       }
     });
@@ -232,9 +235,28 @@ public final class SpookySpawns {
     List<ArmorStand> stands = level.getEntitiesOfClass(ArmorStand.class, player.getBoundingBox().inflate(ARMOR_STAND_RADIUS),
         stand -> stand.getType() == EntityType.ARMOR_STAND && !stand.isMarker() && !stand.isInvisible());
     for (ArmorStand stand : stands) {
-      if (random.nextFloat() < ARMOR_STAND_HAUNT_CHANCE && !HauntedArmorStand.isWatched(level, stand)) {
+      if (random.nextFloat() < HauntedHarvest.scale(level, ARMOR_STAND_HAUNT_CHANCE) && !HauntedArmorStand.isWatched(level, stand)) {
         HauntedArmorStand.haunt(level, stand);
       }
+    }
+  }
+
+  public static void tickHarvestTools(ServerPlayer player) {
+
+    if (player.tickCount % NIGHT_CHECK_INTERVAL != 0 || player.isSpectator() || !HauntedHarvest.isActive(player.level())) {
+      return;
+    }
+    ServerLevel level = player.level();
+    RandomSource random = player.getRandom();
+    if (random.nextFloat() >= HARVEST_TOOL_CHANCE) {
+      return;
+    }
+    BlockPos guess = player.blockPosition().offset(random.nextInt(HARVEST_TOOL_RADIUS * 2 + 1) - HARVEST_TOOL_RADIUS, 0,
+        random.nextInt(HARVEST_TOOL_RADIUS * 2 + 1) - HARVEST_TOOL_RADIUS);
+    BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, guess).below();
+    BlockState soil = level.getBlockState(ground);
+    if (soil.is(Blocks.GRASS_BLOCK) || soil.is(Blocks.FARMLAND) || soil.is(Blocks.DIRT)) {
+      spawnTool(level, random.nextBoolean() ? ModEntities.FLOATING_HOE : ModEntities.FLOATING_SHEARS, ground, ItemStack.EMPTY);
     }
   }
 
@@ -264,7 +286,7 @@ public final class SpookySpawns {
 
   public static void onSkeletonDeath(LivingEntity entity) {
 
-    if (entity.getType() == EntityType.SKELETON && entity.level() instanceof ServerLevel level && level.isDarkOutside() && level.getRandom().nextFloat() < SKELETON_SKULL_CHANCE) {
+    if (entity.getType() == EntityType.SKELETON && entity.level() instanceof ServerLevel level && level.isDarkOutside() && level.getRandom().nextFloat() < HauntedHarvest.scale(level, SKELETON_SKULL_CHANCE)) {
       spawnSkull(level, entity.getEyePosition());
     }
   }
@@ -287,7 +309,7 @@ public final class SpookySpawns {
 
   public static void onSheepSheared(ServerLevel level, Sheep sheep, ItemStack shears) {
 
-    if (sheep.readyForShearing() && shears.is(Tags.Items.TOOLS_SHEAR) && level.getRandom().nextFloat() < SHEARS_CHANCE) {
+    if (sheep.readyForShearing() && shears.is(Tags.Items.TOOLS_SHEAR) && level.getRandom().nextFloat() < HauntedHarvest.scale(level, SHEARS_CHANCE)) {
       spawnTool(level, ModEntities.FLOATING_SHEARS, sheep.blockPosition(), new ItemStack(shears.getItem()));
     }
   }
@@ -297,7 +319,7 @@ public final class SpookySpawns {
     for (Property<?> property : grown.getProperties()) {
       if (property instanceof IntegerProperty age && property.getName().equals("age") && original.hasProperty(age)) {
         int max = age.getPossibleValues().getLast();
-        if (grown.getValue(age) == max && original.getValue(age) < max && level.getRandom().nextFloat() < PLANT_HOE_CHANCE) {
+        if (grown.getValue(age) == max && original.getValue(age) < max && level.getRandom().nextFloat() < HauntedHarvest.scale(level, PLANT_HOE_CHANCE)) {
           spawnTool(level, ModEntities.FLOATING_HOE, pos, ItemStack.EMPTY);
         }
         return;
@@ -307,7 +329,7 @@ public final class SpookySpawns {
 
   public static void onSheepGrownUp(Sheep sheep) {
 
-    if (!sheep.isBaby() && sheep.level() instanceof ServerLevel level && level.getRandom().nextFloat() < LAMB_SHEARS_CHANCE) {
+    if (!sheep.isBaby() && sheep.level() instanceof ServerLevel level && level.getRandom().nextFloat() < HauntedHarvest.scale(level, LAMB_SHEARS_CHANCE)) {
       spawnTool(level, ModEntities.FLOATING_SHEARS, sheep.blockPosition(), ItemStack.EMPTY);
     }
   }
@@ -315,7 +337,7 @@ public final class SpookySpawns {
   public static void onHoeTill(ServerLevel level, BlockPos pos, BlockState state, ItemStack hoe) {
 
     boolean tillable = state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.DIRT_PATH) || state.is(Blocks.COARSE_DIRT);
-    if (tillable && level.isEmptyBlock(pos.above()) && level.getRandom().nextFloat() < HOE_CHANCE) {
+    if (tillable && level.isEmptyBlock(pos.above()) && level.getRandom().nextFloat() < HauntedHarvest.scale(level, HOE_CHANCE)) {
       spawnTool(level, ModEntities.FLOATING_HOE, pos, new ItemStack(hoe.getItem()));
     }
   }
@@ -375,7 +397,7 @@ public final class SpookySpawns {
 
   public static void onCampfireCooked(ServerLevel level, BlockPos pos) {
 
-    if (level.getRandom().nextFloat() >= CAMPFIRE_SWORD_CHANCE) {
+    if (level.getRandom().nextFloat() >= HauntedHarvest.scale(level, CAMPFIRE_SWORD_CHANCE)) {
       return;
     }
 

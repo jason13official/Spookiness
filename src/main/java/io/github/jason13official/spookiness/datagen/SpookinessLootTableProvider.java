@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.datagen;
 
+import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModEntities;
@@ -55,11 +56,12 @@ public class SpookinessLootTableProvider {
     @Override
     protected void generate() {
       this.dropSelf(ModBlocks.SOULLESS_JACK_O_MIMIC);
+      this.dropSelf(ModBlocks.GOURDWYRM_TROPHY);
     }
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-      return List.of(ModBlocks.SOULLESS_JACK_O_MIMIC);
+      return List.of(ModBlocks.SOULLESS_JACK_O_MIMIC, ModBlocks.GOURDWYRM_TROPHY);
     }
   }
 
@@ -76,6 +78,8 @@ public class SpookinessLootTableProvider {
       super.add(type, lootTable, builder);
       this.added.add(type);
     }
+
+    private static final float ANCIENT_DEBRIS_CHANCE = 0.25F;
 
     private static LootPool.Builder one(Item item) {
       return LootPool.lootPool().setRolls(ConstantValue.exactly(1.0F)).add(LootItem.lootTableItem(item));
@@ -110,8 +114,11 @@ public class SpookinessLootTableProvider {
 
       this.add(ModEntities.GOURDWYRM, LootTable.lootTable()
           .withPool(one(ModItems.HARVEST_CROWN))
+          .withPool(one(ModItems.GOURDWYRM_TROPHY))
           .withPool(some(Items.JACK_O_LANTERN, 6.0F, 10.0F))
-          .withPool(some(Items.GOLD_INGOT, 8.0F, 16.0F)));
+          .withPool(some(Items.GOLD_INGOT, 8.0F, 16.0F))
+          .withPool(some(Items.GOLD_BLOCK, 1.0F, 3.0F))
+          .withPool(one(Items.ANCIENT_DEBRIS).when(LootItemRandomChanceCondition.randomChance(ANCIENT_DEBRIS_CHANCE))));
 
       this.add(ModEntities.JACK_O_MIMIC, LootTable.lootTable()
           .withPool(some(Items.PUMPKIN_SEEDS, 0.0F, 3.0F))

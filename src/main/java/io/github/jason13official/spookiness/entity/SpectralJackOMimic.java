@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.entity;
 
+import net.minecraft.util.Mth;
 import io.github.jason13official.spookiness.companion.PlayerFollower;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.lighting.LivingLights;
@@ -44,13 +45,17 @@ import org.jspecify.annotations.Nullable;
 
 public class SpectralJackOMimic extends FloatingPathfinderMob implements OwnableEntity, PlayerFollower {
 
+  private static final double CROWD_DISTANCE = 1.5;
+  private static final double SLOT_RADIUS = 2.5;
+  private static final double SLOT_HEIGHT = 1.2;
+  private static final double SLOT_TOLERANCE = 0.75;
+  private static final double GOLDEN_ANGLE = 2.399963;
   private static final EntityDataAccessor<Optional<EntityReference<LivingEntity>>> DATA_OWNER = SynchedEntityData.defineId(SpectralJackOMimic.class,
       EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE);
 
   private static final int LIGHT_EMISSION = 10;
   private static final byte ATTACK_EVENT = 4;
   private static final double FOLLOW_START_DISTANCE = 6.0;
-  private static final double FOLLOW_STOP_DISTANCE = 3.0;
   private static final double TELEPORT_DISTANCE = 20.0;
 
   public final AnimationState yapAnimationState = new AnimationState();
@@ -248,8 +253,13 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
 
     @Override
     public boolean canUse() {
-      LivingEntity owner = SpectralJackOMimic.this.getOwner();
-      if (owner == null || owner.isSpectator() || SpectralJackOMimic.this.distanceTo(owner) < FOLLOW_START_DISTANCE) {
+      SpectralJackOMimic mimic = SpectralJackOMimic.this;
+      LivingEntity owner = mimic.getOwner();
+      if (owner == null || owner.isSpectator()) {
+        return false;
+      }
+      double distance = mimic.distanceTo(owner);
+      if (distance < FOLLOW_START_DISTANCE && distance > CROWD_DISTANCE) {
         return false;
       }
       this.followed = owner;
@@ -259,7 +269,12 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
     @Override
     public boolean canContinueToUse() {
       return this.followed != null && this.followed.isAlive() && !this.followed.isSpectator()
-          && SpectralJackOMimic.this.distanceTo(this.followed) > FOLLOW_STOP_DISTANCE;
+          && SpectralJackOMimic.this.position().distanceTo(this.slot(this.followed)) > SLOT_TOLERANCE;
+    }
+
+    private Vec3 slot(LivingEntity owner) {
+      double angle = SpectralJackOMimic.this.getId() * GOLDEN_ANGLE;
+      return owner.position().add(Math.cos(angle) * SLOT_RADIUS, SLOT_HEIGHT, Math.sin(angle) * SLOT_RADIUS);
     }
 
     @Override
@@ -279,7 +294,7 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
       }
 
       SpectralJackOMimic mimic = SpectralJackOMimic.this;
-      Vec3 anchor = this.followed.position().add(0.0, 1.0, 0.0);
+      Vec3 anchor = this.slot(this.followed);
       mimic.getLookControl().setLookAt(this.followed, 10.0F, mimic.getMaxHeadXRot());
 
       if (mimic.distanceTo(this.followed) > TELEPORT_DISTANCE) {
@@ -289,7 +304,8 @@ public class SpectralJackOMimic extends FloatingPathfinderMob implements Ownable
         return;
       }
 
-      mimic.getMoveControl().setWantedPosition(anchor.x, anchor.y, anchor.z, 1.2);
+      double speed = Mth.clamp(mimic.position().distanceTo(anchor) * 0.5, 0.6, 2.0);
+      mimic.getMoveControl().setWantedPosition(anchor.x, anchor.y, anchor.z, speed);
     }
   }
 

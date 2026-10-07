@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.registry;
 
+import io.github.jason13official.spookiness.entity.projectile.FrostVolley;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.entity.FloatingBook;
 import io.github.jason13official.spookiness.entity.FloatingCandles;
@@ -42,6 +43,7 @@ public class ModEntities {
   public static EntityType<HallowedMother> HALLOWED_MOTHER;
   public static EntityType<Gourdwyrm> GOURDWYRM;
   public static EntityType<PumpkinBomb> PUMPKIN_BOMB;
+  public static EntityType<FrostVolley> FROST_VOLLEY;
 
   public static void register(BiConsumer<EntityType<?>, Identifier> consumer) {
 
@@ -96,6 +98,10 @@ public class ModEntities {
     PUMPKIN_BOMB = EntityType.Builder.<PumpkinBomb>of(PumpkinBomb::new, MobCategory.MISC).noLootTable().sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(10)
         .build(key("pumpkin_bomb"));
     consumer.accept(PUMPKIN_BOMB, Spookiness.id("pumpkin_bomb"));
+
+    FROST_VOLLEY = EntityType.Builder.<FrostVolley>of(FrostVolley::new, MobCategory.MISC).noLootTable().sized(0.25f, 0.25f).clientTrackingRange(4).updateInterval(10)
+        .build(key("frost_volley"));
+    consumer.accept(FROST_VOLLEY, Spookiness.id("frost_volley"));
   }
 
   private static ResourceKey<EntityType<?>> key(String path) {
