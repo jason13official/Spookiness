@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.registry;
 
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.item.AlliedSpawnEggItem;
+import io.github.jason13official.spookiness.item.HarvestCrownItem;
 import io.github.jason13official.spookiness.item.LamentConfigurationItem;
 import io.github.jason13official.spookiness.item.PumpkinMaceItem;
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.Weapon;
-import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -63,8 +63,8 @@ public class ModItems {
 
     GOURDWYRM_TROPHY = registerBlock(ModBlocks.GOURDWYRM_TROPHY, new Item.Properties().rarity(Rarity.EPIC).fireResistant(), consumer);
 
-    HARVEST_CROWN = registerItem("harvest_crown", new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()
-        .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setAsset(EquipmentAssets.GOLD).setEquipSound(SoundEvents.ARMOR_EQUIP_GOLD).build()), consumer);
+    HARVEST_CROWN = registerItem("harvest_crown", HarvestCrownItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()
+        .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setEquipSound(SoundEvents.ARMOR_EQUIP_GOLD).build()), consumer);
 
     SPAWN_EGGS.clear();
     registerSpawnEgg(ModEntities.JACK_O_MIMIC, 0xE38A1D, 0x3B2508, consumer);

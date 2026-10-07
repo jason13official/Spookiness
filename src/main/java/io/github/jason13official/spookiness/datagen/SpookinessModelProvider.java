@@ -97,7 +97,7 @@ public class SpookinessModelProvider extends ModelProvider {
       }
     }
     itemModels.itemModelOutput.accept(ModItems.PUMPKIN_MACE, ItemModelUtils.select(new ComponentContents<>(ModDataComponents.MACE_STAGE), ItemModelUtils.plainModel(mace), maceStages));
-    itemModels.itemModelOutput.accept(ModItems.HARVEST_CROWN, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/golden_helmet")));
+    itemModels.itemModelOutput.accept(ModItems.HARVEST_CROWN, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.HARVEST_CROWN)));
 
     Identifier lamentBase = LAMENT_BASE.create(ModItems.LAMENT_CONFIGURATION, TextureMapping.particle(Blocks.GOLD_BLOCK), itemModels.modelOutput);
     lament(itemModels, ModItems.LAMENT_CONFIGURATION, lamentBase, LamentConfigurationModel.Part.ALL);
