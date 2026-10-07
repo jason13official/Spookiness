@@ -58,6 +58,8 @@ public class SpookinessLanguageProvider extends LanguageProvider {
 
     this.add("item.spookiness.pumpkin_mace.pumpkin_kills", "Pumpkin Kills: %s/%s");
     this.add("item.spookiness.pumpkin_mace.harvest", "Harvest: %s/%s");
+    this.add("item.spookiness.pumpkin_mace.ignites", "Sets targets alight");
+    this.add("item.spookiness.pumpkin_mace.thorns", "+%s Thorn Damage");
     this.add("item.spookiness.pumpkin_mace.stage.pumpkin", "Unripe");
     this.add("item.spookiness.pumpkin_mace.stage.carved", "Carved");
     this.add("item.spookiness.pumpkin_mace.stage.lantern", "Lit");

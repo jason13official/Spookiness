@@ -55,6 +55,8 @@ public class PumpkinMaceItem extends Item {
   private static final float SMASH_ATTACK_HEAVY_THRESHOLD = 5.0F;
   private static final float SMASH_ATTACK_KNOCKBACK_POWER = 0.7F;
   public static final int KILLS_PER_COMPANION = 5;
+  private static final float BLAZING_FIRE_SECONDS = 3.0F;
+  private static final float THORNED_DAMAGE_BONUS = 5.0F;
 
   public PumpkinMaceItem(Item.Properties properties) {
     super(properties);
@@ -127,6 +129,12 @@ public class PumpkinMaceItem extends Item {
 
     MaceStage stage = getStage(itemStack);
     builder.accept(Component.translatable("item.spookiness.pumpkin_mace.stage." + stage.getSerializedName()).withStyle(ChatFormatting.DARK_GREEN));
+    if (stage.ordinal() >= MaceStage.BLAZING.ordinal()) {
+      builder.accept(Component.translatable("item.spookiness.pumpkin_mace.ignites").withStyle(ChatFormatting.RED));
+    }
+    if (stage == MaceStage.THORNED) {
+      builder.accept(Component.translatable("item.spookiness.pumpkin_mace.thorns", (int) THORNED_DAMAGE_BONUS).withStyle(ChatFormatting.DARK_GREEN));
+    }
     if (!stage.isFinal()) {
       int harvest = itemStack.getOrDefault(ModDataComponents.MACE_HARVEST, 0);
       builder.accept(Component.translatable("item.spookiness.pumpkin_mace.harvest", harvest, stage.next().kills()).withStyle(ChatFormatting.GRAY));
@@ -186,6 +194,14 @@ public class PumpkinMaceItem extends Item {
 
   public void hurtEnemy(ItemStack itemStack, LivingEntity mob, LivingEntity attacker) {
 
+    MaceStage stage = getStage(itemStack);
+    if (stage.ordinal() >= MaceStage.BLAZING.ordinal()) {
+      mob.igniteForSeconds(BLAZING_FIRE_SECONDS);
+    }
+    if (stage == MaceStage.THORNED) {
+      attacker.level().playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.THORNS_HIT, attacker.getSoundSource(), 1.0F, 0.8F);
+    }
+
     if (!canSmashAttack(attacker)) {
       return;
     }
@@ -233,8 +249,9 @@ public class PumpkinMaceItem extends Item {
       return 0.0F;
     }
 
+    float stageBonus = getStage(attacker.getWeaponItem()) == MaceStage.THORNED ? THORNED_DAMAGE_BONUS : 0.0F;
     if (!canSmashAttack(attacker)) {
-      return 0.0F;
+      return stageBonus;
     }
 
     double fallHeightThreshold1 = 3.0F;
@@ -251,9 +268,9 @@ public class PumpkinMaceItem extends Item {
     }
 
     if (attacker.level() instanceof ServerLevel level) {
-      return (float) (damage + (double) EnchantmentHelper.modifyFallBasedDamage(level, attacker.getWeaponItem(), victim, damageSource, 0.0F) * fallDistance);
+      return stageBonus + (float) (damage + (double) EnchantmentHelper.modifyFallBasedDamage(level, attacker.getWeaponItem(), victim, damageSource, 0.0F) * fallDistance);
     } else {
-      return (float) damage;
+      return stageBonus + (float) damage;
     }
   }
 
