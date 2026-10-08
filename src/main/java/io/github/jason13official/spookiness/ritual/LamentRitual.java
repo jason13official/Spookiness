@@ -9,7 +9,10 @@ import io.github.jason13official.spookiness.registry.ModItems;
 import net.minecraft.core.GlobalPos;
 import org.jspecify.annotations.Nullable;
 import io.github.jason13official.spookiness.world.NetherrealmArena;
+import io.github.jason13official.spookiness.entity.boss.SpookyBoss;
 import java.util.List;
+import net.minecraft.world.entity.Entity;
+import net.neoforged.neoforge.entity.PartEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -51,6 +54,7 @@ public final class LamentRitual {
   private static final int SEARCH_RADIUS = 16;
   private static final int NETHER_ROOF_MARGIN = 6;
   private static final int FALLBACK_Y = 64;
+  private static final double CARRY_RADIUS = 4.0;
 
   public static boolean isActive(Player player) {
 
@@ -158,6 +162,7 @@ public final class LamentRitual {
     }
 
     burst(from, player.position());
+    List<Entity> carried = from.getEntities(player, player.getBoundingBox().inflate(CARRY_RADIUS), entity -> canCarry(player, entity));
 
     Vec3 target;
     if (home != null) {
@@ -175,8 +180,18 @@ public final class LamentRitual {
 
     player.teleport(new TeleportTransition(destination, target, Vec3.ZERO, player.getYRot(), player.getXRot(),
         TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET)));
+    for (Entity entity : carried) {
+      entity.teleport(new TeleportTransition(destination, target, Vec3.ZERO, entity.getYRot(), entity.getXRot(),
+          entity instanceof ServerPlayer ? TeleportTransition.PLAY_PORTAL_SOUND : TeleportTransition.DO_NOTHING));
+    }
     burst(destination, target);
     SpookyTrigger.award(player, SpookyTrigger.LAMENT_RITUAL);
+  }
+
+  private static boolean canCarry(ServerPlayer player, Entity entity) {
+
+    return entity.isAlive() && !entity.isSpectator() && !entity.isPassenger() && !(entity instanceof PartEntity<?>) && !(entity instanceof SpookyBoss)
+        && !(entity instanceof ServerPlayer other && isActive(other)) && entity.distanceTo(player) <= CARRY_RADIUS;
   }
 
   private static @Nullable ItemStack findHomeward(ServerPlayer player) {

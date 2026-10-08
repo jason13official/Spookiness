@@ -18,6 +18,16 @@ import io.github.jason13official.spookiness.registry.ModBlockEntities;
 import io.github.jason13official.spookiness.client.renderer.SpectralJackOMimicRenderer;
 import io.github.jason13official.spookiness.client.renderer.BooklessEnchantTableRenderer;
 import io.github.jason13official.spookiness.client.renderer.layer.HeadItemLayer;
+import io.github.jason13official.spookiness.client.renderer.layer.LamentRitualLayer;
+import io.github.jason13official.spookiness.registry.ModAttachments;
+import net.minecraft.client.entity.ClientAvatarEntity;
+import net.minecraft.world.entity.Avatar;
+import net.neoforged.neoforge.client.renderstate.AvatarRenderStateModifier;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.player.AvatarRenderer;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.world.entity.player.PlayerModelType;
+import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
 import io.github.jason13official.spookiness.client.renderer.boss.GourdwyrmRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.HallowedMotherRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.VigilCandleRenderer;
@@ -96,6 +106,15 @@ public class SpookinessClient {
     // RenderHandEvent
     NeoForge.EVENT_BUS.addListener(LamentConfigurationOverlay::render);
 
+    // RegisterRenderStateModifiersEvent
+    modEventBus.addListener((RegisterRenderStateModifiersEvent event) -> event.registerAvatarEntityModifier(new AvatarRenderStateModifier() {
+
+      @Override
+      public <T extends Avatar & ClientAvatarEntity> void accept(T avatar, AvatarRenderState state) {
+        state.setRenderData(LamentRitualLayer.RITUAL_TICKS, avatar.getExistingDataOrNull(ModAttachments.LAMENT_RITUAL));
+      }
+    }));
+
     // EntityRenderersEvent.AddLayers
     modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {
 
@@ -111,6 +130,13 @@ public class SpookinessClient {
 
       if (event.getRenderer(EntityType.ENDERMAN) instanceof EndermanRenderer renderer) {
         renderer.addLayer(new CustomHeadLayer<>(renderer, event.getEntityModels(), event.getContext().getPlayerSkinRenderCache()));
+      }
+
+      for (PlayerModelType skin : event.getSkins()) {
+        AvatarRenderer<AbstractClientPlayer> renderer = event.getPlayerRenderer(skin);
+        if (renderer != null) {
+          renderer.addLayer(new LamentRitualLayer<>(renderer, event.getEntityModels()));
+        }
       }
     });
   }
