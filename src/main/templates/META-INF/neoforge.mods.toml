@@ -9,7 +9,13 @@ version="${mod_version}" #mandatory
 
 displayName="${mod_name}" #mandatory
 
+logoFile="spookiness.png"
+logoBlur=false
+
 authors="Jason13"
+
+displayURL="https://github.com/jason13official/Spookiness"
+
 
 description='''
 A Halloween light-horror mod: living candles, books and tools, the Pumpkin Mace, and three harvest bosses.
