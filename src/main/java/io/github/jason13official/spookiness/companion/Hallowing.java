@@ -131,8 +131,8 @@ public final class Hallowing {
   public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
 
     Player player = event.getEntity();
-    if (event.isCanceled() || event.getHand() != InteractionHand.MAIN_HAND || !(event.getTarget() instanceof JackOMimic mimic)
-        || !player.getUUID().equals(ownerOf(mimic))) {
+    if (event.isCanceled() || event.getHand() != InteractionHand.MAIN_HAND || !(event.getTarget() instanceof Mob mob)
+        || !player.getUUID().equals(ownerOf(mob)) || !(mob instanceof JackOMimic) && !event.getItemStack().isEmpty()) {
       return;
     }
 
@@ -142,9 +142,9 @@ public final class Hallowing {
       return;
     }
 
-    boolean staying = !isStaying(mimic);
-    setStaying(mimic, staying);
-    player.sendOverlayMessage(Component.translatable(staying ? "message.spookiness.ally_stay" : "message.spookiness.ally_follow", mimic.getDisplayName()));
+    boolean staying = !isStaying(mob);
+    setStaying(mob, staying);
+    player.sendOverlayMessage(Component.translatable(staying ? "message.spookiness.ally_stay" : "message.spookiness.ally_follow", mob.getDisplayName()));
   }
 
   public static void onIncomingDamage(LivingIncomingDamageEvent event) {
