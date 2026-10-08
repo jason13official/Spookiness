@@ -23,7 +23,10 @@ import io.github.jason13official.spookiness.client.renderer.boss.HallowedMotherR
 import io.github.jason13official.spookiness.client.renderer.boss.VigilCandleRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.WickmanHeadRenderer;
 import io.github.jason13official.spookiness.client.renderer.boss.WickmanRenderer;
+import io.github.jason13official.spookiness.registry.ModBlocks;
 import io.github.jason13official.spookiness.registry.ModEntities;
+import java.util.List;
+import net.minecraft.client.color.block.BlockTintSources;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.EndermanRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
@@ -36,6 +39,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterSpecialModelRendererEvent;
 
 public class SpookinessClient {
@@ -75,6 +79,9 @@ public class SpookinessClient {
       event.registerBlockEntityRenderer(ModBlockEntities.SOULLESS_JACK_O_MIMIC, SoullessJackOMimicRenderer::new);
       event.registerBlockEntityRenderer(ModBlockEntities.GOURDWYRM_TROPHY, GourdwyrmTrophyRenderer::new);
     });
+
+    // RegisterColorHandlersEvent.BlockTintSources
+    modEventBus.addListener((RegisterColorHandlersEvent.BlockTintSources event) -> event.register(List.of(BlockTintSources.stem()), ModBlocks.JACK_O_MIMIC_STEM));
 
     // RegisterSpecialModelRendererEvent
     modEventBus.addListener((RegisterSpecialModelRendererEvent event) -> {

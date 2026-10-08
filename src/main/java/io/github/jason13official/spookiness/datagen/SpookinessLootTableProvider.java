@@ -1,5 +1,6 @@
 package io.github.jason13official.spookiness.datagen;
 
+import net.minecraft.world.level.storage.loot.predicates.LootItemKilledByPlayerCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.registry.ModBlocks;
@@ -59,11 +60,12 @@ public class SpookinessLootTableProvider {
       this.dropSelf(ModBlocks.GOURDWYRM_TROPHY);
       this.dropOther(ModBlocks.LURKING_CARVED_PUMPKIN, Items.CARVED_PUMPKIN);
       this.dropOther(ModBlocks.LURKING_JACK_O_LANTERN, Items.JACK_O_LANTERN);
+      this.add(ModBlocks.JACK_O_MIMIC_STEM, this.createStemDrops(ModBlocks.JACK_O_MIMIC_STEM, ModItems.JACK_O_MIMIC_SEEDS));
     }
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-      return List.of(ModBlocks.SOULLESS_JACK_O_MIMIC, ModBlocks.GOURDWYRM_TROPHY, ModBlocks.LURKING_CARVED_PUMPKIN, ModBlocks.LURKING_JACK_O_LANTERN);
+      return List.of(ModBlocks.SOULLESS_JACK_O_MIMIC, ModBlocks.GOURDWYRM_TROPHY, ModBlocks.LURKING_CARVED_PUMPKIN, ModBlocks.LURKING_JACK_O_LANTERN, ModBlocks.JACK_O_MIMIC_STEM);
     }
   }
 
@@ -82,6 +84,7 @@ public class SpookinessLootTableProvider {
     }
 
     private static final float ANCIENT_DEBRIS_CHANCE = 0.25F;
+    private static final float MIMIC_SEED_CHANCE = 0.25F;
 
     private static LootPool.Builder one(Item item) {
       return LootPool.lootPool().setRolls(ConstantValue.exactly(1.0F)).add(LootItem.lootTableItem(item));
@@ -124,7 +127,9 @@ public class SpookinessLootTableProvider {
 
       this.add(ModEntities.JACK_O_MIMIC, LootTable.lootTable()
           .withPool(some(Items.PUMPKIN_SEEDS, 0.0F, 3.0F))
-          .withPool(some(Items.TORCH, 0.0F, 1.0F)));
+          .withPool(some(Items.TORCH, 0.0F, 1.0F))
+          .withPool(one(ModItems.JACK_O_MIMIC_SEEDS).when(LootItemKilledByPlayerCondition.killedByPlayer())
+              .when(LootItemRandomChanceCondition.randomChance(MIMIC_SEED_CHANCE))));
 
       this.add(ModEntities.FLOATING_SKULL, LootTable.lootTable().withPool(some(Items.BONE, 0.0F, 2.0F)));
 

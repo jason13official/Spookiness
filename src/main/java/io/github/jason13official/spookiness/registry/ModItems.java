@@ -45,6 +45,8 @@ public class ModItems {
 
   public static Item LURKING_JACK_O_LANTERN;
 
+  public static Item JACK_O_MIMIC_SEEDS;
+
   public static List<SpawnEgg> SPAWN_EGGS = new ArrayList<>();
 
   public static List<Item> CREATIVE_TAB_ITEMS = new ArrayList<>();
@@ -68,6 +70,8 @@ public class ModItems {
     LURKING_CARVED_PUMPKIN = registerBlock(ModBlocks.LURKING_CARVED_PUMPKIN, consumer);
 
     LURKING_JACK_O_LANTERN = registerBlock(ModBlocks.LURKING_JACK_O_LANTERN, consumer);
+
+    JACK_O_MIMIC_SEEDS = registerItem("jack_o_mimic_seeds", p -> new BlockItem(ModBlocks.JACK_O_MIMIC_STEM, p.useItemDescriptionPrefix()), new Item.Properties(), consumer);
 
     GOURDWYRM_TROPHY = registerBlock(ModBlocks.GOURDWYRM_TROPHY, new Item.Properties().rarity(Rarity.EPIC).fireResistant(), consumer);
 

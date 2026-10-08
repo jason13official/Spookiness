@@ -76,7 +76,7 @@ public final class PlayerFollowers {
     for (Mob follower : List.copyOf(LOADED)) {
       UUID ownerId = Allies.ownerOf(follower);
       ServerPlayer owner = ownerId == null ? null : server.getPlayerList().getPlayer(ownerId);
-      if (owner == null || !owner.isAlive() || owner.isSpectator() || !isFollowing(follower, owner)) {
+      if (owner == null || !owner.isAlive() || owner.isSpectator() || !isFollowing(follower, owner) || Hallowing.isStaying(follower)) {
         continue;
       }
 
@@ -91,7 +91,7 @@ public final class PlayerFollowers {
 
     List<CompoundTag> stashed = new ArrayList<>(owner.getData(ModAttachments.STASHED_COMPANIONS));
     for (Mob follower : List.copyOf(LOADED)) {
-      if (!isFollowing(follower, owner)) {
+      if (!isFollowing(follower, owner) || Hallowing.isStaying(follower)) {
         continue;
       }
 

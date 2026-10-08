@@ -24,6 +24,8 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add(ModBlocks.SOULLESS_JACK_O_MIMIC, "Soulless Jack o'Mimic");
     this.add(ModBlocks.LURKING_CARVED_PUMPKIN, "Carved Pumpkin");
     this.add(ModBlocks.LURKING_JACK_O_LANTERN, "Jack o'Lantern");
+    this.add(ModBlocks.JACK_O_MIMIC_STEM, "Jack o'Mimic Stem");
+    this.add(ModItems.JACK_O_MIMIC_SEEDS, "Jack o'Mimic Seeds");
     this.add(ModItems.PIECE_OF_LAMENT_ONE, "Piece of Lament, One");
     this.add(ModItems.PIECE_OF_LAMENT_TWO, "Piece of Lament, Two");
 
@@ -61,6 +63,8 @@ public class SpookinessLanguageProvider extends LanguageProvider {
     this.add("message.spookiness.companions_summoned", "%s spectral Jack o'Mimics join you!");
     this.add("message.spookiness.hallowed", "%s is hallowed and joins you");
     this.add("message.spookiness.hallow_too_weak", "You are too weak to give any more of yourself");
+    this.add("message.spookiness.ally_stay", "%s stays put");
+    this.add("message.spookiness.ally_follow", "%s follows you again");
     this.add("message.spookiness.hallow_too_many", "Your lantern cannot guide any more souls");
     this.add("message.spookiness.mother_warning", "The Hallowed Mother stirs beneath the field and wants to meet your family...");
     this.add("message.spookiness.mother_accept", "[Accept]");

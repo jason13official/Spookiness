@@ -2,6 +2,7 @@ package io.github.jason13official.spookiness.event;
 
 import io.github.jason13official.spookiness.ritual.HallowedMotherTrigger;
 import io.github.jason13official.spookiness.ritual.MaceRituals;
+import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.entity.book.BookStairs;
 import io.github.jason13official.spookiness.ritual.LamentRitual;
@@ -63,6 +64,7 @@ public final class PlayerEvents {
   private static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
 
     MaceRituals.onEntityInteract(event);
+    Hallowing.onEntityInteract(event);
     if (!event.isCanceled() && event.getLevel() instanceof ServerLevel level && event.getTarget() instanceof Sheep sheep) {
       SpookySpawns.onSheepSheared(level, sheep, event.getItemStack());
     }

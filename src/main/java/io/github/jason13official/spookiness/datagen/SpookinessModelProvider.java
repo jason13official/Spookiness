@@ -1,6 +1,8 @@
 package io.github.jason13official.spookiness.datagen;
 
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.client.data.models.blockstates.PropertyDispatch;
+import io.github.jason13official.spookiness.block.JackOMimicStemBlock;
 import com.mojang.math.Transformation;
 import io.github.jason13official.spookiness.Spookiness;
 import io.github.jason13official.spookiness.client.model.LamentConfigurationModel;
@@ -56,6 +58,8 @@ public class SpookinessModelProvider extends ModelProvider {
 
   private static final ModelTemplate SOULLESS_BASE = new ModelTemplate(Optional.of(Identifier.withDefaultNamespace("block/block")), Optional.empty(), TextureSlot.PARTICLE);
 
+  private static final int SEED_TINT = 0x5FE3E0;
+
   private static final TextureSlot MACE_TEXTURE = TextureSlot.create("0");
 
   private static final ModelTemplate MACE_RETEXTURE = new ModelTemplate(Optional.of(Spookiness.id("item/pumpkin_mace")), Optional.empty(), MACE_TEXTURE, TextureSlot.PARTICLE);
@@ -81,6 +85,11 @@ public class SpookinessModelProvider extends ModelProvider {
         .with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
     lurkingPumpkin(blockModels, itemModels, ModBlocks.LURKING_CARVED_PUMPKIN, ModItems.LURKING_CARVED_PUMPKIN, Blocks.CARVED_PUMPKIN);
     lurkingPumpkin(blockModels, itemModels, ModBlocks.LURKING_JACK_O_LANTERN, ModItems.LURKING_JACK_O_LANTERN, Blocks.JACK_O_LANTERN);
+    blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(ModBlocks.JACK_O_MIMIC_STEM).with(PropertyDispatch.initial(JackOMimicStemBlock.AGE)
+        .generate(age -> BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.PUMPKIN_STEM, "_stage" + age)))));
+    Identifier seeds = ModelTemplates.FLAT_ITEM.create(ModItems.JACK_O_MIMIC_SEEDS, TextureMapping.layer0(new Material(Identifier.withDefaultNamespace("item/pumpkin_seeds"))),
+        itemModels.modelOutput);
+    itemModels.itemModelOutput.accept(ModItems.JACK_O_MIMIC_SEEDS, ItemModelUtils.tintedModel(seeds, ItemModelUtils.constantTint(SEED_TINT)));
     itemModels.itemModelOutput.accept(ModItems.GOURDWYRM_TROPHY, ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(ModItems.GOURDWYRM_TROPHY)));
     itemModels.itemModelOutput.accept(ModItems.SOULLESS_JACK_O_MIMIC, ItemModelUtils.specialModel(ModelLocationUtils.getModelLocation(ModItems.SOULLESS_JACK_O_MIMIC),
         SOULLESS_TRANSFORMATION, new SoullessJackOMimicSpecialRenderer.Unbaked()));

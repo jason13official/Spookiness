@@ -2,6 +2,8 @@ package io.github.jason13official.spookiness.ritual;
 
 import io.github.jason13official.spookiness.advancement.SpookyTrigger;
 import io.github.jason13official.spookiness.companion.Hallowing;
+import io.github.jason13official.spookiness.companion.PlayerFollowers;
+import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.util.Particles;
 import io.github.jason13official.spookiness.registry.ModDamageTypes;
 import net.minecraft.network.chat.Component;
@@ -25,7 +27,7 @@ public final class HallowRitual {
       refuse(level, player, "message.spookiness.hallow_too_weak");
       return false;
     }
-    if (Hallowing.count(player) >= MAX_ALLIES) {
+    if (PlayerFollowers.count(player, ally -> Hallowing.isHallowed(ally) && !(ally instanceof JackOMimic)) >= MAX_ALLIES) {
       refuse(level, player, "message.spookiness.hallow_too_many");
       return false;
     }

@@ -1,18 +1,24 @@
 package io.github.jason13official.spookiness.companion;
 
 import io.github.jason13official.spookiness.Spookiness;
+import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.registry.ModAttachments;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Creeper;
@@ -20,10 +26,12 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.jspecify.annotations.Nullable;
 
 public final class Hallowing {
 
+  private static final int STAY_PRIORITY = 1;
   private static final int FOLLOW_PRIORITY = 3;
   private static final double FOLLOW_START_DISTANCE = 6.0;
   private static final double FOLLOW_STOP_DISTANCE = 3.0;
@@ -48,9 +56,30 @@ public final class Hallowing {
     return PlayerFollowers.count(owner, Hallowing::isHallowed);
   }
 
+  public static boolean isStaying(Entity entity) {
+
+    return Boolean.TRUE.equals(entity.getExistingDataOrNull(ModAttachments.HALLOWED_STAYING));
+  }
+
+  public static void setStaying(Mob mob, boolean staying) {
+
+    if (staying) {
+      mob.setData(ModAttachments.HALLOWED_STAYING, true);
+      mob.getNavigation().stop();
+      mob.setTarget(null);
+    } else {
+      mob.removeData(ModAttachments.HALLOWED_STAYING);
+    }
+  }
+
   public static void hallow(Mob mob, Player owner) {
 
-    mob.setData(ModAttachments.HALLOWED_OWNER, Optional.of(owner.getUUID()));
+    hallow(mob, owner.getUUID());
+  }
+
+  public static void hallow(Mob mob, UUID owner) {
+
+    mob.setData(ModAttachments.HALLOWED_OWNER, Optional.of(owner));
     mob.setTarget(null);
     mob.setPersistenceRequired();
     applyGoals(mob);
@@ -59,9 +88,10 @@ public final class Hallowing {
   public static void unhallow(Mob mob) {
 
     mob.removeData(ModAttachments.HALLOWED_OWNER);
+    mob.removeData(ModAttachments.HALLOWED_STAYING);
     PlayerFollowers.untrack(mob);
     mob.setTarget(null);
-    mob.goalSelector.removeAllGoals(goal -> goal instanceof FollowGoal);
+    mob.goalSelector.removeAllGoals(goal -> goal instanceof FollowGoal || goal instanceof StayGoal);
     mob.targetSelector.removeAllGoals(goal -> true);
     if (mob instanceof PathfinderMob pathfinder) {
       mob.targetSelector.addGoal(1, new HurtByTargetGoal(pathfinder));
@@ -87,6 +117,7 @@ public final class Hallowing {
     }
 
     mob.targetSelector.removeAllGoals(goal -> true);
+    mob.goalSelector.addGoal(STAY_PRIORITY, new StayGoal(mob));
     mob.goalSelector.addGoal(FOLLOW_PRIORITY, new FollowGoal(pathfinder));
 
     int targetPriority = 1;
@@ -95,6 +126,25 @@ public final class Hallowing {
     mob.targetSelector.addGoal(targetPriority++, new HurtByTargetGoal(pathfinder));
     mob.targetSelector.addGoal(targetPriority++, new NearestAttackableTargetGoal<>(mob, Mob.class, true,
         (target, level) -> target instanceof Enemy && !(target instanceof Creeper) && !Allies.isAlly(mob, target)));
+  }
+
+  public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+
+    Player player = event.getEntity();
+    if (event.isCanceled() || event.getHand() != InteractionHand.MAIN_HAND || !(event.getTarget() instanceof JackOMimic mimic)
+        || !player.getUUID().equals(ownerOf(mimic))) {
+      return;
+    }
+
+    event.setCanceled(true);
+    event.setCancellationResult(InteractionResult.SUCCESS);
+    if (player.level().isClientSide()) {
+      return;
+    }
+
+    boolean staying = !isStaying(mimic);
+    setStaying(mimic, staying);
+    player.sendOverlayMessage(Component.translatable(staying ? "message.spookiness.ally_stay" : "message.spookiness.ally_follow", mimic.getDisplayName()));
   }
 
   public static void onIncomingDamage(LivingIncomingDamageEvent event) {
@@ -117,6 +167,32 @@ public final class Hallowing {
         0.0, 0.02, 0.0);
   }
 
+  private static final class StayGoal extends Goal {
+
+    private final Mob mob;
+
+    StayGoal(Mob mob) {
+      this.mob = mob;
+      this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.JUMP));
+    }
+
+    @Override
+    public boolean canUse() {
+      return isStaying(this.mob) && !this.mob.isInWater() && this.mob.onGround();
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+      return isStaying(this.mob);
+    }
+
+    @Override
+    public void start() {
+      this.mob.getNavigation().stop();
+      this.mob.getMoveControl().setWait();
+    }
+  }
+
   private static final class FollowGoal extends FollowOwnerGoal {
 
     private final PathfinderMob pathfinder;
@@ -128,12 +204,12 @@ public final class Hallowing {
 
     @Override
     protected boolean canStart(Player owner) {
-      return this.mob.getTarget() == null && this.mob.distanceTo(owner) >= FOLLOW_START_DISTANCE;
+      return !isStaying(this.mob) && this.mob.getTarget() == null && this.mob.distanceTo(owner) >= FOLLOW_START_DISTANCE;
     }
 
     @Override
     protected boolean canKeepFollowing(Player owner) {
-      return this.mob.getTarget() == null && this.mob.distanceTo(owner) > FOLLOW_STOP_DISTANCE;
+      return !isStaying(this.mob) && this.mob.getTarget() == null && this.mob.distanceTo(owner) > FOLLOW_STOP_DISTANCE;
     }
 
     @Override

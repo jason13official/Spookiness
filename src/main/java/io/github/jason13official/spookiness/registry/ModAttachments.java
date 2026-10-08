@@ -21,6 +21,7 @@ public class ModAttachments {
   public static AttachmentType<Boolean> BOOK_AWAKENED;
   public static AttachmentType<Integer> LAMENT_RITUAL;
   public static AttachmentType<Optional<UUID>> HALLOWED_OWNER;
+  public static AttachmentType<Boolean> HALLOWED_STAYING;
   public static AttachmentType<Long> MOTHER_NIGHT;
   public static AttachmentType<Kindling.Kindle> KINDLE;
 
@@ -39,6 +40,9 @@ public class ModAttachments {
     HALLOWED_OWNER = register(consumer, "hallowed_owner", AttachmentType.<Optional<UUID>>builder(Optional::empty)
         .serialize(UUIDUtil.CODEC.optionalFieldOf("owner"), Optional::isPresent)
         .sync(ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC)));
+
+    HALLOWED_STAYING = register(consumer, "hallowed_staying", AttachmentType.builder(() -> false)
+        .serialize(Codec.BOOL.fieldOf("staying"), staying -> staying));
 
     MOTHER_NIGHT = register(consumer, "mother_night", AttachmentType.builder(() -> -1L)
         .serialize(Codec.LONG.fieldOf("mother_night"), night -> night >= 0L)
