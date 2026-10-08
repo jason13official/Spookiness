@@ -3,6 +3,7 @@ package io.github.jason13official.spookiness.entity.boss.mother;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.entity.SpectralJackOMimic;
+import io.github.jason13official.spookiness.util.PoisonClouds;
 import java.util.Comparator;
 import java.util.UUID;
 import net.minecraft.core.particles.ColorParticleOption;
@@ -103,7 +104,7 @@ final class MotherFeast {
       prey.addEffect(new MobEffectInstance(MobEffects.POISON, DIGEST_POISON_TICKS, 1), this.mother);
       prey.hurtServer(level, this.mother.damageSources().indirectMagic(this.mother, this.mother), DIGEST_DAMAGE);
       level.broadcastEntityEvent(this.mother, HallowedMother.SPIT_EVENT);
-      level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, HallowedMother.CLOUD_GREEN), belly.x, belly.y + 1.0, belly.z, 16, 0.6, 0.4, 0.6,
+      level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, PoisonClouds.GREEN), belly.x, belly.y + 1.0, belly.z, 16, 0.6, 0.4, 0.6,
           0.0);
       this.mother.playSound(SoundEvents.GENERIC_EAT.value(), 2.0F, 0.6F);
     }
@@ -138,7 +139,7 @@ final class MotherFeast {
     prey.teleportTo(mouth.x, mouth.y, mouth.z);
     prey.setDeltaMovement(forward.x * SPIT_OUT_SPEED, SPIT_OUT_LIFT, forward.z * SPIT_OUT_SPEED);
     prey.hurtMarked = true;
-    level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, HallowedMother.CLOUD_ORANGE), mouth.x, mouth.y, mouth.z, 24, 0.5, 0.5, 0.5, 0.0);
+    level.sendParticles(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, PoisonClouds.ORANGE), mouth.x, mouth.y, mouth.z, 24, 0.5, 0.5, 0.5, 0.0);
     this.mother.playSound(SoundEvents.PLAYER_BURP, 3.0F, 0.5F);
     this.end();
   }

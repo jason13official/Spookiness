@@ -12,13 +12,13 @@ import net.minecraft.ChatFormatting;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.util.Particles;
+import io.github.jason13official.spookiness.util.PoisonClouds;
 import io.github.jason13official.spookiness.entity.JackOMimic;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import io.github.jason13official.spookiness.registry.ModItems;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.BlockParticleOption;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -32,10 +32,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AnimationState;
-import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -78,8 +75,6 @@ public class HallowedMother extends SpookyBoss implements LightEmitter {
   private static final int CLOUD_DURATION = 140;
   private static final double CLOUD_MIN_DISTANCE = 4.0;
   private static final double CLOUD_MAX_DISTANCE = 10.0;
-  static final int CLOUD_ORANGE = 0xFF8A1E;
-  static final int CLOUD_GREEN = 0x6BCB3A;
   private static final float PROJECTILE_MULTIPLIER = 0.4F;
   private static final float MACE_MULTIPLIER = 2.0F;
   private static final int BROOD_PARTICLE_INTERVAL = 4;
@@ -237,15 +232,7 @@ public class HallowedMother extends SpookyBoss implements LightEmitter {
 
     double distance = CLOUD_MIN_DISTANCE + this.random.nextDouble() * (CLOUD_MAX_DISTANCE - CLOUD_MIN_DISTANCE);
     Vec3 spot = SpookyMath.onRing(this.position(), SpookyMath.randomAngle(this.random), distance);
-    AreaEffectCloud cloud = new AreaEffectCloud(level, spot.x, spot.y, spot.z);
-    cloud.setOwner(this);
-    cloud.setRadius(CLOUD_RADIUS);
-    cloud.setDuration(CLOUD_DURATION);
-    cloud.setRadiusPerTick(-CLOUD_RADIUS / CLOUD_DURATION);
-    cloud.setWaitTime(10);
-    cloud.addEffect(new MobEffectInstance(MobEffects.POISON, 80, 0));
-    cloud.setCustomParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, this.random.nextBoolean() ? CLOUD_ORANGE : CLOUD_GREEN));
-    level.addFreshEntity(cloud);
+    PoisonClouds.spawn(level, this, spot, CLOUD_RADIUS, CLOUD_DURATION);
   }
 
   public Vec3 mouthOffset(float bodyYRot) {

@@ -7,6 +7,7 @@ import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.entity.book.BookStairs;
 import io.github.jason13official.spookiness.ritual.LamentRitual;
 import io.github.jason13official.spookiness.world.HauntedHarvest;
+import io.github.jason13official.spookiness.world.PumpkinSmashing;
 import io.github.jason13official.spookiness.world.SpookySpawns;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -27,6 +28,9 @@ public final class PlayerEvents {
 
     // PlayerInteractEvent.EntityInteract
     gameBus.addListener(PlayerEvents::onEntityInteract);
+
+    // PlayerInteractEvent.LeftClickBlock
+    gameBus.addListener(PumpkinSmashing::onLeftClickBlock);
 
     // PlayerEnchantItemEvent
     gameBus.addListener(PlayerEvents::onEnchantItem);
