@@ -15,7 +15,7 @@ group = mod_group_id
 sourceSets.main.resources {
     srcDir('src/generated/resources')
 
-    exclude("src/generated/**/.cache")
+    exclude(".cache/**")
 }
 
 repositories {
@@ -106,6 +106,13 @@ publishing {
         maven {
             url "file://${project.projectDir}/repo"
         }
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    var licenseName = "LICENSE_${mod_id}"
+    from('LICENSE') {
+        rename { licenseName }
     }
 }
 
