@@ -21,8 +21,8 @@ public class SpookinessRecipeProvider extends RecipeProvider {
     this.shaped(RecipeCategory.COMBAT, ModItems.PUMPKIN_MACE)
         .define('#', Items.PUMPKIN)
         .define('I', Items.STICK)
-        .pattern(" # ")
-        .pattern(" I ")
+        .pattern("#")
+        .pattern("I")
         .unlockedBy(getHasName(Items.PUMPKIN), this.has(Items.PUMPKIN))
         .save(this.output);
 
