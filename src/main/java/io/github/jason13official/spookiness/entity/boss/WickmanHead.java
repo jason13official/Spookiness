@@ -2,8 +2,8 @@ package io.github.jason13official.spookiness.entity.boss;
 
 import io.github.jason13official.spookiness.util.Spawning;
 import io.github.jason13official.spookiness.entity.FloatingPathfinderMob;
-import io.github.jason13official.spookiness.lighting.LivingLights;
-import io.github.jason13official.spookiness.lighting.LightEmitter;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmission;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmitter;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -99,7 +99,7 @@ public class WickmanHead extends FloatingPathfinderMob implements Enemy, LightEm
 
   @Override
   public int getLightEmission() {
-    return this.isFrost() ? 0 : LivingLights.LANTERN_EMISSION;
+    return this.isFrost() ? 0 : LightEmission.MAX;
   }
 
   @Override

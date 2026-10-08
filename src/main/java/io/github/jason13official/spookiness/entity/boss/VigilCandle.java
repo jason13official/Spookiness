@@ -1,7 +1,7 @@
 package io.github.jason13official.spookiness.entity.boss;
 
 import io.github.jason13official.spookiness.util.Spawning;
-import io.github.jason13official.spookiness.lighting.LightEmitter;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmitter;
 import io.github.jason13official.spookiness.registry.ModEntities;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;

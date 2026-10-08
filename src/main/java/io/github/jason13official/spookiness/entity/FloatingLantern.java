@@ -5,7 +5,7 @@ import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.util.Particles;
-import io.github.jason13official.spookiness.lighting.LightEmitter;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmitter;
 import java.util.Comparator;
 import java.util.EnumSet;
 import net.minecraft.core.particles.ParticleTypes;

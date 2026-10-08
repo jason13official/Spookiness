@@ -1,5 +1,9 @@
 package io.github.jason13official.spookiness.event;
 
+import io.github.jason13official.living_lights.api.common.lighting.LightEmission;
+import io.github.jason13official.spookiness.entity.PumpkinHeads;
+import io.github.jason13official.spookiness.item.PumpkinMaceItem;
+
 import io.github.jason13official.spookiness.ritual.HallowedMotherTrigger;
 import io.github.jason13official.spookiness.datagen.SpookinessDatagen;
 import io.github.jason13official.spookiness.entity.book.FloatingBook;
@@ -26,6 +30,9 @@ import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 public final class SetupEvents {
 
   public static void register(IEventBus modBus, IEventBus gameBus) {
+
+    LightEmission.register(PumpkinHeads::isLit, LightEmission.MAX);
+    LightEmission.register(entity -> Math.max(PumpkinMaceItem.getLight(entity.getMainHandItem()), PumpkinMaceItem.getLight(entity.getOffhandItem())));
 
     // GatherDataEvent.Client
     modBus.addListener(SpookinessDatagen::init);

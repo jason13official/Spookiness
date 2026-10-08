@@ -4,7 +4,7 @@ import io.github.jason13official.spookiness.util.SpookyMath;
 import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.DefendOwnerGoal;
 import io.github.jason13official.spookiness.companion.FollowOwnerGoal;
-import io.github.jason13official.spookiness.lighting.LightEmitter;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmitter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;

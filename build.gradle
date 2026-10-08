@@ -75,6 +75,8 @@ configurations {
 
 dependencies {
 
+  implementation files('libs/living_lights-neoforge-26.1.2-0.1.0.jar')
+
   implementation 'maven.modrinth:jei:29.43.0.106-neoforge'
 }
 

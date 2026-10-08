@@ -1,6 +1,6 @@
 package io.github.jason13official.spookiness.entity.boss.gourdwyrm;
 
-import io.github.jason13official.spookiness.lighting.LivingLights;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmission;
 import net.minecraft.world.phys.Vec3;
 
 final class GourdwyrmBody {
@@ -47,7 +47,7 @@ final class GourdwyrmBody {
 
   void removeLights() {
     for (GourdwyrmPart segment : this.segments) {
-      LivingLights.remove(segment);
+      LightEmission.clear(segment);
     }
   }
 
@@ -88,7 +88,7 @@ final class GourdwyrmBody {
   private void updateLights() {
     for (GourdwyrmPart segment : this.segments) {
       boolean lit = this.wyrm.isAlive() && this.wyrm.isSegmentAlive(segment.index) && this.wyrm.isSegmentLit(segment.index);
-      LivingLights.update(segment, lit ? SEGMENT_LIGHT : 0);
+      LightEmission.set(segment, lit ? SEGMENT_LIGHT : 0);
     }
   }
 }

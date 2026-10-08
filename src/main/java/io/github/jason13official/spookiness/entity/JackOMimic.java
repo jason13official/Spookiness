@@ -2,7 +2,7 @@ package io.github.jason13official.spookiness.entity;
 
 import io.github.jason13official.spookiness.registry.ModSounds;
 import io.github.jason13official.spookiness.util.Particles;
-import io.github.jason13official.spookiness.lighting.LightEmitter;
+import io.github.jason13official.living_lights.api.common.lighting.LightEmitter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;

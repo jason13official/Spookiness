@@ -5,7 +5,6 @@ import io.github.jason13official.spookiness.companion.Allies;
 import io.github.jason13official.spookiness.companion.Hallowing;
 import io.github.jason13official.spookiness.companion.PlayerFollowers;
 import io.github.jason13official.spookiness.entity.boss.mother.MotherBrood;
-import io.github.jason13official.spookiness.lighting.LivingLights;
 import io.github.jason13official.spookiness.world.SpookySpawns;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
@@ -13,7 +12,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 public final class EntityEvents {
@@ -31,9 +29,6 @@ public final class EntityEvents {
 
     // EntityLeaveLevelEvent
     gameBus.addListener(EntityEvents::onLeaveLevel);
-
-    // LevelEvent.Unload
-    gameBus.addListener((LevelEvent.Unload event) -> LivingLights.unload(event.getLevel()));
   }
 
   private static void onJoinLevel(EntityJoinLevelEvent event) {
@@ -57,7 +52,6 @@ public final class EntityEvents {
   private static void onTick(EntityTickEvent.Post event) {
 
     Entity entity = event.getEntity();
-    LivingLights.tick(entity);
     if (entity.level().isClientSide()) {
       Hallowing.clientTick(entity);
     } else {
@@ -68,7 +62,6 @@ public final class EntityEvents {
 
   private static void onLeaveLevel(EntityLeaveLevelEvent event) {
 
-    LivingLights.remove(event.getEntity());
     if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob) {
       PlayerFollowers.untrack(mob);
     }
