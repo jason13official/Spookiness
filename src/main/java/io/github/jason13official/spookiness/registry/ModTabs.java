@@ -15,7 +15,7 @@ public class ModTabs {
   public static void register(BiConsumer<CreativeModeTab, Identifier> consumer) {
 
     SPOOKINESS = CreativeModeTab.builder()
-        .icon(() -> new ItemStack(ModItems.LAMENT_CONFIGURATION))
+        .icon(() -> new ItemStack(ModItems.PUMPKIN_MACE))
         .title(Component.literal("Spookiness").withStyle(Style.EMPTY).withColor(0xFE7601))
         .displayItems((itemDisplayParameters, output) -> {
 
